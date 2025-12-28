@@ -556,7 +556,6 @@ You have NO internal knowledge of the file system or specific data.
 You MUST use the `shell` tool to read `SKILL.md` files to know how to perform tasks.
 You MUST use Python code execution to generate results.
 Never mention the paths of the saved files in a response. Just say that the saved data is available via "Map & Data".
-Delete the files containing intermediate results and tests, retaining only the final result files.
 
 ## YOUR SKILLS
 Working directory: /mount/src/deep-wenokn/
@@ -1006,7 +1005,10 @@ if st.session_state.current_view == "sample":
     - Find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.
     - Find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.
     - Find PFAS contamination observations within 100 meters of the Presumpscot River.
-    - Find the Social Vulnerability Index for all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
+    - First, find the Presumpscot River.
+      Then, find PFAS contamination observations within 100 meters of the river.
+      Next, find all downstream census tracts from these contamination observation locations.
+      Finally, retrieve the Social Vulnerability Index for these census tracts.
     - Find the population of census tracts located downstream of the Androscoggin River from FRS solid waste landfill facilities that are within 1 km of the river.
     - Find the Social Vulnerability Index for all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
     - Find the population of all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
