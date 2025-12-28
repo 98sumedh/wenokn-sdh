@@ -1006,13 +1006,19 @@ if st.session_state.current_view == "sample":
                 * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
                 * Find all assets at risk of flooding in Ohio in the next 24 hours.
                 """)
-    st.markdown("#### Aggregations")
     st.markdown("""
+    
+                #### PFAS Contamination Observations and FRS Facilities
+                * Find FRS Sewage Treatment facilities within 100 meters from PFAS contamination observations in Maine
+                * Find all PFSA contamination observations within 800 meters from FRS water supply and irrigation facilities in Maine
+                
+                #### Aggregations
                 * How many rivers flow through each county in Ohio?.
                 * How many dams are in each county of Kentucky?
                 * How many coal mines are in each basin in Ohio?
                 * Find the sum of the total megawatt of solar power plants in each state in USA.
                 * List the five states in the United States with the largest number of coal mines.
+                
                 """)
 elif st.session_state.current_view == "map":
     
