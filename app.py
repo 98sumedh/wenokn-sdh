@@ -1002,9 +1002,10 @@ if st.session_state.current_view == "sample":
     * Find all assets at risk of flooding in Ohio in the next 24 hours.
 
     #### PFAS Contamination Observations and FRS Facilities
-    - Find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.
-    - Find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.
-    - Find PFAS contamination observations within 100 meters of the Presumpscot River.
+    - First, find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.  
+      Also, show these related contamination observations.
+    - First, find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.  
+      Also, show these related facilities.
     - First, find the Presumpscot River.  
       Then, find PFAS contamination observations within 100 meters of the river.  
       Next, find all downstream census tracts from these contamination observation locations.  
