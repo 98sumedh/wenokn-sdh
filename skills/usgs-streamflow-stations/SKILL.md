@@ -31,6 +31,7 @@ Always start by importing PyNHD and related libraries:
 ```python
 from pynhd import NLDI, WaterData
 import geopandas as gpd
+import pandas as pd
 ```
 
 ### Step 2: Identify the Query Type
