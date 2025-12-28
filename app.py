@@ -1009,10 +1009,10 @@ if st.session_state.current_view == "sample":
       Then, find PFAS contamination observations within 100 meters of the river.  
       Next, find all downstream census tracts from these contamination observation locations.  
       Finally, retrieve the Social Vulnerability Index for these census tracts.
-    - First, find the Androscoggin River.
-      Then, find FRS solid waste landfill facilities located within 1 km of the river.
-      Next, identify all downstream census tracts from these landfill facilities.
-      Finally, retrieve the population of these census tracts.
+    - First, find the Androscoggin River.  
+      Then, find FRS solid waste landfill facilities located within 1 km of the river.  
+      Next, identify all downstream census tracts from these landfill facilities.  
+      Finally, retrieve the population of these census tracts.  
 
     #### Aggregations
     * How many rivers flow through each county in Ohio?.
