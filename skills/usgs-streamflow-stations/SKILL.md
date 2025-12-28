@@ -1,6 +1,6 @@
 ---
 name: usgs-streamflow-stations
-description: Query and retrieve USGS streamflow gauging station data, navigate station networks, find stations by location, and access station metadata using PyNHD's NLDI interface.
+description: Query and retrieve USGS streamflow gauging station data, navigate station networks, find stations by location or specific rivers, and access station metadata using PyNHD's NLDI interface.
 ---
 
 # USGS Streamflow Stations Skill
@@ -9,12 +9,12 @@ description: Query and retrieve USGS streamflow gauging station data, navigate s
 
 This skill enables querying and analyzing USGS streamflow gauging stations (also called stream gauges) using the PyNHD library. USGS operates thousands of streamflow stations across the United States that measure river discharge (flow rate) and water levels. These stations are part of the National Water Information System (NWIS) and are integrated into the NHDPlus river network database.
 
-Use this skill to find gauging stations by location, navigate upstream/downstream networks, retrieve station metadata, identify connected stations, and access station attributes. This is essential for hydrologic analysis, watershed studies, flood forecasting, water resource management, and environmental monitoring.
+Use this skill to find gauging stations by location, navigate upstream/downstream networks, retrieve station metadata, identify connected stations, and filter stations by specific rivers. This is essential for hydrologic analysis, watershed studies, flood forecasting, water resource management, and environmental monitoring.
 
 ## When to Use
 
 - When the user asks to find USGS gauging stations near a location or within a region
-- When you need to identify streamflow monitoring points on a specific river
+- When you need to identify streamflow monitoring points on a **specific named river** (e.g., "Ohio River", "Scioto River")
 - When the task involves finding stations upstream or downstream from a point of interest
 - When the user wants to know what stations exist in a watershed or basin
 - When you need to get metadata about a specific USGS station (location, river name, drainage area)
@@ -31,72 +31,170 @@ Always start by importing PyNHD and related libraries:
 ```python
 from pynhd import NLDI, WaterData
 import geopandas as gpd
-import pandas as pd
+import pandas as pd  # CRITICAL: Always import pandas for data manipulation
 ```
 
-### Step 2: Identify the Query Type
+### Step 2: Identify the Query Type and River Name Requirement
 
-Determine what type of station query the user needs:
+**CRITICAL DECISION POINT**: Determine if the user wants stations on a **specific named river** or all stations in a network area.
 
-- **By Station ID**: User provides a specific USGS station number (e.g., "01031500")
-- **By Location**: User provides coordinates or describes a location
-- **By River**: User wants stations on a specific named river
-- **By Watershed**: User wants all stations in a watershed/basin
-- **By Network**: User wants stations upstream or downstream from a point
+**Query Types:**
 
-### Step 3: Execute the Appropriate Query
+1. **Specific River Query** - User mentions a river name (e.g., "Scioto River", "Ohio River")
+   - **MUST filter by river name** to avoid returning hundreds of irrelevant stations
+   - Requires additional step to get flowline attributes and filter
 
-Use the corresponding PyNHD method based on the query type:
+2. **General Network Query** - User wants all stations in an area/network
+   - No river name filtering needed
+   - Returns all stations found in the search area
 
-**For finding stations by location (coordinates):**
+3. **By Station ID** - User provides a specific USGS station number
+   - Direct query, no filtering needed
+
+4. **By Watershed** - User wants all stations in a watershed/basin
+   - Use spatial query within basin boundary
+
+### Step 3: Execute Query Based on Type
+
+#### For Specific River Queries (MOST COMMON - e.g., "stations on Scioto River")
+
+**IMPORTANT**: When user asks for stations on a specific river, you MUST:
+1. Navigate the network to get flowlines
+2. Filter flowlines by river name using WaterData
+3. Then find stations on those specific flowlines
+
 ```python
-from pynhd import NLDI
-nldi = NLDI()
+from pynhd import NLDI, WaterData
+import geopandas as gpd
+import pandas as pd
 
-# Snap to nearest river and find nearby stations
-point = (longitude, latitude)
+nldi = NLDI()
+wd = WaterData("nhdflowline_network")
+
+# Starting point coordinates
+point = (-82.9988, 39.9612)
+river_name = "Scioto River"  # The specific river user asked about
+
+# Step 1: Find nearest river segment
 comid_result = nldi.comid_byloc(point)
 nearest_comid = comid_result.comid.values[0]
 
-# Find stations within a radius or along the network
-stations = nldi.navigate_byid(
+# Step 2: Get all flowlines in the network (cast a wide net)
+upstream_flowlines = nldi.navigate_byid(
     fsource="comid",
     fid=nearest_comid,
-    navigation="upstreamTributaries",  # or "downstreamMain"
+    navigation="upstreamTributaries",
+    source="flowlines",
+    distance=500  # km
+)
+
+downstream_flowlines = nldi.navigate_byid(
+    fsource="comid",
+    fid=nearest_comid,
+    navigation="downstreamMain",
+    source="flowlines",
+    distance=500  # km
+)
+
+# Step 3: Get flowline attributes to check river names
+all_comids = list(upstream_flowlines.nhdplus_comid) + list(downstream_flowlines.nhdplus_comid)
+all_comids = list(set(all_comids))  # Remove duplicates
+flowlines_with_attrs = wd.byid("comid", all_comids)
+
+# Step 4: Filter to ONLY the specified river
+river_flowlines = flowlines_with_attrs[
+    flowlines_with_attrs.gnis_name == river_name
+]
+
+if len(river_flowlines) == 0:
+    print(f"Warning: No flowlines found with name '{river_name}'")
+    # Check what river we're actually on
+    start_flowline = wd.byid("comid", [nearest_comid])
+    actual_river = start_flowline.gnis_name.values[0]
+    print(f"Starting point is on '{actual_river}'")
+else:
+    print(f"Found {len(river_flowlines)} {river_name} flowline segments")
+    
+    # Step 5: Now find stations on ONLY those river segments
+    river_comids = river_flowlines.comid.tolist()
+    
+    # Search for stations near each river segment
+    all_stations = []
+    for comid in river_comids:
+        try:
+            # Search small radius around each river segment
+            stations = nldi.navigate_byid(
+                fsource="comid",
+                fid=comid,
+                navigation="upstreamTributaries",
+                source="nwissite",
+                distance=0.1  # Very small distance to get stations ON this segment
+            )
+            all_stations.append(stations)
+        except:
+            continue
+    
+    if all_stations:
+        stations_gdf = gpd.GeoDataFrame(
+            pd.concat(all_stations).drop_duplicates(subset='identifier')
+        )
+        print(f"Found {len(stations_gdf)} stations on {river_name}")
+    else:
+        print(f"No stations found on {river_name}")
+```
+
+#### For General Network Queries (No specific river mentioned)
+
+```python
+# Find nearest segment
+comid_result = nldi.comid_byloc(point)
+nearest_comid = comid_result.comid.values[0]
+
+# Find all stations in network
+upstream_stations = nldi.navigate_byid(
+    fsource="comid",
+    fid=nearest_comid,
+    navigation="upstreamTributaries",
     source="nwissite",
     distance=100  # km
 )
+
+downstream_stations = nldi.navigate_byid(
+    fsource="comid",
+    fid=nearest_comid,
+    navigation="downstreamMain",
+    source="nwissite",
+    distance=100  # km
+)
+
+# Combine results
+all_stations = gpd.GeoDataFrame(
+    pd.concat([upstream_stations, downstream_stations]).drop_duplicates(subset='identifier')
+)
 ```
 
-**For finding stations upstream/downstream from a known station:**
+#### For Station ID Queries
+
 ```python
 station_id = "01031500"
 
-# Find upstream stations
+# Get stations upstream
 upstream_stations = nldi.navigate_byid(
     fsource="nwissite",
     fid=f"USGS-{station_id}",
     navigation="upstreamTributaries",
     source="nwissite",
-    distance=500  # km
-)
-
-# Find downstream stations
-downstream_stations = nldi.navigate_byid(
-    fsource="nwissite",
-    fid=f"USGS-{station_id}",
-    navigation="downstreamMain",
-    source="nwissite",
-    distance=500  # km
+    distance=500
 )
 ```
 
-**For finding stations in a watershed:**
+#### For Watershed Queries
+
 ```python
-# Get the watershed boundary first
+# Get watershed boundary
 basin = nldi.get_basins(station_id)
 
-# Then use spatial query with GeoConnex
+# Find all stations in watershed
 import pynhd
 stations_in_basin = pynhd.geoconnex(
     item="gauges",
@@ -106,62 +204,148 @@ stations_in_basin = pynhd.geoconnex(
 
 ### Step 4: Extract and Format Results
 
-Parse the station information and present it clearly:
+Parse station information and present clearly:
 
 ```python
-# Extract station IDs
-station_ids = stations.identifier.str.split("-").str[1].tolist()
-
-# Get detailed metadata using GeoConnex
-from pynhd import GeoConnex
-gcx = GeoConnex("gauges")
-detailed_info = gpd.GeoDataFrame(
-    pd.concat(gcx.query({"provider_id": sid}) for sid in station_ids),
-    crs=4326
-)
-
-# Present key information
-print(f"Found {len(stations)} stations")
-for idx, row in stations.iterrows():
-    print(f"Station: {row.identifier}, Name: {row.name}")
+# Extract station IDs and names
+print(f"Total stations found: {len(stations_gdf)}")
+for idx, row in stations_gdf.iterrows():
+    station_num = row.identifier.split('-')[1]
+    station_name = row.name if 'name' in row and row.name else 'N/A'
+    print(f"USGS {station_num}: {station_name}")
 ```
 
 ## Best Practices
 
-- Always use `"nwissite"` as the source when querying for USGS stations in `navigate_byid()`
-- Station IDs should be formatted as `"USGS-{station_id}"` when used as `fid` parameter (e.g., `"USGS-01031500"`)
-- Use appropriate navigation parameters:
-  - `"upstreamMain"` - main channel only going upstream
-  - `"upstreamTributaries"` - all tributaries going upstream
-  - `"downstreamMain"` - main channel only going downstream
-  - `"downstreamDiversions"` - all branches going downstream
-- Set reasonable distance limits (in km) to avoid overwhelming results - typical values are 50-500 km
-- For spatial queries within polygons, use `pynhd.geoconnex()` instead of `navigate_byid()`
-- Cache NLDI instance to avoid repeated initialization: `nldi = NLDI()` once at the start
-- Handle cases where no stations are found gracefully
-- Extract station IDs from the `identifier` column and split by "-" to get the numeric ID
+- **ALWAYS import pandas**: `import pandas as pd` is required for `pd.concat()` operations
+- **Filter by river name when specified**: If user mentions a specific river, you MUST filter flowlines by `gnis_name` field before finding stations
+- **Use WaterData to get flowline attributes**: `wd = WaterData("nhdflowline_network")` then `wd.byid("comid", comid_list)` to get river names
+- **comid_byloc syntax**: Use `nldi.comid_byloc(point)` without `crs` parameter for WGS84 coordinates, or `nldi.comid_byloc(point, loc_crs=crs_string)` for other CRS
+- **Navigation parameters**:
+  - `"upstreamMain"` - main channel only
+  - `"upstreamTributaries"` - all tributaries (includes main channel)
+  - `"downstreamMain"` - main channel only
+  - `"downstreamDiversions"` - all branches
+- **Set appropriate distance limits**: 50-500 km typical, but use smaller distances (0.1-1 km) when searching near specific river segments
+- **Handle empty results gracefully**: Always check if dataframes have rows before processing
+- **Station ID format**: Use `"USGS-{station_id}"` when station ID is the source (fid parameter)
+- **Avoid overwhelming results**: For specific river queries, filter first then search, rather than searching entire network
 
 ## Supporting Files
 
 This skill directory can include supporting files referenced in the instructions:
-- `station_query_helpers.py` - Helper functions for common station queries
-- `station_metadata_template.json` - Template for station information format
+- `station_query_helpers.py` - Helper functions for river-specific station queries
+- `river_name_lookup.json` - Common river name variations and standardization
 - `navigation_patterns.md` - Common network navigation patterns
 
 ## Examples
 
-### Example 1: Find All Upstream Stations
+### Example 1: Find Stations on a Specific River (MOST IMPORTANT)
+
+**User Request:** "Find all USGS streamflow stations on the Scioto River"
+
+**Approach:**
+1. Start with a point on or near the Scioto River
+2. Navigate to get all flowlines in the area
+3. **CRITICAL**: Filter flowlines to only "Scioto River" using WaterData
+4. Find stations on those specific flowline segments
+5. Present results
+
+```python
+from pynhd import NLDI, WaterData
+import geopandas as gpd
+import pandas as pd
+
+nldi = NLDI()
+wd = WaterData("nhdflowline_network")
+
+# Columbus, Ohio on Scioto River
+point = (-82.9988, 39.9612)
+river_name = "Scioto River"
+
+print(f"Finding stations on {river_name}...")
+
+# Find nearest segment
+comid_result = nldi.comid_byloc(point)
+nearest_comid = comid_result.comid.values[0]
+
+# Get flowlines in both directions
+upstream_flow = nldi.navigate_byid(
+    fsource="comid",
+    fid=nearest_comid,
+    navigation="upstreamTributaries",
+    source="flowlines",
+    distance=500
+)
+
+downstream_flow = nldi.navigate_byid(
+    fsource="comid",
+    fid=nearest_comid,
+    navigation="downstreamMain",
+    source="flowlines",
+    distance=500
+)
+
+# Get all unique COMIDs
+all_comids = list(set(
+    list(upstream_flow.nhdplus_comid) + 
+    list(downstream_flow.nhdplus_comid)
+))
+
+# Get flowline attributes
+print(f"Fetching attributes for {len(all_comids)} flowline segments...")
+flowlines_attrs = wd.byid("comid", all_comids)
+
+# Filter to Scioto River ONLY
+scioto_flowlines = flowlines_attrs[
+    flowlines_attrs.gnis_name == river_name
+]
+
+print(f"Found {len(scioto_flowlines)} {river_name} segments")
+
+# Now find stations on Scioto River segments
+scioto_comids = scioto_flowlines.comid.tolist()
+all_stations = []
+
+for comid in scioto_comids:
+    try:
+        stations = nldi.navigate_byid(
+            fsource="comid",
+            fid=comid,
+            navigation="upstreamTributaries",
+            source="nwissite",
+            distance=0.1  # Small distance
+        )
+        if len(stations) > 0:
+            all_stations.append(stations)
+    except:
+        continue
+
+if all_stations:
+    stations_gdf = gpd.GeoDataFrame(
+        pd.concat(all_stations).drop_duplicates(subset='identifier')
+    )
+    
+    print(f"\nFound {len(stations_gdf)} stations on {river_name}:")
+    for idx, row in stations_gdf.iterrows():
+        station_id = row.identifier.split('-')[1]
+        print(f"  USGS {station_id}")
+else:
+    print(f"No stations found on {river_name}")
+```
+
+### Example 2: Find All Upstream Stations (No River Filter)
 
 **User Request:** "What USGS stations are upstream of station 01031500?"
 
 **Approach:**
-1. Initialize NLDI interface
-2. Use `navigate_byid()` with `fsource="nwissite"` and `navigation="upstreamTributaries"`
-3. Set appropriate distance limit (e.g., 1000 km for entire upstream network)
-4. Parse results to extract station IDs and names
+1. Use station ID directly as starting point
+2. Navigate upstream without river name filtering
+3. Present all stations found
 
 ```python
 from pynhd import NLDI
+import pandas as pd
 
 nldi = NLDI()
 station_id = "01031500"
@@ -177,55 +361,84 @@ upstream_stations = nldi.navigate_byid(
 print(f"Found {len(upstream_stations)} upstream stations:")
 for idx, row in upstream_stations.iterrows():
     station_num = row.identifier.split('-')[1]
-    print(f"  - USGS {station_num}: {row.name if 'name' in row else 'N/A'}")
+    station_name = row.name if 'name' in row and row.name else 'N/A'
+    print(f"  USGS {station_num}: {station_name}")
 ```
 
-### Example 2: Find Nearest Station to Coordinates
+### Example 3: Find Nearest Station to Coordinates
 
 **User Request:** "What's the nearest USGS gauging station to coordinates -87.888, 37.743?"
 
 **Approach:**
-1. Snap coordinates to nearest river segment (COMID)
-2. Search for stations in a small radius (e.g., 20 km)
-3. If multiple found, identify the closest one
-4. Return station information
+1. Snap to nearest river
+2. Search small radius
+3. Return closest station
 
 ```python
 from pynhd import NLDI
+import pandas as pd
 
 nldi = NLDI()
 point = (-87.888, 37.743)
 
-# Find nearest river segment
+# Find nearest river
 comid_result = nldi.comid_byloc(point)
 nearest_comid = comid_result.comid.values[0]
 
-# Find nearby stations (within 20 km)
-nearby_stations = nldi.navigate_byid(
+# Find nearby stations (small radius)
+nearby = nldi.navigate_byid(
     fsource="comid",
     fid=nearest_comid,
     navigation="upstreamTributaries",
     source="nwissite",
-    distance=20
+    distance=20  # 20 km radius
 )
 
-if len(nearby_stations) > 0:
-    closest = nearby_stations.iloc[0]
+if len(nearby) > 0:
+    # Get closest one
+    closest = nearby.iloc[0]
     station_id = closest.identifier.split('-')[1]
     print(f"Nearest station: USGS {station_id}")
-    print(f"Location: {closest.geometry.coords[0]}")
 else:
-    print("No stations found within 20 km")
+    print("No stations within 20 km")
 ```
 
-### Example 3: Find Stations in a Watershed
+### Example 4: Verify River Name at Starting Point
 
-**User Request:** "Show me all USGS gauges in the watershed for station 01031500"
+**User Request:** "What river am I starting from at these coordinates?"
 
 **Approach:**
-1. Get the watershed boundary using `get_basins()`
-2. Use GeoConnex spatial query to find all stations within the boundary
-3. Filter and present results
+1. Snap to nearest river segment
+2. Get flowline attributes
+3. Report river name
+
+```python
+from pynhd import NLDI, WaterData
+
+nldi = NLDI()
+wd = WaterData("nhdflowline_network")
+
+point = (-82.9988, 39.9612)
+
+# Find nearest segment
+comid_result = nldi.comid_byloc(point)
+nearest_comid = comid_result.comid.values[0]
+
+# Get flowline info
+flowline = wd.byid("comid", [nearest_comid])
+river_name = flowline.gnis_name.values[0]
+
+print(f"Starting point is on: {river_name}")
+print(f"COMID: {nearest_comid}")
+```
+
+### Example 5: Find Stations in Watershed
+
+**User Request:** "Show all USGS gauges in the watershed for station 01031500"
+
+**Approach:**
+1. Get watershed boundary
+2. Spatial query for stations within boundary
 
 ```python
 from pynhd import NLDI
@@ -234,114 +447,49 @@ import pynhd
 nldi = NLDI()
 station_id = "01031500"
 
-# Get watershed boundary
+# Get watershed
 basin = nldi.get_basins(station_id)
 
-# Find all gauges within the watershed
-stations_in_basin = pynhd.geoconnex(
+# Find all stations in watershed
+stations = pynhd.geoconnex(
     item="gauges",
     query={"geometry": basin.geometry.iloc[0]}
 )
 
-print(f"Found {len(stations_in_basin)} stations in watershed:")
-for idx, row in stations_in_basin.iterrows():
-    if 'provider_id' in row:
-        print(f"  - USGS {row.provider_id}")
+print(f"Found {len(stations)} stations in watershed")
 ```
 
-### Example 4: Find Downstream Stations on Same River
+## Common Pitfalls and Solutions
 
-**User Request:** "What USGS stations are downstream on the Ohio River from coordinates -87.888, 37.743?"
+### Pitfall 1: Forgetting to Import Pandas
+**Error**: `NameError: name 'pd' is not defined`
+**Solution**: Always include `import pandas as pd` at the top
 
-**Approach:**
-1. Snap to nearest river segment
-2. Navigate downstream along main channel
-3. Filter to only Ohio River segments
-4. Find stations on those segments
-5. Present results with river name verification
+### Pitfall 2: Not Filtering by River Name
+**Problem**: User asks for "stations on Ohio River" but gets 200+ stations from entire network
+**Solution**: Always filter flowlines by `gnis_name` field before finding stations
 
-```python
-from pynhd import NLDI, WaterData
+### Pitfall 3: Using Wrong CRS Parameter
+**Error**: `TypeError: comid_byloc() got an unexpected keyword argument 'crs'`
+**Solution**: Use `loc_crs` parameter: `nldi.comid_byloc(point, loc_crs="EPSG:4326")` or omit for WGS84
 
-nldi = NLDI()
-wd = WaterData("nhdflowline_network")
+### Pitfall 4: Empty Results Not Handled
+**Error**: `IndexError: single positional indexer is out-of-bounds`
+**Solution**: Always check `if len(dataframe) > 0:` before accessing rows
 
-point = (-87.888, 37.743)
-
-# Find nearest segment
-comid_result = nldi.comid_byloc(point)
-nearest_comid = comid_result.comid.values[0]
-
-# Get downstream flowlines
-downstream_flow = nldi.navigate_byid(
-    fsource="comid",
-    fid=nearest_comid,
-    navigation="downstreamMain",
-    source="flowlines",
-    distance=500
-)
-
-# Get attributes to filter by river name
-comids = downstream_flow.nhdplus_comid.tolist()
-flowlines_attrs = wd.byid("comid", comids)
-ohio_river_comids = flowlines_attrs[
-    flowlines_attrs.gnis_name == "Ohio River"
-].comid.tolist()
-
-# Now find stations on Ohio River segments
-stations = nldi.navigate_byid(
-    fsource="comid",
-    fid=nearest_comid,
-    navigation="downstreamMain",
-    source="nwissite",
-    distance=500
-)
-
-print(f"Found {len(stations)} stations downstream on Ohio River")
-```
-
-### Example 5: Get Station Metadata
-
-**User Request:** "Tell me about USGS station 01031500"
-
-**Approach:**
-1. Get basic info from NLDI
-2. Optionally get detailed metadata from GeoConnex
-3. Get watershed boundary
-4. Present comprehensive information
-
-```python
-from pynhd import NLDI, GeoConnex
-
-nldi = NLDI()
-gcx = GeoConnex("gauges")
-station_id = "01031500"
-
-# Get basin
-basin = nldi.get_basins(station_id)
-
-# Get detailed metadata
-station_info = gcx.query({"provider_id": station_id})
-
-if len(station_info) > 0:
-    info = station_info.iloc[0]
-    print(f"Station: USGS {station_id}")
-    print(f"Name: {info.name if 'name' in info else 'N/A'}")
-    print(f"Coordinates: {info.geometry.coords[0] if hasattr(info.geometry, 'coords') else 'N/A'}")
-    print(f"Drainage area: {basin.geometry.area[0]:.2f} sq degrees")
-else:
-    print(f"Station {station_id} found, but detailed metadata unavailable")
-```
+### Pitfall 5: Searching Too Large Area
+**Problem**: Query takes forever or returns thousands of stations
+**Solution**: Use smaller distance limits (20-100 km) or filter by river name first
 
 ## Notes
 
-- USGS station IDs are typically 8-15 digit numbers (e.g., "01031500", "07374000")
-- The `identifier` field in results is formatted as `"USGS-{station_id}"` - remember to split and extract the numeric portion
-- Not all river segments have nearby gauging stations - large networks may only have a few monitoring points
-- Distance parameter is in kilometers, not miles
-- Some stations may be inactive or historical - check data availability separately if needed
-- For real-time or historical streamflow data, use PyGeoHydro's NWIS class (separate from this skill)
-- Station density varies by region - more stations in populated areas and major rivers
-- GeoConnex provides richer metadata than NLDI's basic station information
-- When no stations are found, consider increasing the distance parameter or checking if the area has any USGS monitoring
-- The `name` field in NLDI responses may be empty - use GeoConnex for more complete metadata
+- USGS station IDs are typically 8-15 digit numbers
+- The `identifier` field format is `"USGS-{station_id}"` - always split to extract numeric ID
+- Not all river segments have stations - coverage varies by region
+- Distance parameter is in kilometers
+- For queries about specific rivers, ALWAYS filter by `gnis_name` field
+- Some stations may be inactive - check data availability separately if needed
+- GeoConnex provides richer metadata than basic NLDI responses
+- When user mentions a river name, assume they want stations ON THAT SPECIFIC RIVER, not all stations in the area
+- The `name` field in station results may be empty - this is normal
+- Small tributaries often lack station coverage
