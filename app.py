@@ -1011,6 +1011,8 @@ if st.session_state.current_view == "sample":
                 * How many rivers flow through each county in Ohio?.
                 * How many dams are in each county of Kentucky?
                 * How many coal mines are in each basin in Ohio?
+                * Find the sum of the total megawatt of solar power plants in each state in USA.
+                * List the five states in the United States with the largest number of coal mines.
                 """)
 elif st.session_state.current_view == "map":
     
