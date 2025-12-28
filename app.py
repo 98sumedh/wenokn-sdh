@@ -575,6 +575,10 @@ Available skills: {', '.join(skills_list) if skills_list else 'None found'}
 3. **Save**: You MUST save outputs to the user's temp directory: {st.session_state.temp_dir}/
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
 
+## Task Management                                                                                                                                                   
+Use write_todos for complex multi-step tasks (3+ steps). Mark tasks in_progress before starting, completed immediately after finishing.                              
+For simple 1-2 step tasks, just do them without todos.     
+
 ## ANTI-HALLUCINATION RULES
 - **DO NOT** narrate what you are going to do. Just run the tool.
 - **DO NOT** say "I have saved the file" unless you have successfully executed the Python code that saves it.
