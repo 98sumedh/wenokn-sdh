@@ -954,10 +954,10 @@ if st.session_state.current_view == "conversation":
 
 if st.session_state.current_view == "sample":
     # Sample Queries View
-    st.markdown("### Sample Queries")
-
-    st.markdown("#### States, Counties and Rivers")
     st.markdown("""
+                ### Sample Queries
+
+                #### States, Counties and Rivers
                 * Find the state of Utah.
                 * Find all states that border Utah.
                 * Find the Ohio River and all states through which the Ohio River flows.
@@ -965,9 +965,8 @@ if st.session_state.current_view == "sample":
                 * Find Los Angeles County and all rivers that flow through it.
                 * Find all rivers that flow through Arizona with a length greater than 100 km. 
                 * For each county in Ohio, find the longest river that flows through it and save these rivers as GeoJSON.
-                """)
-    st.markdown("#### Dams, Coal Mines and Power Plants")
-    st.markdown("""
+
+                #### Dams, Coal Mines and Power Plants
                 * Find all dams in Ross County.
                 * Find the Muskingum River and all dams on it.
                 * Find all upstream counties along the Muskingum River, starting from the dam named “Muskingum River Lock and Dam No. 5 – Swift’s No. 5.”.
@@ -977,9 +976,8 @@ if st.session_state.current_view == "sample":
                 * Find all solar power plants with a total capacity greater than 100 megawatts in Kentucky.
                 * Compare the energy usage of power plants in California and Ohio.
                 * Compare the power plants of "Pacific Gas & Electric Co." and "San Diego Gas & Electric Co."
-                """)
-    st.markdown("#### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 8, 10, 12)")
-    st.markdown("""
+             
+                #### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 8, 10, 12)
                 * Find the hydrologic basin that contains the Scioto River outlet and save the basin as GeoJSON.
                 * Find all hydrological basins that intersect the state of Ohio.
                 * Find all counties that intersect the Lower Ohio–Salt Basin.
@@ -987,17 +985,15 @@ if st.session_state.current_view == "sample":
                 * Find all rivers that flow through the Roanoke Basin.
                 * Find all watersheds within the Kanawha Basin.
                 * Find all sub-watersheds that intersect the Scioto River.
-                """)
-    st.markdown("#### Demographics, Economics, Health, and Education via Google Data Commons")
-    st.markdown("""
+          
+                #### Demographics, Economics, Health, and Education via Google Data Commons"
                 * Show the population for all counties in the state of Ohio.
                 * Find the population for all states adjacent to the state of Ohio.
                 * Find the median individual income for Ross County and Scioto County.
                 * Find the number of people employed in all counties through which the Scioto River flows.
                 * Show the Social Vulnerability Index for all counties downstream of the coal mine named "River View Mine" along the Ohio River.
-                """)
-    st.markdown("#### Census Tracts, Census Blocks, and Assets at Risk of Flooding")
-    st.markdown("""
+
+                #### Census Tracts, Census Blocks, and Assets at Risk of Flooding
                 * Find all census tracts that the Scioto River flows through.
                 * Find the population of all census tracts within 1000 meters from the Scioto River.
                 * Find all census blocks within 1000 meters from the Fayette Solar power plant.
@@ -1005,12 +1001,10 @@ if st.session_state.current_view == "sample":
                 * Retrieve all buildings at risk of flooding in Ohio from 6 PM 2025-07-18 to 6 AM 2025-07-19.
                 * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
                 * Find all assets at risk of flooding in Ohio in the next 24 hours.
-                """)
-    st.markdown("""
-    
+
                 #### PFAS Contamination Observations and FRS Facilities
-                * Find FRS Sewage Treatment facilities within 100 meters from PFAS contamination observations in Maine
-                * Find all PFSA contamination observations within 800 meters from FRS water supply and irrigation facilities in Maine
+                * Find FRS Sewage Treatment facilities within 100 meters from PFAS contamination observations in Maine.
+                * Find all PFSA contamination observations within 800 meters from FRS water supply and irrigation facilities in Maine.
                 
                 #### Aggregations
                 * How many rivers flow through each county in Ohio?.
@@ -1020,6 +1014,7 @@ if st.session_state.current_view == "sample":
                 * List the five states in the United States with the largest number of coal mines.
                 
                 """)
+                
 elif st.session_state.current_view == "map":
     
     # Check if we have any data at all
