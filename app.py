@@ -1003,13 +1003,13 @@ if st.session_state.current_view == "sample":
     * Find all assets at risk of flooding in Ohio in the next 24 hours.
 
     #### PFAS Contamination Observations and FRS Facilities
-    * Find FRS Sewage Treatment facilities within 100 meters from PFAS contamination observations in Maine.
-    * Find all PFSA contamination observations within 800 meters from FRS water supply and irrigation facilities in Maine.
-    * Find PFSA contamination observations within 100 meters to Presumpscot River.
-    * Find social vulnerability index of all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
-    * Find the population of census tracts located downstream of the Androscoggin River from FRS solid waste landfill facilities that are within 1 km of the river.
-    * Find social vulnerability index of all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
-    * Find populations of all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
+    - Find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.
+    - Find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.
+    - Find PFAS contamination observations within 100 meters of the Presumpscot River.
+    - Find the Social Vulnerability Index for all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
+    - Find the population of census tracts located downstream of the Androscoggin River from FRS solid waste landfill facilities that are within 1 km of the river.
+    - Find the Social Vulnerability Index for all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
+    - Find the population of all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
 
     #### Aggregations
     * How many rivers flow through each county in Ohio?.
