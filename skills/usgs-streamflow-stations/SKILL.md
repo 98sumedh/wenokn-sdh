@@ -54,7 +54,7 @@ nldi = NLDI()
 
 # Snap to nearest river and find nearby stations
 point = (longitude, latitude)
-comid_result = nldi.comid_byloc(point, crs=4326)
+comid_result = nldi.comid_byloc(point)
 nearest_comid = comid_result.comid.values[0]
 
 # Find stations within a radius or along the network
@@ -196,7 +196,7 @@ nldi = NLDI()
 point = (-87.888, 37.743)
 
 # Find nearest river segment
-comid_result = nldi.comid_byloc(point, crs=4326)
+comid_result = nldi.comid_byloc(point)
 nearest_comid = comid_result.comid.values[0]
 
 # Find nearby stations (within 20 km)
@@ -268,7 +268,7 @@ wd = WaterData("nhdflowline_network")
 point = (-87.888, 37.743)
 
 # Find nearest segment
-comid_result = nldi.comid_byloc(point, crs=4326)
+comid_result = nldi.comid_byloc(point)
 nearest_comid = comid_result.comid.values[0]
 
 # Get downstream flowlines
