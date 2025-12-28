@@ -11,7 +11,9 @@ Fetches geometries and attributes of assets at flood risk from:
 https://staging.api-flooding.data2action.tech/v0/impacts/structures
 ```
 
-**Returns:** GeoDataFrame with `fips`, `feature-type`, `geometry`, and `date` (YYYYMMDDHH format).
+**Returns:** GeoDataFrame with `fips`, `feature-type`, `latitude`, `longitude`, `geometry`, and `date` (YYYYMMDDHH format).
+
+**Important:** The API returns hourly risk forecasts. The same asset (building, power plant, etc.) may appear at multiple forecast hours if it remains at risk during those time periods. Each row represents an asset-at-risk at a specific forecast hour.
 
 ## Critical API Notes
 - Response structure: Features are under `data["structures"]["features"]`, NOT `data["features"]`
@@ -31,7 +33,11 @@ def fetch_flood_impacts(
     max_retries: int = 3,
     delay_between_requests: float = 0.1
 ) -> gpd.GeoDataFrame:
-    """Fetch flood impact data and return as GeoDataFrame."""
+    """Fetch flood impact data and return as GeoDataFrame.
+    
+    Returns GeoDataFrame with hourly risk forecasts. The same asset may appear
+    multiple times if it remains at risk across multiple forecast hours.
+    """
     
     # Validate inputs
     valid_fips = ["state", "county", "tract", "block-group"]
@@ -107,7 +113,7 @@ def fetch_flood_impacts(
     # Build GeoDataFrame
     if not all_features:
         return gpd.GeoDataFrame(
-            columns=["fips", "feature-type", "geometry", "date"],
+            columns=["fips", "feature-type", "latitude", "longitude", "geometry", "date"],
             geometry="geometry", crs="EPSG:4326"
         )
 
@@ -118,6 +124,8 @@ def fetch_flood_impacts(
         rows.append({
             "fips": props["fips"],
             "feature-type": props["feature-type"],
+            "latitude": lat,
+            "longitude": lon,
             "geometry": Point(lon, lat)
         })
 
@@ -134,3 +142,6 @@ fetch_flood_impacts("2025100210", fips="tract", feature_type="power", scope="39"
 # Buildings at risk in Ohio on 2025-08-12 23:00, block group level
 fetch_flood_impacts("2025081223", fips="block-group", feature_type="building", scope="39")
 ```
+
+### Understanding the Results
+Each row represents an asset at risk at a specific forecast hour. If building A is at risk from 04:00 to 05:00, it will appear as two separate rows (one for 2025081204 and one for 2025081205). To identify unique assets, group by latitude/longitude or FIPS code.
