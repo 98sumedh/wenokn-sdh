@@ -9,3 +9,4 @@ streamlit-kepler-component
 folium>=0.15.0
 streamlit-folium>=0.15.0
 openpyxl
+pynhd
