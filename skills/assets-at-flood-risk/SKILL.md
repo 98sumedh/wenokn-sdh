@@ -144,4 +144,7 @@ fetch_flood_impacts("2025081223", fips="block-group", feature_type="building", s
 ```
 
 ### Understanding the Results
-Each row represents an asset at risk at a specific forecast hour. If building A is at risk from 04:00 to 05:00, it will appear as two separate rows (one for 2025081204 and one for 2025081205). To identify unique assets, group by latitude/longitude or FIPS code.
+
+- Each row represents an asset at risk at a specific forecast hour. If building A is at risk from 04:00 to 05:00, it will appear as two separate rows (one for 2025081204 and one for 2025081205). To identify unique assets, group by latitude/longitude or FIPS code.
+
+- Don't convert a returned 'power' into a power station defined in the power-plants skill.
