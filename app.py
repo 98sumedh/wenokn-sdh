@@ -1005,12 +1005,9 @@ if st.session_state.current_view == "sample":
     - Find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.
     - Find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.
     - Find PFAS contamination observations within 100 meters of the Presumpscot River.
-    - First, find the Presumpscot River.
-      
-      Then, find PFAS contamination observations within 100 meters of the river.
-      
-      Next, find all downstream census tracts from these contamination observation locations.
-      
+    - First, find the Presumpscot River.  
+      Then, find PFAS contamination observations within 100 meters of the river.  
+      Next, find all downstream census tracts from these contamination observation locations.  
       Finally, retrieve the Social Vulnerability Index for these census tracts.
     - Find the population of census tracts located downstream of the Androscoggin River from FRS solid waste landfill facilities that are within 1 km of the river.
     - Find the Social Vulnerability Index for all census tracts located downstream of the Presumpscot River from PFAS contamination observations within 100 meters of the river.
