@@ -1006,6 +1006,12 @@ if st.session_state.current_view == "sample":
                 * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
                 * Find all assets at risk of flooding in Ohio in the next 24 hours.
                 """)
+    st.markdown("#### Aggregations")
+    st.markdown("""
+                * How many rivers flow through each county in Ohio?.
+                * How many dams are in each county of Kentucky?
+                * How many coal mines are in each basin in Ohio?
+                """)
 elif st.session_state.current_view == "map":
     
     # Check if we have any data at all
