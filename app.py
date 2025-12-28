@@ -742,7 +742,7 @@ async def handle_user_input_async(user_input):
                                             # Show brief summary
                                             st.info(f"{icon} {display_str}")
                                             
-                                            # Add expandable section to show FULL arguments
+                                            # Add expandable section to show FULL arguments 
                                             with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
                                                 if tool_name == "shell":
                                                     command = tool_args.get("command", "")
