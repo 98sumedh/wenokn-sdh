@@ -1000,6 +1000,7 @@ if st.session_state.current_view == "sample":
     st.markdown("""
                 * Find all census tracts that the Scioto River flows through.
                 * Find the population of all census tracts within 1000 meters from the Scioto River.
+                * Find all census blocks within 1000 meters from the Fayette Solar power plant.
                 * Retrieve all power plants at risk of flooding in Ohio at 2 PM on July 1, 2025.
                 * Retrieve all buildings at risk of flooding in Ohio from 6 PM 2025-07-18 to 6 AM 2025-07-19.
                 * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
