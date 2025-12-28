@@ -988,7 +988,7 @@ if st.session_state.current_view == "sample":
                 * Find all watersheds within the Kanawha Basin.
                 * Find all sub-watersheds that intersect the Scioto River.
                 """)
-    st.markdown("#### Demographics, Economics, Health, Education via Google Data Commons")
+    st.markdown("#### Demographics, Economics, Health, and Education via Google Data Commons")
     st.markdown("""
                 * Show the population for all counties in the state of Ohio.
                 * Find the population for all states adjacent to the state of Ohio.
@@ -996,8 +996,9 @@ if st.session_state.current_view == "sample":
                 * Find the number of people employed in all counties through which the Scioto River flows.
                 * Show the Social Vulnerability Index for all counties downstream of the coal mine named "River View Mine" along the Ohio River.
                 """)
-    st.markdown("#### Assets at Risk of Flooding")
+    st.markdown("#### Census Tracts, Census Blocks, and Assets at Risk of Flooding")
     st.markdown("""
+                * Find all census tracts that the Scioto River flows through.
                 * Retrieve all power plants at risk of flooding in Ohio at 2 PM on July 1, 2025.
                 * Retrieve all buildings at risk of flooding in Ohio from 6 PM 2025-07-18 to 6 AM 2025-07-19.
                 * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
