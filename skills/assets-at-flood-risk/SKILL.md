@@ -118,9 +118,7 @@ def fetch_flood_impacts(
         rows.append({
             "fips": props["fips"],
             "feature-type": props["feature-type"],
-            "geometry": Point(lon, lat),
-            "latitude": lat,
-            "longitude": lon
+            "geometry": Point(lon, lat)
         })
 
     gdf = gpd.GeoDataFrame(rows, crs="EPSG:4326")
