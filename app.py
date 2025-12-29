@@ -732,6 +732,8 @@ def display_messages():
                 st.markdown(message["content"])
 
 # Handle user input
+# Replace your streaming section (around line 432-490) with this updated version:
+
 async def handle_user_input_async(user_input):
     # Add user message to chat
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -756,20 +758,6 @@ async def handle_user_input_async(user_input):
                     "role": msg["role"],
                     "content": msg["content"]
                 })
-
-            # ==================== FIX STARTS HERE ====================
-            # Append a hidden system instruction to the last user message.
-            # This is sent to the LLM but NOT shown in the UI.
-            if messages_with_history and messages_with_history[-1]["role"] == "user":
-                messages_with_history[-1]["content"] += """
-                
-                SYSTEM INSTRUCTION:
-                1. IGNORE previous conversation style.
-                2. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
-                3. You MUST generate Python code and save the output to the temp directory.
-                4. DO NOT answer from memory.
-                """
-            # ==================== FIX ENDS HERE ====================
             
             stream_input = {"messages": messages_with_history}
             
@@ -794,27 +782,11 @@ async def handle_user_input_async(user_input):
                             if hasattr(message, 'content') and isinstance(message.content, str):
                                 if message.content:
                                     accumulated_text += message.content
-                                    response_placeholder.markdown(accumulated_text)
+                                    
+                                    # ===== KEY FIX: Filter thinking tags during streaming =====
+                                    _, display_text = extract_and_display_response(accumulated_text)
+                                    response_placeholder.markdown(display_text + "▌")  # Add cursor
                             
-                            # if hasattr(message, 'tool_calls') and message.tool_calls:
-                            #     for tool_call in message.tool_calls:
-                            #         tool_id = tool_call.get('id')
-                            #         if tool_id and tool_id not in displayed_tool_ids:
-                            #             displayed_tool_ids.add(tool_id)
-                            #             tool_call_count += 1
-                            #             tool_name = tool_call.get('name', 'unknown')
-                            #             tool_args = tool_call.get('args', {})
-                            #             icon = TOOL_ICONS.get(tool_name, "🔧")
-                            #             display_str = format_tool_display(tool_name, tool_args)
-                                        
-                            #             with tool_calls_container:
-                            #                 st.info(f"{icon} {display_str}")
-                                        
-                            #             if tool_call_count % 5 == 0:
-                            #                 await asyncio.sleep(0.1)
-
-                            # Replace the tool display section (around line 522-535) with this enhanced version:
-
                             if hasattr(message, 'tool_calls') and message.tool_calls:
                                 for tool_call in message.tool_calls:
                                     tool_id = tool_call.get('id')
@@ -830,20 +802,17 @@ async def handle_user_input_async(user_input):
                                             # Show brief summary
                                             st.info(f"{icon} {display_str}")
                                             
-                                            # Add expandable section to show FULL arguments 
+                                            # Add expandable section for full details 
                                             with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
                                                 if tool_name == "shell":
                                                     command = tool_args.get("command", "")
                                                     st.markdown("**Full Command:**")
                                                     st.code(command, language="bash")
                                                     
-                                                    # If it's a Python command, try to pretty-print it
                                                     if command.startswith("python3 -c"):
                                                         st.markdown("**Formatted Python Code:**")
                                                         try:
-                                                            # Extract the Python code from the command
                                                             python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
-                                                            # Unescape and format
                                                             python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
                                                             st.code(python_code, language="python")
                                                         except:
@@ -863,7 +832,6 @@ async def handle_user_input_async(user_input):
                                                     else:
                                                         st.json(tool_args)
                                                 
-                                                # Add download button for shell commands
                                                 if tool_name == "shell" and "command" in tool_args:
                                                     st.download_button(
                                                         label="📥 Download Command",
@@ -876,29 +844,11 @@ async def handle_user_input_async(user_input):
                                         if tool_call_count % 5 == 0:
                                             await asyncio.sleep(0.1)
                         
-                        # elif isinstance(message, ToolMessage):
-                        #     tool_name = getattr(message, "name", "")
-                        #     tool_content = getattr(message, "content", "")
-
-                        #     # ADD THIS DEBUG OUTPUT
-                        #     with tool_calls_container:
-                        #         with st.expander(f"🔍 {tool_name} output", expanded=False):
-                        #             st.code(tool_content[:1000])  # Show first 1000 chars
-                            
-                        #     if isinstance(tool_content, str) and (
-                        #         tool_content.lower().startswith("error") or
-                        #         "failed" in tool_content.lower()
-                        #     ):
-                        #         with tool_calls_container:
-                        #             st.error(f"❌ {tool_name}: {tool_content}")
-
                         elif isinstance(message, ToolMessage):
                             tool_name = getattr(message, "name", "")
                             tool_content = getattr(message, "content", "")
 
-                            # Enhanced debug output with full content and better formatting
                             with tool_calls_container:
-                                # Show a preview with character count
                                 preview_length = 500
                                 is_truncated = len(tool_content) > preview_length
                                 
@@ -907,10 +857,8 @@ async def handle_user_input_async(user_input):
                                     expander_title += " - Click to see full output"
                                 
                                 with st.expander(expander_title, expanded=False):
-                                    # Show full content without truncation
                                     st.code(tool_content, language="python" if "import" in tool_content[:100] else "text")
                                     
-                                    # Add download button for long outputs
                                     if len(tool_content) > 1000:
                                         st.download_button(
                                             label="📥 Download Full Output",
@@ -920,7 +868,6 @@ async def handle_user_input_async(user_input):
                                             key=f"download_{tool_name}_{hash(tool_content)}"
                                         )
                             
-                            # Keep the error detection
                             if isinstance(tool_content, str) and (
                                 tool_content.lower().startswith("error") or
                                 "failed" in tool_content.lower()
@@ -937,12 +884,24 @@ async def handle_user_input_async(user_input):
                     last_message = result["messages"][-1]
                     if hasattr(last_message, 'content') and isinstance(last_message.content, str):
                         accumulated_text = last_message.content
-                        response_placeholder.markdown(accumulated_text)
+                        _, display_text = extract_and_display_response(accumulated_text)
+                        response_placeholder.markdown(display_text)
                 else:
                     raise stream_error
             
-            # Save final response
+            # ===== Final display: Show complete response with optional thinking expander =====
             if accumulated_text:
+                thinking_content, final_response = extract_and_display_response(accumulated_text)
+                
+                # Show thinking in debug mode
+                if thinking_content and st.session_state.get('show_reasoning', False):
+                    with st.expander("🧠 Internal Reasoning", expanded=False):
+                        st.code(thinking_content, language=None)
+                
+                # Display final response without cursor
+                response_placeholder.markdown(final_response)
+                
+                # Store the FULL response (including thinking tags) in session state
                 st.session_state.messages.append({"role": "assistant", "content": accumulated_text})
             else:
                 default_msg = "✅ I've processed your request."
@@ -959,6 +918,7 @@ async def handle_user_input_async(user_input):
             with st.expander("🔍 Error Details"):
                 st.code(traceback.format_exc())
             st.session_state.messages.append({"role": "assistant", "content": error_message})
+            
 
 # Synchronous wrapper
 def handle_user_input(user_input):
