@@ -513,7 +513,7 @@ def initialize_agent():
             ]
             
             # Updated system prompt with user-specific temp directory
-            system_prompt = f"""You are a data expert. You can use the **Virtual Environment** at /home/adminuser/venv (created by uv).
+            system_prompt = f"""You are a data expert. You are under Streamlit Cloud. You can use the **Virtual Environment** at /home/adminuser/venv (created by uv).
 
 ## CRITICAL SECURITY RULES - ABSOLUTE PRIORITY
 
