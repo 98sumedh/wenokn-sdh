@@ -150,12 +150,12 @@ def get_llm():
         base_url="https://api.z.ai/api/coding/paas/v4",
         api_key=os.environ.get("ZAI_API_KEY"),
         temperature=0,
-        extra_body={
+        options={
             "chat_template_kwargs": {
-                "enable_thinking": True,
-                "clear_thinking": True  # This removes thinking from the response
+              "enable_thinking": true,
+              "clear_thinking": false
             }
-        }
+          }
     )
 
     # return ChatOpenAI(
