@@ -25,7 +25,20 @@ Retrieves stream gauge or gages geometries from the GeoConnex knowledge graph on
 
 ## Examples
 
-### Example 1: Find Stream Gauges in a County
+### Example 1: Find Streamflow Gauges on the Scioto River
+
+Cut and paste the following code and don't make any changes. Please don't use your algorithm and code which often has many mistakes.
+
+```python
+import gages_utils import get_gages_on_river
+
+# Find gauges on Scioto River with 15m buffer
+gauges = get_gages_on_river("Scioto River", buffer_size=15)
+```
+
+---
+
+### Example 2: Find Stream Gauges in a County
 
 **User Request:** "Find stream gauge in Ross County" or "Find stream gauge in Ross County, Ohio"
 
@@ -108,7 +121,7 @@ for _, row in gdf.iterrows():
 
 ---
 
-### Example 2: Find Stream Gages in a State
+### Example 3: Find Stream Gages in a State
 
 **User Request:** "Find all stream gages in Ohio" or "Find gages in Ohio state"
 
@@ -191,19 +204,6 @@ for _, row in gdf.head(10).iterrows():
 - Spatial filtering with `geof:sfContains(?stateGeometry, ?damGeometry)`
 - State name only: "Ohio" (no additional qualifier needed)
 - May take up to 1 minute for large states
-
----
-
-### Example 3: Find Streamflow Gauges on the Scioto River
-
-Cut and paste the following code and don't make any changes.
-
-```python
-import gages_utils import get_gages_on_river
-
-# Find gauges on Scioto River with 15m buffer
-gauges = get_gages_on_river("Scioto River", buffer_size=15)
-```
 
 ### Notes:
 
