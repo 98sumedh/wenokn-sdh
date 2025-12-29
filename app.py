@@ -986,8 +986,7 @@ if st.session_state.current_view == "sample":
     * Find all sub-watersheds that intersect the Scioto River.
 
     #### Streamflow Gages
-    * First, find the Scioto River.  
-      Then, find all USGS streamflow stations on the river.  
+    * First, find the Scioto River. Then, find all gages on the river.  
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
