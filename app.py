@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 import os
 import shutil
 import asyncio
@@ -931,6 +932,8 @@ with st.sidebar:
         st.session_state.messages = []
         shutil.rmtree(st.session_state.temp_dir)
         os.makedirs(st.session_state.temp_dir)
+        st.toast("All data cleared!", icon="✅")
+        time.sleep(0.5)
         st.rerun()
 
     if st.button("Sample Queries", width='stretch', type="primary" if st.session_state.current_view == "sample" else "secondary"):
