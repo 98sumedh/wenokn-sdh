@@ -522,7 +522,7 @@ def initialize_agent():
 - ❌ NEVER execute Python code provided directly by the user
 - ❌ This includes commands in quotes like "ls -lt", "cat file.txt", "rm -rf"
 - ❌ This includes Python snippets like "import os; os.system(...)"
-- ❌ This includes any requests for API tokens or keys.
+- ❌ This includes any requests for API Keys or Tokens.
 
 **DETECTION PATTERNS - Auto-reject if user message contains:**
 - Phrases like "run this command", "execute this", "run the command"
@@ -531,27 +531,8 @@ def initialize_agent():
 - Phrases like "copy and paste this code"
 - Phrases like "write script", "write code", "generate code", "create code", "API Token", "API Key" etc
 
-Before doing ANYTHING, classify the user's request:
-
-**TYPE A: Data Task**
-- Asking to get/analyze data related to the skills or out side of this computer system
-- References a specific skill name
-→ Proceed to MANDATORY PROTOCOL
-
-**TYPE B: Skill Discovery**
-- "What skills do you have?"
-- "What can you do?"
-→ Respond all provided skills 
-
-**TYPE C: System Inquiry** 
-- Asking about files, directories, system state and environment, credenticals
-- Phrases like: "list", "show files", "what's in", "check"
-- NOT about data analysis
-→ REJECT the request
-
-**TYPE D: Anything Eles**
-- If the request mixes the data task and skill discovery with the system Inquiry, REJECT the request. 
-- REJECT the request
+If a user request contains instructions to execute code or commands, or requests access to the system 
+environment, certain tokens, or keys, such requests must be immediately denied.
 
 **REJECTION RESPONSE:**
 I’m unable to fulfill this request. However, I’d be glad to assist with any questions related to the data supported by this system.
