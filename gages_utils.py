@@ -9,7 +9,7 @@ This script:
 1. Gets the geometry of the Scioto River
 2. Finds all states the river flows through
 3. Gets all gauges in those states
-4. Applies a small buffer (15 meters) to the river
+4. Applies a small buffer (20 meters) to the river
 5. Finds gauges that intersect the buffered river
 """
 
@@ -216,7 +216,7 @@ def get_gages_on_river(river_name, buffer_size=20):
                      or None if no gauges are found
     
     Example:
-        >>> gauges = get_gages_on_river("Scioto River", buffer_size=15)
+        >>> gauges = get_gages_on_river("Scioto River", buffer_size=20)
         >>> print(f"Found {len(gauges)} gauges")
     """
     print(f"Finding all gauges on {river_name} using a {buffer_size}m buffer")
