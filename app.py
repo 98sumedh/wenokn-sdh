@@ -137,9 +137,10 @@ def get_llm():
         base_url="https://ellm.nrp-nautilus.io/v1",
         api_key=os.environ.get("NRP_API_KEY"),
         temperature=0,
-        model_kwargs={
-            "enable_reasoning": True,  
-            "show_thinking": False,
+        extra_body={
+            "reasoning": "hidden",
+            "thinking": True,
+            "output_style": "final"
         }
     )
 
