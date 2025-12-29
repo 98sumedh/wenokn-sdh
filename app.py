@@ -301,7 +301,7 @@ def display_all_layers_map():
                         border-radius: 3px;
                         box-shadow: 3px;
                         font-size: 11px;
-                        max-width: 300px;
+                        max-width: 400px;
                         max-height: 300px;
                         overflow-y: auto;
                         padding: 8px;
