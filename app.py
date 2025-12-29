@@ -989,7 +989,7 @@ if st.session_state.current_view == "sample":
     * Find all watersheds within the Kanawha Basin.
     * Find all sub-watersheds that intersect the Scioto River.
 
-    #### Streamflow Gages
+    #### Stream Gages
     * Find the Scioto River and all stream gages located along the river. 
     * Find all gages within the Ross county.
     * Find the Muskingum River.  
