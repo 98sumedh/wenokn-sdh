@@ -992,7 +992,7 @@ if st.session_state.current_view == "sample":
     * Find all gages within the Ross county.
     * Find the Muskingum River.  
       Find the dam named “Muskingum River Lock and Dam No. 5 – Swift’s No. 5”.  
-      Find the upstream gage with the shortest distance to this dam on the Muskingum River as GeoJSON.
+      Find the upstream gage with the shortest distance to this dam on the Muskingum River.
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
