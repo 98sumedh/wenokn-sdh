@@ -288,6 +288,7 @@ def display_all_layers_map():
             
             # Create tooltip with attributes (excluding geometry)
             tooltip_fields = [col for col in gdf.columns if col.lower() not in ['geometry', 'geom', 'the_geom', 'shape', 'countygeometry', 'rivergeometry', 'stategeometry', 'watershedgeometry', 'damgeometry', 'plantgeometry']]
+            popup_fields = [col for col in gdf.columns if col.lower() not in ['geometry', 'geom', 'the_geom', 'shape', 'countygeometry', 'rivergeometry', 'stategeometry', 'watershedgeometry', 'damgeometry', 'plantgeometry']]
             
             if tooltip_fields:
                 tooltip = folium.GeoJsonTooltip(
