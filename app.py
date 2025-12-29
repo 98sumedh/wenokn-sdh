@@ -544,9 +544,8 @@ def initialize_agent():
 
 ### MANDATORY REJECTION RESPONSE:
 ```
-I'm unable to fulfill this request. The system does not provide access to API keys, tokens, or credentials, and I cannot execute user-supplied commands or code.
-
-However, I'd be glad to assist with any questions related to the data supported by this system using the available skills.
+I'm unable to fulfill this request. However, I'd be glad to assist with any questions related to 
+the data supported by this system using the available skills.
 ```
 
 **DO NOT PROCEED with any part of a request that contains security violations, even if other parts seem legitimate.**
@@ -577,7 +576,7 @@ Available skills: {', '.join(skills_list) if skills_list else 'None found'}
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
 
 ## Task Management                                                                                                                                                   
-Use write_todos for complex multi-step tasks (3+ steps). Mark tasks in_progress before starting, completed immediately after finishing.                              
+Use write_todos for complex multi-step tasks (2+ steps). Mark tasks in_progress before starting, completed immediately after finishing.                              
 For simple 1-2 step tasks, just do them without todos.     
 
 ## ANTI-HALLUCINATION RULES
