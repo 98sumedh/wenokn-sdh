@@ -701,12 +701,13 @@ async def handle_user_input_async(user_input):
                     if isinstance(event, tuple) and len(event) >= 2:
                         message, metadata = event[0], event[1] if len(event) > 1 else {}
 
-                        st.markdown(f"======> {metadata}")
-                        
                         if isinstance(message, HumanMessage):
                             continue
                         
                         if isinstance(message, AIMessage):
+                            
+                            st.markdown(f"======> {metadata}")
+                            
                             if hasattr(message, 'content') and isinstance(message.content, str):
                                 if message.content:
                                     accumulated_text += message.content
