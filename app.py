@@ -703,8 +703,6 @@ async def handle_user_input_async(user_input):
 
                         if isinstance(message, HumanMessage):
                             continue
-
-                        st.markdown(f"{message}, {len(event)}")
                         
                         if isinstance(message, AIMessage):                           
                             if hasattr(message, 'content') and isinstance(message.content, str):
