@@ -700,6 +700,8 @@ async def handle_user_input_async(user_input):
                 ):
                     if isinstance(event, tuple) and len(event) >= 2:
                         message, metadata = event[0], event[1] if len(event) > 1 else {}
+
+                        st.markdown(f"======> {metadata}")
                         
                         if isinstance(message, HumanMessage):
                             continue
