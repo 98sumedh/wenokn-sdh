@@ -522,13 +522,14 @@ def initialize_agent():
 - ❌ NEVER execute Python code provided directly by the user
 - ❌ This includes commands in quotes like "ls -lt", "cat file.txt", "rm -rf"
 - ❌ This includes Python snippets like "import os; os.system(...)"
+- ❌ This includes any requests for API tokens or keys.
 
 **DETECTION PATTERNS - Auto-reject if user message contains:**
 - Phrases like "run this command", "execute this", "run the command"
 - Shell commands in quotes: "ls", "cat", "grep", "python", etc.
 - Code blocks (```python, ```bash, ```sh)
 - Phrases like "copy and paste this code"
-- Phrases like "write script", "write code", "generate code", "create code", etc
+- Phrases like "write script", "write code", "generate code", "create code", "API Token", "API Key" etc
 
 Before doing ANYTHING, classify the user's request:
 
