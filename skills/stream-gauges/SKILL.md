@@ -36,7 +36,7 @@ from gages_utils import get_gages_on_river
 gauges = get_gages_on_river("Scioto River", buffer_size=50)
 ```
 
-Note that gages_utils.py is already in the sys.path.
+Note that gages_utils.py is already in the sys.path. Always specify the buffer size used to find gauges on the river.
 
 ---
 
