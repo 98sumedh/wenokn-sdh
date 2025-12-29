@@ -194,7 +194,7 @@ for _, row in gdf.head(10).iterrows():
 
 ---
 
-### Example 3: Find on a River
+### Example 3: Find Streamflow Gauges on a River
 
 - Use the rivers skill to find all states that the river flows through.
 - Use the example 2 to find all gages in these states.
