@@ -985,8 +985,9 @@ if st.session_state.current_view == "sample":
     * Find all watersheds within the Kanawha Basin.
     * Find all sub-watersheds that intersect the Scioto River.
 
-    #### USGS Streamflow Stations
-    * First, find the Scioto River. Then, find all USGS streamflow stations on the river. 
+    #### Streamflow Gages
+    * First, find the Scioto River.  
+      Then, find all USGS streamflow stations on the river.  
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
