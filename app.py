@@ -81,6 +81,18 @@ if "current_view" not in st.session_state:
 # st.code(sys.executable)
 # st.write(f"""When you need to run Python via shell, always use {sys.executable} -c "....." """)
 
+def extract_and_display_response(full_response):
+    """
+    Extract thinking section and final response from Claude's output.
+    Returns: (thinking_content, final_response)
+    """
+    thinking_pattern = r'<thinking>(.*?)</thinking>'
+    thinking_match = re.search(thinking_pattern, full_response, re.DOTALL)
+    thinking_content = thinking_match.group(1).strip() if thinking_match else None
+    final_response = re.sub(thinking_pattern, '', full_response, flags=re.DOTALL).strip()
+    return thinking_content, final_response
+    
+
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
     """Scan the skills directory and cache SKILL.md documentation."""
@@ -702,7 +714,21 @@ def format_tool_display(tool_name: str, args: dict) -> str:
 def display_messages():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            # st.markdown(message["content"]
+            if message["role"] == "assistant":
+                # Extract thinking and final response
+                thinking_content, final_response = extract_and_display_response(message["content"])
+                
+                # Optional: Show thinking in debug mode
+                if thinking_content and st.session_state.get('show_reasoning', False):
+                    with st.expander("🧠 Internal Reasoning", expanded=False):
+                        st.code(thinking_content, language=None)
+                
+                # Display final response
+                st.markdown(final_response)
+            else:
+                # User messages display normally
+                st.markdown(message["content"])
 
 # Handle user input
 async def handle_user_input_async(user_input):
