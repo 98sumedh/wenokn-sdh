@@ -703,11 +703,12 @@ async def handle_user_input_async(user_input):
 
                         if isinstance(message, HumanMessage):
                             continue
+
+                        st.markdown(f"{message}, {len(event)}")
                         
                         if isinstance(message, AIMessage):                           
                             if hasattr(message, 'content') and isinstance(message.content, str):
                                 if message.content:
-                                    accumulated_text += "++++++++++"
                                     accumulated_text += message.content
                                     response_placeholder.markdown(accumulated_text)
                             
