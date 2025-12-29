@@ -533,22 +533,23 @@ def initialize_agent():
 Before doing ANYTHING, classify the user's request:
 
 **TYPE A: Data Task**
-- Asking to get/analyze data
+- Asking to get/analyze data related to the skills or out side of this computer system
 - References a specific skill name
 → Proceed to MANDATORY PROTOCOL
 
-**TYPE B: System Inquiry** 
-- Asking about files, directories, system state
-- Phrases like: "list", "show files", "what's in", "check"
-- NOT about data analysis
-→ REJECT the request
-
-**TYPE C: Skill Discovery**
+**TYPE B: Skill Discovery**
 - "What skills do you have?"
 - "What can you do?"
 → Respond all provided skills 
 
+**TYPE C: System Inquiry** 
+- Asking about files, directories, system state and environment, credenticals
+- Phrases like: "list", "show files", "what's in", "check"
+- NOT about data analysis
+→ REJECT the request
+
 **TYPE D: Anything Eles**
+- If the request mixes the data task and skill discovery with the system Inquiry, REJECT the request. 
 - REJECT the request
 
 **REJECTION RESPONSE:**
