@@ -46,7 +46,7 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT DISTINCT ?gageName ?gageGeometry
+SELECT DISTINCT ?gageId ?gageName ?gageGeometry
 WHERE {{
     VALUES ?inputCounty { "Ross County, Ohio" }
     
@@ -65,6 +65,7 @@ WHERE {{
            schema:description ?gageDescription;
            geo:hasGeometry/geo:asWKT ?gageGeometry.  
     FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
+    BIND(STRAFTER(STR(?gage), "https://geoconnex.us/ref/gages/") AS ?gageId)
     
     # Spatial containment - LAST, on reduced dataset
     FILTER(geof:sfContains(?countyGeometry, ?gageGeometry))
@@ -128,7 +129,7 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT DISTINCT ?gageName ?gageGeometry
+SELECT DISTINCT ?gageId ?gageName ?gageGeometry
 WHERE {{
     # User-provided states - FILTER EARLY
     VALUES ?inputState { "Ohio" }
@@ -148,6 +149,7 @@ WHERE {{
            schema:description ?gageDescription;
            geo:hasGeometry/geo:asWKT ?gageGeometry.  
     FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
+    BIND(STRAFTER(STR(?gage), "https://geoconnex.us/ref/gages/") AS ?gageId)
 
     # Spatial containment - LAST, on reduced dataset
     FILTER(geof:sfContains(?stateGeometry, ?gageGeometry))
