@@ -138,7 +138,7 @@ def get_llm():
         api_key=os.environ.get("NRP_API_KEY"),
         temperature=0,
         model_kwargs={
-            "enable_reasoning": True,
+            "enable_reasoning": True,  
             "show_thinking": False,
         }
     )
