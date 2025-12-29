@@ -198,5 +198,5 @@ for _, row in gdf.head(10).iterrows():
 
 - Use the rivers skill to find all states that the river flows through.
 - Use the example 2 to find all gages in these states.
-- Add a small buffer (100 meters) to the river.
+- Add a very small buffer (20 meters) to the river.
 - Find all gages that intersect the buffer.
