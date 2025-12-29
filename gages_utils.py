@@ -1,4 +1,8 @@
 """
+Pre-validated functions for querying streamflow gages.
+
+DO NOT MODIFY THIS FILE - Functions are validated against specific SPARQL endpoints.
+
 Find all stream gauges on the Scioto River using a small buffer.
 
 This script:
