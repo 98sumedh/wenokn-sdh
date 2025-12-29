@@ -9,7 +9,7 @@ This script:
 1. Gets the geometry of the Scioto River
 2. Finds all states the river flows through
 3. Gets all gauges in those states
-4. Applies a small buffer (20 meters) to the river
+4. Applies a small buffer (50 meters) to the river
 5. Finds gauges that intersect the buffered river
 """
 
@@ -119,7 +119,7 @@ WHERE {{
 
   FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
 }}
-LIMIT 200
+LIMIT 60
 '''
     
     df = execute_sparql_query(query)
@@ -182,7 +182,7 @@ WHERE {{
     
     return gdf
 
-def find_gauges_on_river(river_gdf, gauges_gdf, buffer_meters=20):
+def find_gauges_on_river(river_gdf, gauges_gdf, buffer_meters=50):
     """Find gauges that intersect with the buffered river."""
     print(f"\n=== Step 4: Finding gauges within {buffer_meters}m of river ===")
     
@@ -203,20 +203,20 @@ def find_gauges_on_river(river_gdf, gauges_gdf, buffer_meters=20):
     
     return gauges_on_river
 
-def get_gages_on_river(river_name, buffer_size=20):
+def get_gages_on_river(river_name, buffer_size=50):
     """
     Find all stream gauges on a specific river using a buffer.
     
     Args:
         river_name (str): Name of the river (e.g., "Scioto River", "Ohio River")
-        buffer_size (int): Buffer distance in meters (default: 20)
+        buffer_size (int): Buffer distance in meters (default: 50)
     
     Returns:
         GeoDataFrame: GeoDataFrame containing all gauges within the buffer of the river,
                      or None if no gauges are found
     
     Example:
-        >>> gauges = get_gages_on_river("Scioto River", buffer_size=20)
+        >>> gauges = get_gages_on_river("Scioto River", buffer_size=50)
         >>> print(f"Found {len(gauges)} gauges")
     """
     print(f"Finding all gauges on {river_name} using a {buffer_size}m buffer")
