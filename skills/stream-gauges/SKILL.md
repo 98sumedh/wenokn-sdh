@@ -33,7 +33,7 @@ Cut and paste the following code and don't make any changes. Keep the code as it
 from gages_utils import get_gages_on_river
 
 # Find gauges on Scioto River with 20m buffer
-gauges = get_gages_on_river("Scioto River", buffer_size=20)
+gauges = get_gages_on_river("Scioto River", buffer_size=50)
 ```
 
 Note that gages_utils.py is already in the sys.path.
