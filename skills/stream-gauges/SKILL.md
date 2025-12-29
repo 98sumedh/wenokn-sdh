@@ -200,3 +200,9 @@ for _, row in gdf.head(10).iterrows():
 - Use the example 2 to find all gages in these states.
 - Add a very small buffer (20 meters) to the river.
 - Find all gages that intersect the buffer.
+
+### Notes:
+
+- Qlever (used by FRINK) has very limited support for geospatial functions.
+- It doesn't support geof:distance(?gageGeometry, ?riverGeometry, unit:KiloM).
+- Use the spatial functions in the examples only. Other functions do not exist in Qlevel.
