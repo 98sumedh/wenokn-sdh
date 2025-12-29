@@ -707,7 +707,7 @@ async def handle_user_input_async(user_input):
                         if isinstance(message, AIMessage):                           
                             if hasattr(message, 'content') and isinstance(message.content, str):
                                 if message.content:
-                                    accumulated_text += "\n===============\n"
+                                    accumulated_text += "\n ~~~~~~~~~~~~~~~~~ \n"
                                     accumulated_text += message.content
                                     response_placeholder.markdown(accumulated_text)
                             
