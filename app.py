@@ -136,7 +136,13 @@ def get_llm():
         model="glm-4.7",
         base_url="https://ellm.nrp-nautilus.io/v1",
         api_key=os.environ.get("NRP_API_KEY"),
-        temperature=0
+        temperature=0,
+        extra_body={
+            "chat_template_kwargs": {
+                "enable_thinking": True,
+                "clear_thinking": True  # This removes thinking from the response
+            }
+        }
     )
 
     # return ChatOpenAI(
