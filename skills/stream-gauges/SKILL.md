@@ -25,9 +25,9 @@ Retrieves stream gauge or gages geometries from the GeoConnex knowledge graph on
 
 ## Examples
 
-### Example 1: Find Streamflow Gauges on the Scioto River
+### Example 1: Find All Gauges on the Scioto River
 
-Cut and paste the following code and don't make any changes. Please don't use your algorithm and code which often has many mistakes.
+Cut and paste the following code and don't make any changes. Keep the code as it is. Don't make any changes.
 
 ```python
 import gages_utils import get_gages_on_river
@@ -35,6 +35,8 @@ import gages_utils import get_gages_on_river
 # Find gauges on Scioto River with 15m buffer
 gauges = get_gages_on_river("Scioto River", buffer_size=15)
 ```
+
+Note that always use 20m buffer around the river to find the gages on the river. 
 
 ---
 
@@ -204,6 +206,11 @@ for _, row in gdf.head(10).iterrows():
 - Spatial filtering with `geof:sfContains(?stateGeometry, ?damGeometry)`
 - State name only: "Ohio" (no additional qualifier needed)
 - May take up to 1 minute for large states
+
+### Example 4: Find The Closest Gage on a River to an Object
+
+- First, find all gages on the river using the Example 1
+- Then, check the geges to find the closet one.
 
 ### Notes:
 
