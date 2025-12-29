@@ -152,8 +152,8 @@ def get_llm():
         temperature=0,
         options={
             "chat_template_kwargs": {
-              "enable_thinking": true,
-              "clear_thinking": false
+              "enable_thinking": True,
+              "clear_thinking": False
             }
           }
     )
