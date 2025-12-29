@@ -986,7 +986,8 @@ if st.session_state.current_view == "sample":
     * Find all sub-watersheds that intersect the Scioto River.
 
     #### Streamflow Gages
-    * First, find the Scioto River. Then, find all gages on the river.    
+    * Find the Scioto River and all stream gages located along the river. 
+    * Find all gages within the Ross county.
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
