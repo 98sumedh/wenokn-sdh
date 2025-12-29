@@ -36,7 +36,7 @@ from gages_utils import get_gages_on_river
 gauges = get_gages_on_river("Scioto River", buffer_size=15)
 ```
 
-Note that gages_utils.py is already in the sys.path and it uses 20m buffer around the river to find the gages on the river. 
+Note that gages_utils.py is already in the sys.path.
 
 ---
 
