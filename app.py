@@ -309,23 +309,51 @@ def display_all_layers_map():
                         padding: 8px;
                     """,
                 )
-                popup = folium.GeoJsonPopup(
-                    fields=popup_fields,
-                    aliases=[f"<b>{field}</b>" for field in popup_fields],
-                    localize=True,
-                    labels=True,
-                    style="""
-                        background-color: white;
-                        border: 2px solid black;
-                        border-radius: 5px;
-                        box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
-                        font-size: 12px;
-                        max-width: 400px;
-                        max-height: 400px;
-                        overflow-y: auto;
-                        padding: 10px;
-                    """,
-                    max_width=400,
+                
+                # Create HTML table for better formatting
+                popup_html = """
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            min-width: 250px; max-width: 400px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                padding: 12px 15px;
+                                margin: -10px -10px 10px -10px;
+                                border-radius: 5px 5px 0 0;
+                                font-weight: 600;
+                                font-size: 14px;
+                                letter-spacing: 0.5px;">
+                        FEATURE INFORMATION
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                """
+                
+                for field in popup_fields:
+                    popup_html += f"""
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 8px 4px; 
+                                       font-weight: 600; 
+                                       color: #374151;
+                                       width: 40%;
+                                       vertical-align: top;">
+                                {field}
+                            </td>
+                            <td style="padding: 8px 4px; 
+                                       color: #1f2937;
+                                       word-wrap: break-word;">
+                                {{{field}}}
+                            </td>
+                        </tr>
+                    """
+                
+                popup_html += """
+                    </table>
+                </div>
+                """
+                
+                popup = folium.Popup(
+                    popup_html,
+                    max_width=450,
+                    min_width=250
                 )
             else:
                 tooltip = None
