@@ -1,5 +1,5 @@
 ---
-name: stream-gauge
+name: stream-gauges
 description: Query stream gauge or gages geometries in the USA from the GeoConnex knowledge graph. Returns stream gauge locations and metadata as a GeoDataFrame.
 ---
 
