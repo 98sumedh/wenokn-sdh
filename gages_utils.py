@@ -182,7 +182,7 @@ WHERE {{
     
     return gdf
 
-def find_gauges_on_river(river_gdf, gauges_gdf, buffer_meters=15):
+def find_gauges_on_river(river_gdf, gauges_gdf, buffer_meters=20):
     """Find gauges that intersect with the buffered river."""
     print(f"\n=== Step 4: Finding gauges within {buffer_meters}m of river ===")
     
