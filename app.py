@@ -988,6 +988,7 @@ if st.session_state.current_view == "sample":
     #### Streamflow Gages
     * Find the Scioto River and all stream gages located along the river. 
     * Find all gages within the Ross county.
+    * Find the stream gage closest to the dam named “Muskingum River Lock and Dam No. 5 – Swift’s No. 5” on the Muskingum River.
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
