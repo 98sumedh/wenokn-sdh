@@ -33,8 +33,8 @@ Cut and paste the following code and don't make any changes. Keep the code as it
 ```python
 from dams_utils import get_dams_on_river
 
-# Find dams on Scioto River with 100m buffer
-dams = get_dams_on_river("Scioto River", buffer_size=100)
+# Find dams on Scioto River with 200m buffer
+dams = get_dams_on_river("Scioto River", buffer_size=200)
 ```
 
 Note that dams_utils.py is already in the sys.path and you can directly use it. 
