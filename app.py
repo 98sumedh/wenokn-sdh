@@ -295,6 +295,7 @@ def display_all_layers_map():
                     fields=popup_fields,
                     style="""
                           font-size: 11px;
+                          max-width: 300px;
                           max-height: 400px;
                           overflow-y: auto;
                           """,
