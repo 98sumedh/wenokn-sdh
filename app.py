@@ -287,7 +287,7 @@ def display_all_layers_map():
                 }
             
             # Create popup with attributes (excluding geometry)
-            popup_fields = [col for col in gdf.columns if col.lower() not in ['geometry', 'geom', 'the_geom', 'shape', 'countygeometry', 'rivergeometry', 'stategeometry', 'watershedgeometry', 'damgeometry', 'plantgeometry']]
+            popup_fields = [col for col in gdf.columns if "geometry" not in col.lower() and col.lower() not in ['geom', 'the_geom', 'shape']]
             
             if popup_fields:
                 # Create HTML popup with better formatting
