@@ -129,7 +129,7 @@ PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?damName ?damGeometry ?countyName
+SELECT ?damName ?damGeometry ?damDescription ?countyName
 WHERE {
     # Specify the county
     VALUES ?inputCounty { "Ross County, Ohio" }
@@ -207,7 +207,7 @@ PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?damName ?damGeometry ?stateName
+SELECT ?damName ?damGeometry ?damDescription ?stateName
 WHERE {
     # Specify the state
     VALUES ?inputState { "Ohio" }
