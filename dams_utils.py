@@ -142,7 +142,7 @@ PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?damName ?damGeometry ?stateName
+SELECT ?damName ?damGeometry ?damDescription ?stateName
 WHERE {{
     VALUES ?inputState {{ {state_values} }}
     
@@ -154,6 +154,7 @@ WHERE {{
     
     ?dam schema:provider "https://nid.usace.army.mil"^^<https://schema.org/url>;
          schema:name ?damName;
+         schema:description ?damDescription;
          geo:hasGeometry/geo:asWKT ?damGeometry.
     FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
     
