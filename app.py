@@ -286,29 +286,10 @@ def display_all_layers_map():
                     'fillOpacity': 0.7,
                 }
             
-            # Create tooltip with attributes (excluding geometry)
-            tooltip_fields = [col for col in gdf.columns if col.lower() not in ['geometry', 'geom', 'the_geom', 'shape', 'countygeometry', 'rivergeometry', 'stategeometry', 'watershedgeometry', 'damgeometry', 'plantgeometry']]
+            # Create popup with attributes (excluding geometry)
             popup_fields = [col for col in gdf.columns if col.lower() not in ['geometry', 'geom', 'the_geom', 'shape', 'countygeometry', 'rivergeometry', 'stategeometry', 'watershedgeometry', 'damgeometry', 'plantgeometry']]
             
-            if tooltip_fields:
-                tooltip = folium.GeoJsonTooltip(
-                    fields=tooltip_fields,
-                    aliases=[f"{field}:" for field in tooltip_fields],
-                    localize=True,
-                    sticky=False,
-                    labels=True,
-                    style="""
-                        background-color: white;
-                        border: 1px solid black;
-                        border-radius: 3px;
-                        box-shadow: 3px;
-                        font-size: 11px;
-                        max-width: 400px;
-                        max-height: 300px;
-                        overflow-y: auto;
-                        padding: 8px;
-                    """,
-                )
+            if popup_fields:
                 # Create HTML popup with better formatting
                 popup = folium.GeoJsonPopup(
                     fields=popup_fields,
@@ -327,10 +308,9 @@ def display_all_layers_map():
                         padding: 10px;
                     """,
                     max_width=400,
-                )
-                           
+                )         
             else:
-                tooltip = None
+                popup = None
             
             # Define the marker style for points
             point_marker = folium.CircleMarker(
@@ -350,7 +330,6 @@ def display_all_layers_map():
                 marker=point_marker,
                 style_function=style_function,
                 highlight_function=highlight_function,
-                # tooltip=tooltip,
                 popup=popup, 
                 name=name.replace('_', ' ').title()
             ).add_to(feature_group)
