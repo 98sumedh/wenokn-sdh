@@ -11,7 +11,7 @@ Fetches geometries and attributes of assets at flood risk from:
 https://staging.api-flooding.data2action.tech/v0/impacts/structures
 ```
 
-**Returns:** GeoDataFrame with `fips`, `feature-type`, `latitude`, `longitude`, `geometry`, and `date` (YYYYMMDDHH format).
+**Returns:** GeoDataFrame with `fips`, `feature-type`, `latitude`, `longitude`, `geometry`, and `date` (YYYYMMDDHH format in UTC).
 
 **Important:** The API returns hourly risk forecasts. The same asset (building, power plant, etc.) may appear at multiple forecast hours if it remains at risk during those time periods. Each row represents an asset-at-risk at a specific forecast hour.
 
@@ -25,7 +25,7 @@ https://staging.api-flooding.data2action.tech/v0/impacts/structures
 ### Function Setup
 ```python
 def fetch_flood_impacts(
-    date: str, 
+    date: str,  # in UTC
     fips: str = "county",  # "state" | "county" | "tract" | "block-group"
     feature_type: str = "power",  # "building" | "ust" | "power"
     scope: Optional[Union[str, List[str]]] = None,  # State FIPS codes, default ["39", "21"] for Ohio and Kentucky
