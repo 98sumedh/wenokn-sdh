@@ -38,6 +38,7 @@ dams = get_dams_on_river("Scioto River", buffer_size=200)
 ```
 
 Note that dams_utils.py is already in the sys.path and you can directly use it. 
+When reporting the dams on a river, always mention the buffer size used.
 
 ---
 
