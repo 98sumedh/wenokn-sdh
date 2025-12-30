@@ -295,7 +295,7 @@ def display_all_layers_map():
                     fields=popup_fields,
                     style="""
                           font-size: 12px;
-                          """
+                          """,
                     # aliases=[f"<b>{field}</b>" for field in popup_fields],
                     # localize=True,
                     # labels=True,
