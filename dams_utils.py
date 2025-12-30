@@ -74,7 +74,7 @@ WHERE {{
          geo:hasGeometry/geo:asWKT ?riverGeometry .
   FILTER(LCASE(?riverName) = LCASE("{river_name}")) .
 }}
-ORDER BY DESC(STRLEN(?riverGeometry))
+ORDER BY DESC(STRLEN(STR(?riverGeometry)))
 LIMIT 1
 '''
     
@@ -115,7 +115,7 @@ WHERE {{
           rdfs:label ?stateName ;
           geo:hasGeometry/geo:asWKT ?stateGeometry .
   FILTER(STRSTARTS(STR(?state), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-  FILTER(strlen(?stateName) > 2)
+  FILTER(STRLEN(?stateName) > 2)
 
   FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
 }}
@@ -135,7 +135,7 @@ def get_dams_in_states(states):
     # Create VALUES clause for states
     state_values = ' '.join([f'"{state}"' for state in states])
     
-    query = f'''
+    query = f"""
 PREFIX schema: <https://schema.org/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
@@ -143,27 +143,23 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?damName ?damGeometry ?stateName
-WHERE {
-    # User-provided states - FILTER EARLY
+WHERE {{
     VALUES ?inputState {{ {state_values} }}
     
-    # Get state geometry
     ?state rdf:type <http://stko-kwg.geog.ucsb.edu/lod/ontology/AdministrativeRegion_1>;
            rdfs:label ?stateName;
            geo:hasGeometry/geo:asWKT ?stateGeometry.
     FILTER(STRSTARTS(STR(?state), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
     FILTER(STRSTARTS(LCASE(STR(?stateName)), LCASE(?inputState)))
     
-    # Get dams
     ?dam schema:provider "https://nid.usace.army.mil"^^<https://schema.org/url>;
          schema:name ?damName;
          geo:hasGeometry/geo:asWKT ?damGeometry.
     FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
     
-    # Spatial filter - dam must be contained in state
     FILTER(geof:sfContains(?stateGeometry, ?damGeometry))
-}
-'''
+}}
+"""
     
     df = execute_sparql_query(query)
     
