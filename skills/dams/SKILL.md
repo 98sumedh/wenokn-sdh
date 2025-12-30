@@ -54,7 +54,6 @@ WHERE {
     # Filter by name (case-insensitive prefix match)
     FILTER(STRSTARTS(LCASE(STR(?damName)), LCASE("Deer Creek Dam")))
 }
-LIMIT 10
 '''
 
 # Execute query
