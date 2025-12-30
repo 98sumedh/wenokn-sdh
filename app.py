@@ -296,27 +296,17 @@ def display_all_layers_map():
                     aliases=[f"<b>{field}</b>" for field in popup_fields],
                     localize=True,
                     labels=True,
-                    style="""
-                        # background-color: white;
-                        # border: 2px solid black;
-                        # border-radius: 5px;
-                        # box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
-                        # font-size: 12px;
-                        # max-width: 400px;
-                        # max-height: 400px;
-                        # overflow-y: auto;
-                        # padding: 10px;
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        font-size: 13px;
-                        color: #333;
-                        background-color: white;
-                        padding: 12px;
-                        border-radius: 8px;
-                        border: none;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-                        line-height: 1.6;
-                        min-width: 150px;
-                    """,
+                    # style="""
+                    #     background-color: white;
+                    #     border: 2px solid black;
+                    #     border-radius: 5px;
+                    #     box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+                    #     font-size: 12px;
+                    #     max-width: 400px;
+                    #     max-height: 400px;
+                    #     overflow-y: auto;
+                    #     padding: 10px;
+                    # """,
                     max_width=400,
                 )         
             else:
