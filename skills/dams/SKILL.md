@@ -268,6 +268,19 @@ for _, row in gdf.head(10).iterrows():
 
 ---
 
+### Example 5: Find Dam by Id
+
+**User Request:** "Find dam with the id OK30280"
+
+```
+from pygeohydro import NID
+
+nid = NID()
+query = [{"federalId": ["OK30280"]}]
+dam_results = nid.get_byfilter(query)
+dam = dam_results[0]
+```
+
 ## Query Pattern Summary
 
 | Query Type | Administrative Level | Ontology Class | Spatial Filter |
