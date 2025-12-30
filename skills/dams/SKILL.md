@@ -281,6 +281,8 @@ dam_results = nid.get_byfilter(query)
 dam = dam_results[0]
 ```
 
+Note the dam is a GeoDataframe. It can be returned directly.
+
 ## Query Pattern Summary
 
 | Query Type | Administrative Level | Ontology Class | Spatial Filter |
