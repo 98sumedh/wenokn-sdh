@@ -21,12 +21,27 @@ Retrieves dam geometries from the GeoConnex knowledge graph on FRINK using SPARQ
 - **Always use spatial filtering in SPARQL** using `geof:sfContains()` for county/state queries - this is much faster than filtering in Python
 - **County names must include state** - use "Ross County, Ohio" not just "Ross County"
 - **Dams are point geometries** - they may not intersect river lines exactly due to GIS precision
-- **Large queries take time** - state-level queries may take up to 1 minute
+- **Large queries take time** - state-level queries may take up to one minute
 - **Data source** - only National Inventory of Dams (NID) data is available
 
 ## Examples
 
-### Example 1: Find Dams in a County
+### Example 1: Find All Dams on the Scioto River
+
+Cut and paste the following code and don't make any changes. Keep the code as it is. Don't make any changes.
+
+```python
+from dams_utils import get_dams_on_river
+
+# Find dams on Scioto River with 50m buffer
+dams = get_dams_on_river("Scioto River", buffer_size=50)
+```
+
+Note that dams_utils.py is already in the sys.path. Always specify the buffer size used to find dams on the river.
+
+---
+
+### Example 2: Find Dams in a County
 
 **User Request:** "Find all dams in Ross County" or "Find dams in Ross County, Ohio"
 
@@ -104,7 +119,7 @@ for _, row in gdf.iterrows():
 
 ---
 
-### Example 2: Find Dams in a State
+### Example 3: Find Dams in a State
 
 **User Request:** "Find all dams in Ohio" or "Find dams in Ohio state"
 
@@ -184,7 +199,7 @@ for _, row in gdf.head(10).iterrows():
 
 ---
 
-### Example 3: Find Dam by Name
+### Example 4: Find Dam by Name
 
 **User Request:** "Find Deer Creek Dam" or "Find dam named Deer Creek"
 
@@ -278,3 +293,9 @@ VALUES ?inputState {
     "Kentucky"
 }
 ```
+
+## Notes:
+
+- Qlever (used by FRINK) has very limited support for geospatial functions.
+- It doesn't support geof:distance(?gageGeometry, ?riverGeometry, unit:KiloM).
+- Use the spatial functions in the examples only. Other functions do not exist in Qlevel.
