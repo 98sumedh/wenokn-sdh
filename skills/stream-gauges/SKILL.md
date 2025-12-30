@@ -80,7 +80,7 @@ WHERE {{
            schema:description ?gageDescription;
            geo:hasGeometry/geo:asWKT ?gageGeometry.  
     FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
-    BIND(STRAFTER(STR(?gage), "https://geoconnex.us/ref/gages/") AS ?gageId)
+    BIND(STR(?gage) AS ?gageId)
     
     # Spatial containment - LAST, on reduced dataset
     FILTER(geof:sfContains(?countyGeometry, ?gageGeometry))
@@ -164,7 +164,7 @@ WHERE {{
            schema:description ?gageDescription;
            geo:hasGeometry/geo:asWKT ?gageGeometry.  
     FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
-    BIND(STRAFTER(STR(?gage), "https://geoconnex.us/ref/gages/") AS ?gageId)
+    BIND(STR(?gage) AS ?gageId)
 
     # Spatial containment - LAST, on reduced dataset
     FILTER(geof:sfContains(?stateGeometry, ?gageGeometry))
