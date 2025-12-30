@@ -294,7 +294,9 @@ def display_all_layers_map():
                 popup = folium.GeoJsonPopup(
                     fields=popup_fields,
                     style="""
-                          font-size: 12px;
+                          font-size: 11px;
+                          max-height: 400px;
+                          overflow-y: auto;
                           """,
                     # aliases=[f"<b>{field}</b>" for field in popup_fields],
                     # localize=True,
