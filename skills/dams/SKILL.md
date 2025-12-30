@@ -144,6 +144,7 @@ WHERE {
     # Get dams
     ?dam schema:provider "https://nid.usace.army.mil"^^<https://schema.org/url>;
          schema:name ?damName;
+         schema:description ?damDescription;
          geo:hasGeometry/geo:asWKT ?damGeometry.
     FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
     
@@ -222,6 +223,7 @@ WHERE {
     # Get dams
     ?dam schema:provider "https://nid.usace.army.mil"^^<https://schema.org/url>;
          schema:name ?damName;
+         schema:description ?damDescription;
          geo:hasGeometry/geo:asWKT ?damGeometry.
     FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
     
