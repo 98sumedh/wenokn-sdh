@@ -61,7 +61,7 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT DISTINCT ?gageId ?gageName ?gageGeometry
+SELECT DISTINCT ?gageId ?gageName ?gageDescription ?gageGeometry
 WHERE {{
     VALUES ?inputCounty { "Ross County, Ohio" }
     
@@ -144,7 +144,7 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT DISTINCT ?gageId ?gageName ?gageGeometry
+SELECT DISTINCT ?gageId ?gageName ?gageDescription ?gageGeometry
 WHERE {{
     # User-provided states - FILTER EARLY
     VALUES ?inputState { "Ohio" }
