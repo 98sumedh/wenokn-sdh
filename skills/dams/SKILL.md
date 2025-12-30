@@ -52,7 +52,7 @@ WHERE {
     FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
     
     # Filter by name (case-insensitive prefix match)
-    FILTER(STRSTARTS(LCASE(STR(?damName)), LCASE("Deer Creek")))
+    FILTER(STRSTARTS(LCASE(STR(?damName)), LCASE("Deer Creek Dam")))
 }
 LIMIT 10
 '''
