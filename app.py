@@ -1026,7 +1026,10 @@ if st.session_state.current_view == "sample":
     * How many dams are in each county of Kentucky?
     * How many coal mines are in each basin in Ohio?
     * Find the sum of the total megawatt of solar power plants in each state in USA.
-    * List the five states in the United States with the largest number of coal mines.            
+    * List the five states in the United States with the largest number of coal mines.    
+
+    #### Miscellaneous
+    * Find NPDES wastewater facilities within 100 meters from San Diego River
     """)
 
 elif st.session_state.current_view == "map":
