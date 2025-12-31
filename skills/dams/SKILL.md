@@ -311,8 +311,9 @@ VALUES ?inputState {
 }
 ```
 
-## Notes:
+## Critical Notes:
 
 - Qlever (used by FRINK) has very limited support for geospatial functions.
 - It doesn't support geof:distance(?gageGeometry, ?riverGeometry, unit:KiloM).
-- Use the spatial functions in the examples only. Other functions do not exist in Qlevel.
+- It doesn't support converting a string into a WKTLiteral.
+- Use the spatial functions given in the examples only. Other functions do not exist in Qlevel. 
