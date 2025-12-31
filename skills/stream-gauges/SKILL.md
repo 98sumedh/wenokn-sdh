@@ -1,219 +1,478 @@
 ---
 name: stream-gauges
-description: Query stream gauge or gages geometries in the USA from the GeoConnex knowledge graph. Returns stream gauge locations and metadata as a GeoDataFrame.
+description: Query active USGS stream gauges using the USGS Water Services API. Returns stream gauge locations and metadata as a GeoDataFrame with current status information.
 ---
 
-# Stream Gauges Skill
+# USGS Stream Gauges Skill
 
 ## Description
 
-Retrieves stream gauge or gages geometries from the GeoConnex knowledge graph on FRINK using SPARQL queries. Returns results as a GeoPandas GeoDataFrame.
+Retrieves active USGS stream gauge data using the official USGS Water Services API. This method provides access to all ~8,500 active USGS streamgages (not just forecast locations), includes current streamflow data, and returns results as a GeoPandas GeoDataFrame.
 
 ## When to Use
 
-- Find stream gauge or gages by name
-- Find stream gauge or gages within counties or states
-- Find stream gauge or gages near rivers or other geographic features
-- Spatial analysis involving stream gauge or gages
+- Find active stream gauges by state, county, or bounding box
+- Get gauges with current streamflow measurements
+- Find gauges on specific rivers or watersheds (HUC codes)
+- Spatial analysis involving stream gauges with live data
+- Filter for only active, operational gauges
 
 ## Important Notes
 
-- **Always use spatial filtering in SPARQL** using `geof:sfContains()` for county/state queries - this is much faster than filtering in Python
-- **County names must include state** - use "Ross County, Ohio" not just "Ross County" unless the county name is unqiue
-- **stream gauge or gages are point geometries** - they may not intersect river lines exactly due to GIS precision
-- **Large queries take time** - state-level queries may take up to 1 minute
+- Use `siteStatus=active` to get only operational gauges
+- Use `siteType=ST` to get stream gauges only (excludes groundwater, lakes, etc.)
+- Use `parameterCd=00060` to ensure gauges measure streamflow/discharge
+- County codes require state FIPS + county FIPS (e.g., "39049" for Franklin County, OH)
+- HUC codes identify watersheds (8-digit HUC recommended for river systems)
 
 ## Examples
 
-### Example 1: Find All Gauges on the Scioto River
+### Example 1: Find Active Stream Gauges in a State
 
-Cut and paste the following code and don't make any changes. Keep the code as it is. Don't make any changes.
-
-```python
-from gages_utils import get_gages_on_river
-
-# Find gauges on Scioto River with 50m buffer
-gauges = get_gages_on_river("Scioto River", buffer_size=50)
-```
-
-Note that gages_utils.py is already in the sys.path. Always specify the buffer size used to find gauges on the river.
-
----
-
-### Example 2: Find Stream Gauges in a County
-
-**User Request:** "Find stream gauge in Ross County" or "Find stream gauge in Ross County, Ohio"
+**User Request:** "Find active stream gauges in Ohio" or "Get all Ohio streamgages"
 
 **Complete Code:**
 
 ```python
-import sparql_dataframe
+import requests
 import geopandas as gpd
-from shapely import wkt
+from shapely.geometry import Point
 
-# SPARQL query with spatial filtering
-query = '''
-PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
-PREFIX schema: <https://schema.org/>
-PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-SELECT DISTINCT ?gageId ?gageName ?gageDescription ?gageGeometry
-WHERE {{
-    VALUES ?inputCounty { "Ross County, Ohio" }
+def get_usgs_gauges_by_state(state_code):
+    """
+    Get active USGS stream gauges in a state.
     
-    # Counties (AdministrativeRegion_2) - FILTERED BY NAME FIRST
-    ?county rdf:type <http://stko-kwg.geog.ucsb.edu/lod/ontology/AdministrativeRegion_2> ;
-            rdfs:label ?countyName ;
-            geo:hasGeometry/geo:asWKT ?countyGeometry .
-    FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-    FILTER(STRSTARTS(LCASE(STR(?countyName)), LCASE(?inputCounty)))
+    Args:
+        state_code: Two-letter state code (e.g., "OH", "KY", "PA")
     
-    # Gages - ONLY AFTER COUNTIES ARE FILTERED
-    ?gage rdf:type hyf:HY_HydroLocation;
-           rdf:type hyf:HY_HydrometricFeature;
-           schema:provider <https://waterdata.usgs.gov>;
-           schema:name ?gageName;
-           schema:description ?gageDescription;
-           geo:hasGeometry/geo:asWKT ?gageGeometry.  
-    FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
-    BIND(STR(?gage) AS ?gageId)
+    Returns:
+        GeoDataFrame with active stream gauges
+    """
+    url = "https://waterservices.usgs.gov/nwis/iv/"
     
-    # Spatial containment - LAST, on reduced dataset
-    FILTER(geof:sfContains(?countyGeometry, ?gageGeometry))
-}}
-'''
+    params = {
+        "stateCd": state_code,
+        "parameterCd": "00060",  # Discharge/streamflow
+        "siteType": "ST",  # Stream only
+        "siteStatus": "active",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return gpd.GeoDataFrame()
+    
+    # Parse timeSeries data
+    gauges = []
+    for ts in data.get('value', {}).get('timeSeries', []):
+        site = ts['sourceInfo']
+        site_code = site['siteCode'][0]['value']
+        
+        # Get current value if available
+        current_value = None
+        current_time = None
+        if 'values' in ts and len(ts['values']) > 0:
+            values_list = ts['values'][0].get('value', [])
+            if len(values_list) > 0:
+                latest = values_list[-1]
+                current_value = latest.get('value')
+                current_time = latest.get('dateTime')
+        
+        gauges.append({
+            'usgs_site_no': site_code,
+            'site_name': site['siteName'],
+            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+            'county': site['siteProperty'][0]['value'] if 'siteProperty' in site and len(site['siteProperty']) > 0 else None,
+            'current_flow_cfs': float(current_value) if current_value else None,
+            'current_time': current_time,
+            'geometry': Point(
+                float(site['geoLocation']['geogLocation']['longitude']),
+                float(site['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    return gdf
 
-# Execute query
-endpoint_url = "https://frink.apps.renci.org/federation/sparql"
-df = sparql_dataframe.get(endpoint_url, query)
-
-# Convert to GeoDataFrame
-wkt_col = None
-for col in df.columns:
-    col_lower = col.lower()
-    if 'geometry' in col_lower or 'geom' in col_lower or 'wkt' in col_lower:
-        sample = df[col].dropna().astype(str)
-        if len(sample) > 0:
-            valid_wkt = sample.str.match(r'^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s*\(')
-            if valid_wkt.sum() / len(sample) > 0.5:
-                wkt_col = col
-                break
-
-if wkt_col is None:
-    raise ValueError("No WKT geometry column found")
-
-df = df.dropna(subset=[wkt_col]).copy()
-df['geometry'] = df[wkt_col].apply(wkt.loads)
-gdf = gpd.GeoDataFrame(df, geometry='geometry', crs='EPSG:4326')
-
-# Display results
-print(f"Found {len(gdf)} gauges in Ross County, Ohio")
-for _, row in gdf.iterrows():
-    print(f"- {row['gagesName']}")
+# Usage
+ohio_gauges = get_usgs_gauges_by_state("OH")
+print(f"Found {len(ohio_gauges)} active stream gauges in Ohio")
+print(ohio_gauges.head())
 ```
-
-**Key Points:**
-- Uses `AdministrativeRegion_2` for counties
-- Spatial filtering with `geof:sfContains(?countyGeometry, ?gageGeometry)`
-- County name must include state: "Ross County, Ohio"
 
 ---
 
-### Example 3: Find Stream Gages in a State
+### Example 2: Find Active Stream Gauges in a County
 
-**User Request:** "Find all stream gages in Ohio" or "Find gages in Ohio state"
+**User Request:** "Find stream gauges in Franklin County, Ohio" or "Get gauges in Ross County"
 
 **Complete Code:**
 
 ```python
-import sparql_dataframe
+import requests
 import geopandas as gpd
-from shapely import wkt
+from shapely.geometry import Point
 
-# SPARQL query with spatial filtering
-query = '''
-PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
-PREFIX schema: <https://schema.org/>
-PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+def get_usgs_gauges_by_county(state_fips, county_fips):
+    """
+    Get active USGS stream gauges in a county.
+    
+    Args:
+        state_fips: State FIPS code (e.g., "39" for Ohio)
+        county_fips: County FIPS code (e.g., "049" for Franklin County)
+    
+    Returns:
+        GeoDataFrame with active stream gauges
+    """
+    # Combine state and county FIPS
+    county_code = f"{state_fips}{county_fips}"
+    
+    url = "https://waterservices.usgs.gov/nwis/iv/"
+    
+    params = {
+        "countyCd": county_code,
+        "parameterCd": "00060",
+        "siteType": "ST",
+        "siteStatus": "active",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return gpd.GeoDataFrame()
+    
+    gauges = []
+    for ts in data.get('value', {}).get('timeSeries', []):
+        site = ts['sourceInfo']
+        site_code = site['siteCode'][0]['value']
+        
+        current_value = None
+        current_time = None
+        if 'values' in ts and len(ts['values']) > 0:
+            values_list = ts['values'][0].get('value', [])
+            if len(values_list) > 0:
+                latest = values_list[-1]
+                current_value = latest.get('value')
+                current_time = latest.get('dateTime')
+        
+        gauges.append({
+            'usgs_site_no': site_code,
+            'site_name': site['siteName'],
+            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+            'current_flow_cfs': float(current_value) if current_value else None,
+            'current_time': current_time,
+            'geometry': Point(
+                float(site['geoLocation']['geogLocation']['longitude']),
+                float(site['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    return gdf
 
-SELECT DISTINCT ?gageId ?gageName ?gageDescription ?gageGeometry
-WHERE {{
-    # User-provided states - FILTER EARLY
-    VALUES ?inputState { "Ohio" }
+# Example: Franklin County, Ohio (State FIPS: 39, County FIPS: 049)
+franklin_gauges = get_usgs_gauges_by_county("39", "049")
+print(f"Found {len(franklin_gauges)} active stream gauges in Franklin County, OH")
 
-    # States (AdministrativeRegion_1) - FILTERED BY NAME FIRST
-    ?state rdf:type <http://stko-kwg.geog.ucsb.edu/lod/ontology/AdministrativeRegion_1> ;
-           rdfs:label ?stateName ;
-           geo:hasGeometry/geo:asWKT ?stateGeometry .
-    FILTER(STRSTARTS(STR(?state), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-    FILTER(STRSTARTS(LCASE(STR(?stateName)), LCASE(?inputState)))
-
-    # Gages - ONLY AFTER STATES ARE FILTERED
-    ?gage rdf:type hyf:HY_HydroLocation;
-           rdf:type hyf:HY_HydrometricFeature;
-           schema:provider <https://waterdata.usgs.gov>;
-           schema:name ?gageName;
-           schema:description ?gageDescription;
-           geo:hasGeometry/geo:asWKT ?gageGeometry.  
-    FILTER(STRSTARTS(STR(?gage), "https://geoconnex.us/ref/gages/"))
-    BIND(STR(?gage) AS ?gageId)
-
-    # Spatial containment - LAST, on reduced dataset
-    FILTER(geof:sfContains(?stateGeometry, ?gageGeometry))
-}}
-'''
-
-# Execute query
-endpoint_url = "https://frink.apps.renci.org/federation/sparql"
-df = sparql_dataframe.get(endpoint_url, query)
-
-# Convert to GeoDataFrame
-wkt_col = None
-for col in df.columns:
-    col_lower = col.lower()
-    if 'geometry' in col_lower or 'geom' in col_lower or 'wkt' in col_lower:
-        sample = df[col].dropna().astype(str)
-        if len(sample) > 0:
-            valid_wkt = sample.str.match(r'^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)\s*\(')
-            if valid_wkt.sum() / len(sample) > 0.5:
-                wkt_col = col
-                break
-
-if wkt_col is None:
-    raise ValueError("No WKT geometry column found")
-
-df = df.dropna(subset=[wkt_col]).copy()
-df['geometry'] = df[wkt_col].apply(wkt.loads)
-gdf = gpd.GeoDataFrame(df, geometry='geometry', crs='EPSG:4326')
-
-# Display results
-print(f"Found {len(gdf)} gages in Ohio")
-print(f"First 10 gages:")
-for _, row in gdf.head(10).iterrows():
-    print(f"- {row['damName']}")
+# Example: Ross County, Ohio (State FIPS: 39, County FIPS: 141)
+ross_gauges = get_usgs_gauges_by_county("39", "141")
+print(f"Found {len(ross_gauges)} active stream gauges in Ross County, OH")
 ```
 
-**Key Points:**
-- Uses `AdministrativeRegion_1` for states
-- Spatial filtering with `geof:sfContains(?stateGeometry, ?damGeometry)`
-- State name only: "Ohio" (no additional qualifier needed)
-- May take up to 1 minute for large states
+**Common Ohio County FIPS Codes:**
+- Franklin County: 39049
+- Ross County: 39141
+- Hamilton County: 39061
+- Cuyahoga County: 39035
 
-### Example 4: Find The Closest Gage on a River to an Object
+---
 
-- First, find all gages on the river using the Example 1
-- Then, check the geges to find the closet one.
+### Example 3: Find Active Stream Gauges in a Bounding Box
 
-### Notes:
+**User Request:** "Find stream gauges in this region" or "Get gauges in bounding box"
 
-- Qlever (used by FRINK) has very limited support for geospatial functions.
-- It doesn't support geof:distance(?gageGeometry, ?riverGeometry, unit:KiloM).
-- Use the spatial functions in the examples only. Other functions do not exist in Qlevel.
+**Complete Code:**
+
+```python
+import requests
+import geopandas as gpd
+from shapely.geometry import Point
+
+def get_usgs_gauges_by_bbox(west, south, east, north):
+    """
+    Get active USGS stream gauges in a bounding box.
+    
+    Args:
+        west: Western longitude (negative for W)
+        south: Southern latitude
+        east: Eastern longitude (negative for W)
+        north: Northern latitude
+    
+    Returns:
+        GeoDataFrame with active stream gauges
+    """
+    url = "https://waterservices.usgs.gov/nwis/iv/"
+    
+    params = {
+        "bBox": f"{west},{south},{east},{north}",
+        "parameterCd": "00060",
+        "siteType": "ST",
+        "siteStatus": "active",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return gpd.GeoDataFrame()
+    
+    gauges = []
+    for ts in data.get('value', {}).get('timeSeries', []):
+        site = ts['sourceInfo']
+        site_code = site['siteCode'][0]['value']
+        
+        current_value = None
+        current_time = None
+        if 'values' in ts and len(ts['values']) > 0:
+            values_list = ts['values'][0].get('value', [])
+            if len(values_list) > 0:
+                latest = values_list[-1]
+                current_value = latest.get('value')
+                current_time = latest.get('dateTime')
+        
+        gauges.append({
+            'usgs_site_no': site_code,
+            'site_name': site['siteName'],
+            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+            'current_flow_cfs': float(current_value) if current_value else None,
+            'current_time': current_time,
+            'geometry': Point(
+                float(site['geoLocation']['geogLocation']['longitude']),
+                float(site['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    return gdf
+
+# Example: Columbus, Ohio area
+bbox_gauges = get_usgs_gauges_by_bbox(-83.2, 39.8, -82.8, 40.2)
+print(f"Found {len(bbox_gauges)} active stream gauges in bounding box")
+```
+
+---
+
+### Example 4: Find Active Stream Gauges in a Watershed (HUC)
+
+**User Request:** "Find gauges in Scioto River watershed" or "Get gauges in HUC 05060001"
+
+**Complete Code:**
+
+```python
+import requests
+import geopandas as gpd
+from shapely.geometry import Point
+
+def get_usgs_gauges_by_huc(huc_code):
+    """
+    Get active USGS stream gauges in a watershed (Hydrologic Unit Code).
+    
+    Args:
+        huc_code: HUC code (2, 4, 6, or 8 digits)
+                 Example: "05060001" for Upper Scioto River
+    
+    Returns:
+        GeoDataFrame with active stream gauges
+    """
+    url = "https://waterservices.usgs.gov/nwis/iv/"
+    
+    params = {
+        "huc": huc_code,
+        "parameterCd": "00060",
+        "siteType": "ST",
+        "siteStatus": "active",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return gpd.GeoDataFrame()
+    
+    gauges = []
+    for ts in data.get('value', {}).get('timeSeries', []):
+        site = ts['sourceInfo']
+        site_code = site['siteCode'][0]['value']
+        
+        current_value = None
+        current_time = None
+        if 'values' in ts and len(ts['values']) > 0:
+            values_list = ts['values'][0].get('value', [])
+            if len(values_list) > 0:
+                latest = values_list[-1]
+                current_value = latest.get('value')
+                current_time = latest.get('dateTime')
+        
+        gauges.append({
+            'usgs_site_no': site_code,
+            'site_name': site['siteName'],
+            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+            'huc': huc_code,
+            'current_flow_cfs': float(current_value) if current_value else None,
+            'current_time': current_time,
+            'geometry': Point(
+                float(site['geoLocation']['geogLocation']['longitude']),
+                float(site['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    return gdf
+
+# Example: Upper Scioto River watershed
+scioto_gauges = get_usgs_gauges_by_huc("05060001")
+print(f"Found {len(scioto_gauges)} active stream gauges in Upper Scioto River watershed")
+
+# Example: Entire Ohio River basin (Region 05)
+ohio_basin_gauges = get_usgs_gauges_by_huc("05")
+print(f"Found {len(ohio_basin_gauges)} active stream gauges in Ohio River basin")
+```
+
+**Common Ohio HUC Codes:**
+- Upper Scioto River: 05060001
+- Lower Scioto River: 05060002
+- Great Miami River: 05080001
+- Muskingum River: 05040004
+- Ohio River Basin: 05
+
+---
+
+### Example 5: Get Detailed Site Metadata
+
+**User Request:** "Get detailed information for gauge 03227500"
+
+**Complete Code:**
+
+```python
+import requests
+import geopandas as gpd
+from shapely.geometry import Point
+
+def get_usgs_site_metadata(site_numbers):
+    """
+    Get detailed metadata for USGS sites.
+    
+    Args:
+        site_numbers: Single site number (str) or list of site numbers
+    
+    Returns:
+        GeoDataFrame with detailed site metadata
+    """
+    if isinstance(site_numbers, str):
+        site_numbers = [site_numbers]
+    
+    url = "https://waterservices.usgs.gov/nwis/site/"
+    
+    params = {
+        "sites": ",".join(site_numbers),
+        "siteOutput": "expanded",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return gpd.GeoDataFrame()
+    
+    sites = []
+    for site in data.get('value', {}).get('timeSeries', []):
+        source = site['sourceInfo']
+        
+        sites.append({
+            'usgs_site_no': source['siteCode'][0]['value'],
+            'site_name': source['siteName'],
+            'latitude': float(source['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(source['geoLocation']['geogLocation']['longitude']),
+            'datum': source['geoLocation']['geogLocation'].get('srs', 'Unknown'),
+            'agency': source['siteCode'][0].get('agencyCode', 'USGS'),
+            'site_type': source.get('siteType', [{}])[0].get('name', 'Unknown'),
+            'huc': source.get('siteProperty', [{}])[0].get('value') if 'siteProperty' in source else None,
+            'geometry': Point(
+                float(source['geoLocation']['geogLocation']['longitude']),
+                float(source['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    gdf = gpd.GeoDataFrame(sites, crs="EPSG:4326")
+    return gdf
+
+# Example: Get metadata for specific sites
+sites_metadata = get_usgs_site_metadata(["03227500", "03221500", "03234500"])
+print(sites_metadata)
+```
+
+---
+
+## USGS Parameter Codes
+
+Common parameter codes for water data:
+
+- `00060` - Discharge (streamflow) in cubic feet per second (cfs)
+- `00065` - Gage height (stage) in feet
+- `00010` - Water temperature in degrees Celsius
+- `00300` - Dissolved oxygen in mg/L
+- `00400` - pH
+- `63680` - Turbidity in FNU
+
+## USGS Site Type Codes
+
+- `ST` - Stream
+- `ES` - Estuary
+- `LK` - Lake, Reservoir, Impoundment
+- `GW` - Well (groundwater)
+- `SP` - Spring
+- `OC` - Ocean
+
+## State FIPS Codes (Common)
+
+- Ohio: 39
+- Kentucky: 21
+- Pennsylvania: 42
+- Indiana: 18
+- West Virginia: 54
+- Michigan: 26
+
+## API Limitations
+
+- Instantaneous values (IV) service: Returns current/recent data
+- Daily values (DV) service: Use base URL `https://waterservices.usgs.gov/nwis/dv/` for historical daily data
+- Rate limits: Generally no strict limits for reasonable use
+- Timeout: Set reasonable timeouts (30s recommended) for large queries
+
+## Resources
+
+- USGS Water Services Documentation: https://waterservices.usgs.gov/rest/
+- FIPS Codes: https://www.census.gov/library/reference/code-lists/ansi.html
+- HUC Lookup: https://water.usgs.gov/GIS/huc.html
+- USGS Parameter Codes: https://help.waterdata.usgs.gov/parameter_cd
