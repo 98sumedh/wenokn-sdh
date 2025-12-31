@@ -123,6 +123,7 @@ WHERE {{
          geo:hasGeometry/geo:asWKT ?riverGeometry .
    
    FILTER(geof:sfIntersects(?riverGeometry, ?countyGeometry)) .
+   FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
 }}
 LIMIT 300
 ```
@@ -200,6 +201,7 @@ WHERE {
   FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
   
   FILTER(geof:sfIntersects(?riverGeometry, ?countyGeometry))
+  FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
 }
 LIMIT 200
 ```
@@ -238,6 +240,7 @@ WHERE {
   FILTER(strlen(?stateName) > 2)
 
   FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
+  FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
 }
 LIMIT 200
 ```
