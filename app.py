@@ -987,7 +987,7 @@ if st.session_state.current_view == "sample":
     * Find the Scioto River and all stream gages located along the river. 
     * Find all gages within the Ross county.
     * Find the Muskingum River.  
-      Find the dam named “Muskingum River Lock and Dam No. 5 - Swift's No. 5”.  
+      Find the dam named “Muskingum River Lock and Dam No. 8 - Rokeby No. 8”.  
       Find the upstream gage with the shortest distance in km to this dam on the Muskingum River.
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
