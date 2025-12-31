@@ -1005,7 +1005,7 @@ if st.session_state.current_view == "sample":
     * Retrieve all buildings at risk of flooding in Ohio from 6 PM 2025-07-18 to 6 AM 2025-07-19.
     * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
     * First, identify all assets in Ohio that are at risk of flooding within the next 24 hours. 
-      Then, extend the result with precipitation forecast.
+      Then, extend the result with precipitation forecast at the risk date only.
 
     #### PFAS Contamination Observations and FRS Facilities
     - First, find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.  
