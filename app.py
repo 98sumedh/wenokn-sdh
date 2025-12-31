@@ -1029,7 +1029,7 @@ if st.session_state.current_view == "sample":
     * List the five states in the United States with the largest number of coal mines.    
 
     #### Miscellaneous
-    * Find NPDES wastewater facilities within 100 meters from San Diego River
+    * Find NPDES wastewater facilities within 100 meters from San Diego River.  
     """)
 
 elif st.session_state.current_view == "map":
