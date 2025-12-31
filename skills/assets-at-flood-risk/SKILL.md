@@ -24,6 +24,9 @@ https://staging.api-flooding.data2action.tech/v0/impacts/structures
 
 ### Function Setup
 ```python
+import pandas as pd
+import requests
+
 def fetch_flood_impacts(
     date: str,  # in UTC
     fips: str = "county",  # "state" | "county" | "tract" | "block-group"
@@ -130,7 +133,7 @@ def fetch_flood_impacts(
         })
 
     gdf = gpd.GeoDataFrame(rows, crs="EPSG:4326")
-    gdf["date"] = date
+    gdf["date"] = pd.to_datetime(date, format="%Y%m%d%H", utc=True)
     return gdf
 ```
 
