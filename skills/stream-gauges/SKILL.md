@@ -34,7 +34,7 @@ Cut and paste the following code and don't make any changes. Keep the code as it
 ```python
 from gages_utils import get_gages_on_river
 
-# automatically sets buffer_size based on the river's size. Unless explicitly requested by the user, buffer_size does not need to be provided.
+# Don't need a buffer size. Automatically sets buffer_size based on the river's size.
 gauges = get_gages_on_river("Scioto River")
 ```
 
