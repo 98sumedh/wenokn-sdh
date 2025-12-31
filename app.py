@@ -927,7 +927,7 @@ with st.sidebar:
         shutil.rmtree(st.session_state.temp_dir)
         os.makedirs(st.session_state.temp_dir)
         st.toast("All data cleared!", icon="✅")
-        time.sleep(0.5)
+        time.sleep(1)
         st.rerun()
 
     if st.button("Sample Queries", width='stretch', type="primary" if st.session_state.current_view == "sample" else "secondary"):
