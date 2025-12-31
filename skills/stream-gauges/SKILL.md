@@ -27,6 +27,20 @@ Retrieves active USGS stream gauge data using the official USGS Water Services A
 
 ## Examples
 
+### Example 1: Find All Gauges on the Scioto River
+
+Cut and paste the following code and don't make any changes. Keep the code as it is. Don't make any changes.
+
+```python
+from gages_utils import get_gages_on_river
+
+gauges = get_gages_on_river("Scioto River")
+```
+
+Note that gages_utils.py is already in the sys.path. Always specify the buffer size used to find gauges on the river.
+
+---
+
 ### Example 1: Find Active Stream Gauges in a State
 
 **User Request:** "Find active stream gauges in Ohio" or "Get all Ohio streamgages"
