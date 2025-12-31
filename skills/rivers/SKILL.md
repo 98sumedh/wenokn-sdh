@@ -90,7 +90,7 @@ This code gets a dataframe from the SPARQL query
 
 ## Examples
 
-### Example 1: Find all rivers in a county
+### Example 1: Find all rivers that flow through a county (or all rivers that intersect a county)
 
 **User Request:** "Find all rivers in Ross county, Ohio"
 
