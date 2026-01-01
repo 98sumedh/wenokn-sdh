@@ -1033,6 +1033,8 @@ if st.session_state.current_view == "sample":
     * Find the population of the ten counties with the lowest average income in the United States.
     * Find the largest county in the U.S. by land area.
     * Find the three largest basins by area.
+    * Find all counties that intersect 8 basins or more.
+    * Which county has the most coal mines?
     
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
