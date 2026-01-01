@@ -22,6 +22,8 @@ The service returns the following columns:
 - **Shape__Area**: The area of the basin geometry calculated by the GIS system
 - **Shape__Length**: The perimeter length of the basin geometry calculated by the GIS system
 
+Note than getting all basins from this service will get timeout error. Please use the code in the notes to fetch all basins in USA.
+
 ## When to Use
 
 Use this skill to:
