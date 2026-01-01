@@ -18,6 +18,8 @@ Use this skill when you need to:
 
 ## How to Use
 
+To obtain all counties in the USA, please use the method provided in the Notes.
+
 ### Step 1: Construct a SPARQL query
 
 The following SPARQL gets the county names and their geometries for three specified counties.
