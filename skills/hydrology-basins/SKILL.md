@@ -156,6 +156,6 @@ Occasionally, when needing all basins in the USA, using the given ArcGIS Feature
 from pygeohydro import huc_wb_full
 import geopandas as gpd
 
-huc8_basins = huc_wb_full(huc_lvl=8)
+huc8_basins = huc_wb_full(huc_lvl=6)
 
 ```
