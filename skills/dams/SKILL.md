@@ -316,4 +316,5 @@ VALUES ?inputState {
 - Qlever (used by FRINK) has very limited support for geospatial functions.
 - It doesn't support geof:distance(?gageGeometry, ?riverGeometry, unit:KiloM).
 - It doesn't support converting a string into a WKTLiteral.
-- Use the spatial functions given in the examples only. Other functions do not exist in Qlevel. 
+- Use the spatial functions given in the examples only. Other functions do not exist in Qlevel.
+- Finding all dams in a county or a state or on a river may take up more than 30 seconds. When encounter a 30 seconds timeout, please run the same query again because FRINK/Qlevel may cache the data and the second query can be processed much faster.
