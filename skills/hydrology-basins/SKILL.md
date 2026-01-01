@@ -161,3 +161,4 @@ import geopandas as gpd
 huc8_basins = huc_wb_full(huc_lvl=6)
 
 ```
+Try the second time if get a timeout.
