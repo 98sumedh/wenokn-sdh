@@ -149,7 +149,7 @@ The **bbox (bounding box) parameter** is essential for efficient spatial queries
 
 **Why bbox matters**: Without a bbox, the service may return all features matching the WHERE clause across the entire USA, which is inefficient. The bbox acts as a spatial pre-filter, dramatically improving query performance.
 
-### Fetch all basins in USA
+### **Critical**:  Fetch all basins in USA
 
 Occasionally, when needing all basins in the USA, using the given ArcGIS Feature service won't work and always get timeout. Please use the following code:
 ```
