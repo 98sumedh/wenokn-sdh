@@ -18,7 +18,7 @@ Use this skill when you need to:
 
 ## How to Use
 
-To obtain all counties in the USA, please use the method provided in the Notes.
+To obtain all counties in the USA, please skip the following steps and use the method provided in the Critical Notes section.
 
 ### Step 1: Construct a SPARQL query
 
