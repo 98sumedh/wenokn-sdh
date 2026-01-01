@@ -189,9 +189,9 @@ for _, row in gdf.iterrows():
 
 ---
 
-### Example 4: Find Dams in a State
+### Example 4: Find All Dams in a State
 
-**User Request:** "Find all dams in Ohio" or "Find dams in Ohio state"
+**User Request:** "Find all dams in Ohio" or "Find dams in Kentucky state"
 
 **Complete Code:**
 
