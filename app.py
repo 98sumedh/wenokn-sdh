@@ -1029,7 +1029,9 @@ if st.session_state.current_view == "sample":
     * Find the sum of the total megawatt of solar power plants in each state in USA.
     * List the five states in the United States with the largest number of coal mines.    
     * Find the upstream-most dam on the Scioto River.  
-    * Find the 10 USA counties with the largest populations.
+    * Find the 10 USA counties with the largest population.
+    * Find the population of the ten counties with the lowest average income in the United States.
+    
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
     """)
