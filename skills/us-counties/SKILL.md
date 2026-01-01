@@ -115,4 +115,12 @@ This code gets a dataframe from the SPARQL query
 
 ## Notes
 
--- Unless explicitly stated, do not assume FRINK contains other types of data.
+- Unless explicitly stated, do not assume FRINK contains other types of data.
+
+- Occasionally, you may need all counties in the USA, but using SPARQL queries can be very slow. The fastest way to get all counties is to use the following code:
+```
+census_url = 'https://www2.census.gov/geo/tiger/TIGER2024/COUNTY/tl_2024_us_county.zip'
+counties = gpd.read_file(census_url, use_arrow=True)
+```
+   
+
