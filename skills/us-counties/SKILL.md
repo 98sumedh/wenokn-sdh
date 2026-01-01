@@ -113,6 +113,17 @@ This code gets a dataframe from the SPARQL query
 
 ```
 
-## Notes
+## Critical Notes
 
-- Unless explicitly stated, do not assume FRINK contains other types of data.
+- Qlever (used by FRINK) has very limited support for geospatial functions.
+- It doesn't support converting a string into a WKTLiteral.
+- Use the spatial functions given in the examples only. Other functions do not exist in Qlevel.
+- Occasionally, when needing all counties in the USA, using SPARQL queries can be very slow. The fastest way to obtain all counties is to use the following code:
+```
+import geopandas as gpd
+
+# Load all USA counties in one second                                                                                                             
+counties = gpd.read_file('https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip')
+counties['countyName'] = counties['NAMELSAD'] + ', ' + counties['STATE_NAME']
+counties = counties[['countyName', 'geometry']]
+```
