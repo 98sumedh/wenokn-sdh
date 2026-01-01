@@ -1032,6 +1032,7 @@ if st.session_state.current_view == "sample":
     * Find the 10 USA counties with the largest population.
     * Find the population of the ten counties with the lowest average income in the United States.
     * Find the largest county in the U.S. by land area.
+    * Find the three largest basins by area.
     
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
