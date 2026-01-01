@@ -974,7 +974,7 @@ if st.session_state.current_view == "sample":
     * Compare the energy usage of power plants in California and Ohio.
     * Compare the power plants of "Pacific Gas & Electric Co." and "San Diego Gas & Electric Co."
     
-    #### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 8, 10, 12)
+    #### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 6, 10, 12)
     * Find the hydrologic basin that contains the Scioto River outlet and save the basin as GeoJSON.
     * Find all hydrological basins that intersect the state of Ohio.
     * Find all counties that intersect the Lower Ohio–Salt Basin.
