@@ -1008,10 +1008,10 @@ if st.session_state.current_view == "sample":
       Then, extend the result with precipitation forecast at the risk date only.
 
     #### PFAS Contamination Observations and FRS Facilities
-    - First, find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine as GeoJSON.  
-      Also, show these related contamination observations as GeoJSON.
+    - First, find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.  
+      Also, save these related contamination observations above as GeoJSON.
     - First, find all PFAS contamination observations within 800 meters of FRS water supply and irrigation facilities in Maine.  
-      Also, show these related facilities.
+      Also, save these related facilities above as GeoJSON.
     - First, find the Presumpscot River.  
       Then, find PFAS contamination observations within 100 meters of the river.  
       Next, find all downstream census tracts from these contamination observation locations.  
