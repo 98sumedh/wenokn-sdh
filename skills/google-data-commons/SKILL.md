@@ -81,7 +81,7 @@ Please note that a place like San Diego county may have more than 150000 variabl
 
 The core functions for data retrieval is `observations_dataframe()`.
 
-#### Example: Get Statistical Observations as a DataFrame
+#### Example 1: Get Statistical Observations as a DataFrame
 
 The `observations_dataframe` method retrieves time-series data for a variable/entity pair.
 
@@ -92,4 +92,22 @@ The `observations_dataframe` method retrieves time-series data for a variable/en
         entity_dcids=[san_diego_dcid],
         date="latest" # Get the most recent value
     )
+```
+
+#### Example 2: Get The Populations of All USA Counties
+
+```
+   df = client.observations_dataframe(
+        variable_dcids=['Count_Person'],
+        entity_type='County',
+        parent_entity='country/USA',
+        date='latest'
+    )
+    
+    print(f"✓ Successfully fetched data for {len(df)} rows\n")
+    
+    # Get only the latest data for each county
+    # Group by entity (county) and keep the row with the maximum date
+    df_lastest = df.sort_values('date').groupby('entity').last().reset_index()
+
 ```
