@@ -182,24 +182,24 @@ def get_state_codes_from_names(state_names):
 
 def get_usgs_gauges_by_states(state_codes):
     """
-    Get active USGS stream gauges from multiple states.
+    Get active USGS stream gauges from multiple states with both flow and stage data.
     
     Args:
         state_codes (list): List of 2-letter state codes (e.g., ["OH", "KY"])
     
     Returns:
-        GeoDataFrame: Combined gauges from all states
+        GeoDataFrame: Combined gauges from all states with flow and stage data
     """
     print(f"Step 3: Getting active USGS stream gauges from {len(state_codes)} states...")
     
-    all_gauges = []
+    all_gauges = {}  # Use dict to group by site
     
     for state_code in state_codes:
         url = "https://waterservices.usgs.gov/nwis/iv/"
         
         params = {
             "stateCd": state_code,
-            "parameterCd": "00060",  # Discharge/streamflow
+            "parameterCd": "00060,00065",  # Both discharge and gage height
             "siteType": "ST",  # Stream only
             "siteStatus": "active",
             "format": "json"
@@ -210,12 +210,33 @@ def get_usgs_gauges_by_states(state_codes):
             response.raise_for_status()
             data = response.json()
             
-            state_count = 0
+            # Process each timeSeries entry
             for ts in data.get('value', {}).get('timeSeries', []):
                 site = ts['sourceInfo']
                 site_code = site['siteCode'][0]['value']
                 
-                # Get current value if available
+                # Initialize site entry if not exists
+                if site_code not in all_gauges:
+                    all_gauges[site_code] = {
+                        'usgs_site_no': site_code,
+                        'site_name': site['siteName'],
+                        'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                        'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                        'state': state_code,
+                        'current_flow_cfs': None,
+                        'current_stage_ft': None,
+                        'flow_time': None,
+                        'stage_time': None,
+                        'geometry': Point(
+                            float(site['geoLocation']['geogLocation']['longitude']),
+                            float(site['geoLocation']['geogLocation']['latitude'])
+                        )
+                    }
+                
+                # Get parameter code and current value
+                variable = ts.get('variable', {})
+                param_code = variable.get('variableCode', [{}])[0].get('value', '')
+                
                 current_value = None
                 current_time = None
                 if 'values' in ts and len(ts['values']) > 0:
@@ -225,21 +246,15 @@ def get_usgs_gauges_by_states(state_codes):
                         current_value = latest.get('value')
                         current_time = latest.get('dateTime')
                 
-                all_gauges.append({
-                    'usgs_site_no': site_code,
-                    'site_name': site['siteName'],
-                    'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-                    'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-                    'state': state_code,
-                    'current_flow_cfs': float(current_value) if current_value else None,
-                    'current_time': current_time,
-                    'geometry': Point(
-                        float(site['geoLocation']['geogLocation']['longitude']),
-                        float(site['geoLocation']['geogLocation']['latitude'])
-                    )
-                })
-                state_count += 1
+                # Store value based on parameter code
+                if param_code == '00060' and current_value:  # Discharge
+                    all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+                    all_gauges[site_code]['flow_time'] = current_time
+                elif param_code == '00065' and current_value:  # Gage height
+                    all_gauges[site_code]['current_stage_ft'] = float(current_value)
+                    all_gauges[site_code]['stage_time'] = current_time
             
+            state_count = len([g for g in all_gauges.values() if g['state'] == state_code])
             print(f"  ✓ {state_code}: {state_count} gauges")
             
         except Exception as e:
@@ -249,20 +264,21 @@ def get_usgs_gauges_by_states(state_codes):
     if not all_gauges:
         return gpd.GeoDataFrame()
     
-    gdf = gpd.GeoDataFrame(all_gauges, crs="EPSG:4326")
+    gauge_list = list(all_gauges.values())
+    gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
     print(f"  ✓ Total: {len(gdf)} active stream gauges")
     return gdf
 
 
 def get_usgs_gauges_by_bbox(west, south, east, north):
     """
-    Get active USGS stream gauges in a bounding box.
+    Get active USGS stream gauges in a bounding box with both flow and stage data.
     
     Args:
         west, south, east, north (float): Bounding box coordinates
     
     Returns:
-        GeoDataFrame: Active stream gauges
+        GeoDataFrame: Active stream gauges with flow and stage data
     """
     print(f"Step 3: Getting active USGS stream gauges in bounding box...")
     print(f"  Bounds: [{west:.4f}, {south:.4f}, {east:.4f}, {north:.4f}]")
@@ -271,7 +287,7 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
     
     params = {
         "bBox": f"{west},{south},{east},{north}",
-        "parameterCd": "00060",
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",
         "siteStatus": "active",
         "format": "json"
@@ -282,10 +298,32 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
         response.raise_for_status()
         data = response.json()
         
-        gauges = []
+        all_gauges = {}  # Use dict to group by site
+        
         for ts in data.get('value', {}).get('timeSeries', []):
             site = ts['sourceInfo']
             site_code = site['siteCode'][0]['value']
+            
+            # Initialize site entry if not exists
+            if site_code not in all_gauges:
+                all_gauges[site_code] = {
+                    'usgs_site_no': site_code,
+                    'site_name': site['siteName'],
+                    'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                    'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                    'current_flow_cfs': None,
+                    'current_stage_ft': None,
+                    'flow_time': None,
+                    'stage_time': None,
+                    'geometry': Point(
+                        float(site['geoLocation']['geogLocation']['longitude']),
+                        float(site['geoLocation']['geogLocation']['latitude'])
+                    )
+                }
+            
+            # Get parameter code and current value
+            variable = ts.get('variable', {})
+            param_code = variable.get('variableCode', [{}])[0].get('value', '')
             
             current_value = None
             current_time = None
@@ -296,20 +334,16 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
                     current_value = latest.get('value')
                     current_time = latest.get('dateTime')
             
-            gauges.append({
-                'usgs_site_no': site_code,
-                'site_name': site['siteName'],
-                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-                'current_flow_cfs': float(current_value) if current_value else None,
-                'current_time': current_time,
-                'geometry': Point(
-                    float(site['geoLocation']['geogLocation']['longitude']),
-                    float(site['geoLocation']['geogLocation']['latitude'])
-                )
-            })
+            # Store value based on parameter code
+            if param_code == '00060' and current_value:  # Discharge
+                all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+                all_gauges[site_code]['flow_time'] = current_time
+            elif param_code == '00065' and current_value:  # Gage height
+                all_gauges[site_code]['current_stage_ft'] = float(current_value)
+                all_gauges[site_code]['stage_time'] = current_time
         
-        gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+        gauge_list = list(all_gauges.values())
+        gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
         print(f"  ✓ Found {len(gdf)} active stream gauges")
         return gdf
         
@@ -389,7 +423,7 @@ def estimate_buffer_size(river_gdf):
 
 def get_gages_on_river(river_name, buffer_size=None):
     """
-    Find all active USGS stream gauges on a river.
+    Find all active USGS stream gauges on a river with both flow and stage data.
     
     This function:
     1. Gets river geometry from GeoConnex
@@ -405,7 +439,16 @@ def get_gages_on_river(river_name, buffer_size=None):
                                      Recommended: let function auto-calculate for best results.
     
     Returns:
-        GeoDataFrame: Active stream gauges on the river with current flow data
+        GeoDataFrame: Active stream gauges on the river with current flow and stage data
+        
+        Columns:
+        - usgs_site_no: USGS site number
+        - site_name: Gauge name
+        - latitude, longitude: Coordinates
+        - current_flow_cfs: Current streamflow in cubic feet per second (None if unavailable)
+        - current_stage_ft: Current gage height in feet (None if unavailable)
+        - flow_time: Timestamp for flow measurement
+        - stage_time: Timestamp for stage measurement
     
     Examples:
         >>> # Auto-calculate buffer (RECOMMENDED)
@@ -416,7 +459,7 @@ def get_gages_on_river(river_name, buffer_size=None):
         
         >>> # Access results
         >>> print(f"Found {len(gauges)} gauges")
-        >>> print(gauges[['usgs_site_no', 'site_name', 'current_flow_cfs']])
+        >>> print(gauges[['usgs_site_no', 'site_name', 'current_flow_cfs', 'current_stage_ft']])
     """
     print(f"\n{'='*70}")
     print(f"Finding active stream gauges on {river_name}")
@@ -462,9 +505,10 @@ def get_gages_on_river(river_name, buffer_size=None):
         if len(gauges_on_river) > 0:
             print(f"Gauges on {river_name}:\n")
             for idx, row in gauges_on_river.iterrows():
-                flow_str = f" | Flow: {row['current_flow_cfs']:.1f} cfs" if row['current_flow_cfs'] else ""
+                flow_str = f" | Flow: {row['current_flow_cfs']:.1f} cfs" if row['current_flow_cfs'] else " | Flow: N/A"
+                stage_str = f" | Stage: {row['current_stage_ft']:.2f} ft" if row['current_stage_ft'] else " | Stage: N/A"
                 print(f"  • {row['site_name']}")
-                print(f"    ID: {row['usgs_site_no']} | Location: {row['latitude']:.6f}°N, {row['longitude']:.6f}°W{flow_str}")
+                print(f"    ID: {row['usgs_site_no']} | Location: {row['latitude']:.6f}°N, {row['longitude']:.6f}°W{flow_str}{stage_str}")
                 print()
         else:
             print("No gauges found within the buffer zone.")
@@ -499,4 +543,4 @@ if __name__ == "__main__":
     # Access the data
     if len(scioto_gauges) > 0:
         print("\nScioto River Gauges DataFrame:")
-        print(scioto_gauges[['usgs_site_no', 'site_name', 'current_flow_cfs']].head())
+        print(scioto_gauges[['usgs_site_no', 'site_name', 'current_flow_cfs', 'current_stage_ft']].head())
