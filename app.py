@@ -1040,6 +1040,7 @@ if st.session_state.current_view == "sample":
     
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
+    * Find all counties in Southern California.
     """)
 
 elif st.session_state.current_view == "map":
