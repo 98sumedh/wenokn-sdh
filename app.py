@@ -502,7 +502,7 @@ def initialize_agent():
                 skills_middleware,
                 ShellToolMiddleware(
                     workspace_root=current_directory,
-                    execution_policy=HostExecutionPolicy(),
+                    execution_policy=HostExecutionPolicy(command_timeout=60.0),
                     env=os.environ,
                 ),
             ]
