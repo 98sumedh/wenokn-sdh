@@ -990,7 +990,7 @@ if st.session_state.current_view == "sample":
       Find the dam named “Muskingum River Lock and Dam No. 8 - Rokeby No. 8”.  
       Find the upstream gage with the shortest distance in km to this dam on the Muskingum River.
     * Find the number of gauges for each state in USA. 
-    * Find all gauges with the current flow greater than 5000 cfs.
+    * Find all gauges with the current flow greater than 5000 cfs and the current stage greater than 100 feet.
 
     #### Demographics, Economics, Health, and Education via Google Data Commons"
     * Show the population for all counties in the state of Ohio.
