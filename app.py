@@ -566,7 +566,7 @@ Available skills: {', '.join(skills_list) if skills_list else 'None found'}
    -- ❌ WRONG: read_file tool doesn't work with absolute paths. Please use "tail -n +N file" to get the content from Lines N                                                                                                         )
    -- ❌ WRONG: absolute paths            
    
-2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs. Use inline Python execution when possible: `timeout 60s /home/adminuser/venv/bin/python3 -c ...". Avoid creating .py files unless necessary.
+2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs. Use inline Python execution when possible: `/home/adminuser/venv/bin/python3 -c ...". Avoid creating .py files unless necessary.
 3. **Save**: You MUST save outputs to the user's temp directory: {st.session_state.temp_dir}/
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
 
