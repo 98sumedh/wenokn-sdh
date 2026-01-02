@@ -1,18 +1,18 @@
 ---
 name: stream-gauges
-description: Query active USGS stream gauges using the USGS Water Services API. Returns stream gauge locations and metadata as a GeoDataFrame with current status information.
+description: Query active USGS stream gauges using the USGS Water Services API. Returns stream gauge locations and metadata as a GeoDataFrame with current streamflow and stage information.
 ---
 
 # USGS Stream Gauges Skill
 
 ## Description
 
-Retrieves active USGS stream gauge data using the official USGS Water Services API. This method provides access to all ~8,500 active USGS streamgages (not just forecast locations), includes current streamflow data, and returns results as a GeoPandas GeoDataFrame.
+Retrieves active USGS stream gauge data using the official USGS Water Services API. This method provides access to all ~8,500 active USGS streamgages (not just forecast locations), includes current streamflow and stage data, and returns results as a GeoPandas GeoDataFrame.
 
 ## When to Use
 
 - Find active stream gauges by state, county, or bounding box
-- Get gauges with current streamflow measurements
+- Get gauges with current streamflow and stage measurements
 - Find gauges on specific rivers or watersheds (HUC codes)
 - Spatial analysis involving stream gauges with live data
 - Filter for only active, operational gauges
@@ -21,9 +21,10 @@ Retrieves active USGS stream gauge data using the official USGS Water Services A
 
 - Use `siteStatus=active` to get only operational gauges
 - Use `siteType=ST` to get stream gauges only (excludes groundwater, lakes, etc.)
-- Use `parameterCd=00060` to ensure gauges measure streamflow/discharge
+- Use `parameterCd=00060,00065` to get both streamflow/discharge and gage height/stage
 - County codes require state FIPS + county FIPS (e.g., "39049" for Franklin County, OH)
 - HUC codes identify watersheds (8-digit HUC recommended for river systems)
+- Not all gauges measure both flow and stage - fields will be None if unavailable
 
 ## Examples
 
@@ -42,7 +43,7 @@ Note that gages_utils.py is already in the sys.path. Always specify the buffer s
 
 ---
 
-### Example 1: Find Active Stream Gauges in a State
+### Example 2: Find Active Stream Gauges in a State
 
 **User Request:** "Find active stream gauges in Ohio" or "Get all Ohio streamgages"
 
@@ -55,7 +56,7 @@ from shapely.geometry import Point
 
 def get_usgs_gauges_by_state(state_code):
     """
-    Get active USGS stream gauges in a state.
+    Get active USGS stream gauges in a state with flow and stage data.
     
     Args:
         state_code: Two-letter state code (e.g., "OH", "KY", "PA")
@@ -67,7 +68,7 @@ def get_usgs_gauges_by_state(state_code):
     
     params = {
         "stateCd": state_code,
-        "parameterCd": "00060",  # Discharge/streamflow
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",  # Stream only
         "siteStatus": "active",
         "format": "json"
@@ -81,13 +82,34 @@ def get_usgs_gauges_by_state(state_code):
         print(f"Error fetching data: {e}")
         return gpd.GeoDataFrame()
     
-    # Parse timeSeries data
-    gauges = []
+    # Parse timeSeries data - group by site since each parameter comes separately
+    all_gauges = {}
     for ts in data.get('value', {}).get('timeSeries', []):
         site = ts['sourceInfo']
         site_code = site['siteCode'][0]['value']
         
-        # Get current value if available
+        # Initialize site entry if not exists
+        if site_code not in all_gauges:
+            all_gauges[site_code] = {
+                'usgs_site_no': site_code,
+                'site_name': site['siteName'],
+                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                'county': site['siteProperty'][0]['value'] if 'siteProperty' in site and len(site['siteProperty']) > 0 else None,
+                'current_flow_cfs': None,
+                'current_stage_ft': None,
+                'flow_time': None,
+                'stage_time': None,
+                'geometry': Point(
+                    float(site['geoLocation']['geogLocation']['longitude']),
+                    float(site['geoLocation']['geogLocation']['latitude'])
+                )
+            }
+        
+        # Get parameter code and current value
+        variable = ts.get('variable', {})
+        param_code = variable.get('variableCode', [{}])[0].get('value', '')
+        
         current_value = None
         current_time = None
         if 'values' in ts and len(ts['values']) > 0:
@@ -97,32 +119,27 @@ def get_usgs_gauges_by_state(state_code):
                 current_value = latest.get('value')
                 current_time = latest.get('dateTime')
         
-        gauges.append({
-            'usgs_site_no': site_code,
-            'site_name': site['siteName'],
-            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-            'county': site['siteProperty'][0]['value'] if 'siteProperty' in site and len(site['siteProperty']) > 0 else None,
-            'current_flow_cfs': float(current_value) if current_value else None,
-            'current_time': current_time,
-            'geometry': Point(
-                float(site['geoLocation']['geogLocation']['longitude']),
-                float(site['geoLocation']['geogLocation']['latitude'])
-            )
-        })
+        # Store value based on parameter code
+        if param_code == '00060' and current_value:  # Discharge
+            all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+            all_gauges[site_code]['flow_time'] = current_time
+        elif param_code == '00065' and current_value:  # Gage height
+            all_gauges[site_code]['current_stage_ft'] = float(current_value)
+            all_gauges[site_code]['stage_time'] = current_time
     
-    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    gauge_list = list(all_gauges.values())
+    gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
     return gdf
 
 # Usage
 ohio_gauges = get_usgs_gauges_by_state("OH")
 print(f"Found {len(ohio_gauges)} active stream gauges in Ohio")
-print(ohio_gauges.head())
+print(ohio_gauges[['usgs_site_no', 'site_name', 'current_flow_cfs', 'current_stage_ft']].head())
 ```
 
 ---
 
-### Example 2: Find Active Stream Gauges in a County
+### Example 3: Find Active Stream Gauges in a County
 
 **User Request:** "Find stream gauges in Franklin County, Ohio" or "Get gauges in Ross County"
 
@@ -135,7 +152,7 @@ from shapely.geometry import Point
 
 def get_usgs_gauges_by_county(state_fips, county_fips):
     """
-    Get active USGS stream gauges in a county.
+    Get active USGS stream gauges in a county with flow and stage data.
     
     Args:
         state_fips: State FIPS code (e.g., "39" for Ohio)
@@ -151,7 +168,7 @@ def get_usgs_gauges_by_county(state_fips, county_fips):
     
     params = {
         "countyCd": county_code,
-        "parameterCd": "00060",
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",
         "siteStatus": "active",
         "format": "json"
@@ -165,10 +182,30 @@ def get_usgs_gauges_by_county(state_fips, county_fips):
         print(f"Error fetching data: {e}")
         return gpd.GeoDataFrame()
     
-    gauges = []
+    # Parse timeSeries data - group by site
+    all_gauges = {}
     for ts in data.get('value', {}).get('timeSeries', []):
         site = ts['sourceInfo']
         site_code = site['siteCode'][0]['value']
+        
+        if site_code not in all_gauges:
+            all_gauges[site_code] = {
+                'usgs_site_no': site_code,
+                'site_name': site['siteName'],
+                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                'current_flow_cfs': None,
+                'current_stage_ft': None,
+                'flow_time': None,
+                'stage_time': None,
+                'geometry': Point(
+                    float(site['geoLocation']['geogLocation']['longitude']),
+                    float(site['geoLocation']['geogLocation']['latitude'])
+                )
+            }
+        
+        variable = ts.get('variable', {})
+        param_code = variable.get('variableCode', [{}])[0].get('value', '')
         
         current_value = None
         current_time = None
@@ -179,20 +216,15 @@ def get_usgs_gauges_by_county(state_fips, county_fips):
                 current_value = latest.get('value')
                 current_time = latest.get('dateTime')
         
-        gauges.append({
-            'usgs_site_no': site_code,
-            'site_name': site['siteName'],
-            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-            'current_flow_cfs': float(current_value) if current_value else None,
-            'current_time': current_time,
-            'geometry': Point(
-                float(site['geoLocation']['geogLocation']['longitude']),
-                float(site['geoLocation']['geogLocation']['latitude'])
-            )
-        })
+        if param_code == '00060' and current_value:
+            all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+            all_gauges[site_code]['flow_time'] = current_time
+        elif param_code == '00065' and current_value:
+            all_gauges[site_code]['current_stage_ft'] = float(current_value)
+            all_gauges[site_code]['stage_time'] = current_time
     
-    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    gauge_list = list(all_gauges.values())
+    gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
     return gdf
 
 # Example: Franklin County, Ohio (State FIPS: 39, County FIPS: 049)
@@ -212,7 +244,7 @@ print(f"Found {len(ross_gauges)} active stream gauges in Ross County, OH")
 
 ---
 
-### Example 3: Find Active Stream Gauges in a Bounding Box
+### Example 4: Find Active Stream Gauges in a Bounding Box
 
 **User Request:** "Find stream gauges in this region" or "Get gauges in bounding box"
 
@@ -225,7 +257,7 @@ from shapely.geometry import Point
 
 def get_usgs_gauges_by_bbox(west, south, east, north):
     """
-    Get active USGS stream gauges in a bounding box.
+    Get active USGS stream gauges in a bounding box with flow and stage data.
     
     Args:
         west: Western longitude (negative for W)
@@ -240,7 +272,7 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
     
     params = {
         "bBox": f"{west},{south},{east},{north}",
-        "parameterCd": "00060",
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",
         "siteStatus": "active",
         "format": "json"
@@ -254,10 +286,30 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
         print(f"Error fetching data: {e}")
         return gpd.GeoDataFrame()
     
-    gauges = []
+    # Parse timeSeries data - group by site
+    all_gauges = {}
     for ts in data.get('value', {}).get('timeSeries', []):
         site = ts['sourceInfo']
         site_code = site['siteCode'][0]['value']
+        
+        if site_code not in all_gauges:
+            all_gauges[site_code] = {
+                'usgs_site_no': site_code,
+                'site_name': site['siteName'],
+                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                'current_flow_cfs': None,
+                'current_stage_ft': None,
+                'flow_time': None,
+                'stage_time': None,
+                'geometry': Point(
+                    float(site['geoLocation']['geogLocation']['longitude']),
+                    float(site['geoLocation']['geogLocation']['latitude'])
+                )
+            }
+        
+        variable = ts.get('variable', {})
+        param_code = variable.get('variableCode', [{}])[0].get('value', '')
         
         current_value = None
         current_time = None
@@ -268,20 +320,15 @@ def get_usgs_gauges_by_bbox(west, south, east, north):
                 current_value = latest.get('value')
                 current_time = latest.get('dateTime')
         
-        gauges.append({
-            'usgs_site_no': site_code,
-            'site_name': site['siteName'],
-            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-            'current_flow_cfs': float(current_value) if current_value else None,
-            'current_time': current_time,
-            'geometry': Point(
-                float(site['geoLocation']['geogLocation']['longitude']),
-                float(site['geoLocation']['geogLocation']['latitude'])
-            )
-        })
+        if param_code == '00060' and current_value:
+            all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+            all_gauges[site_code]['flow_time'] = current_time
+        elif param_code == '00065' and current_value:
+            all_gauges[site_code]['current_stage_ft'] = float(current_value)
+            all_gauges[site_code]['stage_time'] = current_time
     
-    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    gauge_list = list(all_gauges.values())
+    gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
     return gdf
 
 # Example: Columbus, Ohio area
@@ -291,7 +338,7 @@ print(f"Found {len(bbox_gauges)} active stream gauges in bounding box")
 
 ---
 
-### Example 4: Find Active Stream Gauges in a Watershed (HUC)
+### Example 5: Find Active Stream Gauges in a Watershed (HUC)
 
 **User Request:** "Find gauges in Scioto River watershed" or "Get gauges in HUC 05060001"
 
@@ -304,7 +351,7 @@ from shapely.geometry import Point
 
 def get_usgs_gauges_by_huc(huc_code):
     """
-    Get active USGS stream gauges in a watershed (Hydrologic Unit Code).
+    Get active USGS stream gauges in a watershed (Hydrologic Unit Code) with flow and stage data.
     
     Args:
         huc_code: HUC code (2, 4, 6, or 8 digits)
@@ -317,7 +364,7 @@ def get_usgs_gauges_by_huc(huc_code):
     
     params = {
         "huc": huc_code,
-        "parameterCd": "00060",
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",
         "siteStatus": "active",
         "format": "json"
@@ -331,10 +378,31 @@ def get_usgs_gauges_by_huc(huc_code):
         print(f"Error fetching data: {e}")
         return gpd.GeoDataFrame()
     
-    gauges = []
+    # Parse timeSeries data - group by site
+    all_gauges = {}
     for ts in data.get('value', {}).get('timeSeries', []):
         site = ts['sourceInfo']
         site_code = site['siteCode'][0]['value']
+        
+        if site_code not in all_gauges:
+            all_gauges[site_code] = {
+                'usgs_site_no': site_code,
+                'site_name': site['siteName'],
+                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                'huc': huc_code,
+                'current_flow_cfs': None,
+                'current_stage_ft': None,
+                'flow_time': None,
+                'stage_time': None,
+                'geometry': Point(
+                    float(site['geoLocation']['geogLocation']['longitude']),
+                    float(site['geoLocation']['geogLocation']['latitude'])
+                )
+            }
+        
+        variable = ts.get('variable', {})
+        param_code = variable.get('variableCode', [{}])[0].get('value', '')
         
         current_value = None
         current_time = None
@@ -345,21 +413,15 @@ def get_usgs_gauges_by_huc(huc_code):
                 current_value = latest.get('value')
                 current_time = latest.get('dateTime')
         
-        gauges.append({
-            'usgs_site_no': site_code,
-            'site_name': site['siteName'],
-            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-            'huc': huc_code,
-            'current_flow_cfs': float(current_value) if current_value else None,
-            'current_time': current_time,
-            'geometry': Point(
-                float(site['geoLocation']['geogLocation']['longitude']),
-                float(site['geoLocation']['geogLocation']['latitude'])
-            )
-        })
+        if param_code == '00060' and current_value:
+            all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+            all_gauges[site_code]['flow_time'] = current_time
+        elif param_code == '00065' and current_value:
+            all_gauges[site_code]['current_stage_ft'] = float(current_value)
+            all_gauges[site_code]['stage_time'] = current_time
     
-    gdf = gpd.GeoDataFrame(gauges, crs="EPSG:4326")
+    gauge_list = list(all_gauges.values())
+    gdf = gpd.GeoDataFrame(gauge_list, crs="EPSG:4326")
     return gdf
 
 # Example: Upper Scioto River watershed
@@ -380,7 +442,7 @@ print(f"Found {len(ohio_basin_gauges)} active stream gauges in Ohio River basin"
 
 ---
 
-### Example 5: Get Detailed Site Metadata
+### Example 6: Get Detailed Site Metadata
 
 **User Request:** "Get detailed information for gauge 03227500"
 
@@ -449,23 +511,23 @@ print(sites_metadata)
 
 ---
 
-### Example 6: Get All Gauges in USA
+### Example 7: Get All Gauges in USA
 
 **User Request:** "Get all gauges in USA"
 
-```
+```python
 import requests
 import geopandas as gpd
 from shapely.geometry import Point
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def get_usgs_gauges_by_state(state_code):
-    """Get active USGS stream gauges in a state."""
+    """Get active USGS stream gauges in a state with flow and stage data."""
     url = "https://waterservices.usgs.gov/nwis/iv/"
     
     params = {
         "stateCd": state_code,
-        "parameterCd": "00060",
+        "parameterCd": "00060,00065",  # Both discharge and gage height
         "siteType": "ST",
         "siteStatus": "active",
         "format": "json"
@@ -479,10 +541,31 @@ def get_usgs_gauges_by_state(state_code):
         print(f"Error fetching data for {state_code}: {e}")
         return state_code, []
     
-    gauges = []
+    # Parse timeSeries data - group by site
+    all_gauges = {}
     for ts in data.get('value', {}).get('timeSeries', []):
         site = ts['sourceInfo']
         site_code = site['siteCode'][0]['value']
+        
+        if site_code not in all_gauges:
+            all_gauges[site_code] = {
+                'usgs_site_no': site_code,
+                'site_name': site['siteName'],
+                'state': state_code,
+                'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+                'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+                'current_flow_cfs': None,
+                'current_stage_ft': None,
+                'flow_time': None,
+                'stage_time': None,
+                'geometry': Point(
+                    float(site['geoLocation']['geogLocation']['longitude']),
+                    float(site['geoLocation']['geogLocation']['latitude'])
+                )
+            }
+        
+        variable = ts.get('variable', {})
+        param_code = variable.get('variableCode', [{}])[0].get('value', '')
         
         current_value = None
         current_time = None
@@ -493,21 +576,15 @@ def get_usgs_gauges_by_state(state_code):
                 current_value = latest.get('value')
                 current_time = latest.get('dateTime')
         
-        gauges.append({
-            'usgs_site_no': site_code,
-            'site_name': site['siteName'],
-            'state': state_code,
-            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
-            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
-            'current_flow_cfs': float(current_value) if current_value else None,
-            'current_time': current_time,
-            'geometry': Point(
-                float(site['geoLocation']['geogLocation']['longitude']),
-                float(site['geoLocation']['geogLocation']['latitude'])
-            )
-        })
+        if param_code == '00060' and current_value:
+            all_gauges[site_code]['current_flow_cfs'] = float(current_value)
+            all_gauges[site_code]['flow_time'] = current_time
+        elif param_code == '00065' and current_value:
+            all_gauges[site_code]['current_stage_ft'] = float(current_value)
+            all_gauges[site_code]['stage_time'] = current_time
     
-    return state_code, gauges
+    gauge_list = list(all_gauges.values())
+    return state_code, gauge_list
 
 def get_all_active_usgs_gauges(max_workers=10):
     """
@@ -551,8 +628,6 @@ def get_all_active_usgs_gauges(max_workers=10):
 ```
 
 ---
-
-**Complete Code:**
 
 ## USGS Parameter Codes
 
