@@ -449,6 +449,111 @@ print(sites_metadata)
 
 ---
 
+### Example 6: Get All Gauges in USA
+
+**User Request:** "Get all gauges in USA"
+
+```
+import requests
+import geopandas as gpd
+from shapely.geometry import Point
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def get_usgs_gauges_by_state(state_code):
+    """Get active USGS stream gauges in a state."""
+    url = "https://waterservices.usgs.gov/nwis/iv/"
+    
+    params = {
+        "stateCd": state_code,
+        "parameterCd": "00060",
+        "siteType": "ST",
+        "siteStatus": "active",
+        "format": "json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        print(f"Error fetching data for {state_code}: {e}")
+        return state_code, []
+    
+    gauges = []
+    for ts in data.get('value', {}).get('timeSeries', []):
+        site = ts['sourceInfo']
+        site_code = site['siteCode'][0]['value']
+        
+        current_value = None
+        current_time = None
+        if 'values' in ts and len(ts['values']) > 0:
+            values_list = ts['values'][0].get('value', [])
+            if len(values_list) > 0:
+                latest = values_list[-1]
+                current_value = latest.get('value')
+                current_time = latest.get('dateTime')
+        
+        gauges.append({
+            'usgs_site_no': site_code,
+            'site_name': site['siteName'],
+            'state': state_code,
+            'latitude': float(site['geoLocation']['geogLocation']['latitude']),
+            'longitude': float(site['geoLocation']['geogLocation']['longitude']),
+            'current_flow_cfs': float(current_value) if current_value else None,
+            'current_time': current_time,
+            'geometry': Point(
+                float(site['geoLocation']['geogLocation']['longitude']),
+                float(site['geoLocation']['geogLocation']['latitude'])
+            )
+        })
+    
+    return state_code, gauges
+
+def get_all_active_usgs_gauges(max_workers=10):
+    """
+    Get ALL active USGS stream gauges using concurrent requests.
+    
+    Args:
+        max_workers: Number of concurrent threads (default: 10)
+    """
+    
+    # All US state codes
+    states = [
+        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+        'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+        'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+        'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+        'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+        'AS', 'GU', 'MP', 'PR', 'VI'  # US territories
+    ]
+    
+    all_gauges = []
+    
+    print(f"Fetching gauges for {len(states)} states using {max_workers} workers...")
+    
+    # Use ThreadPoolExecutor for concurrent requests
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_state = {
+            executor.submit(get_usgs_gauges_by_state, state): state 
+            for state in states
+        }
+        
+        # Process completed tasks as they finish
+        for future in as_completed(future_to_state):
+            state_code, gauges = future.result()
+            all_gauges.extend(gauges)
+            print(f"  {state_code}: {len(gauges)} gauges (Total so far: {len(all_gauges)})")
+    
+    gdf = gpd.GeoDataFrame(all_gauges, crs="EPSG:4326")
+    print(f"\nTotal: {len(gdf)} active stream gauges nationwide")
+    return gdf
+```
+
+---
+
+**Complete Code:**
+
 ## USGS Parameter Codes
 
 Common parameter codes for water data:
