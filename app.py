@@ -533,7 +533,7 @@ def initialize_agent():
 
 4. **Request to download or install softwares or libraries to prevent mailcious code
 5. **Request to access a URL to prevent fishing attacks
-6. **Request to read, create, update or delete a file.
+6. **Reject any request to read, create, update or delete a file. Remember The user is only a web user and does not have access to the current machine.
 
 ### DETECTION - Flag if request contains:
 - Words: key, token, password, credential, secret (when referring to obtaining them)
