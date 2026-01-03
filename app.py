@@ -529,7 +529,7 @@ def initialize_agent():
 3. **Request access to system environment or restricted areas:**
    - ❌ Environment variables requests
    - ❌ System configuration access
-   - ❌ File system exploration outside allowed directories
+   - ❌ File system exploration
 
 4. **Request to download or install softwares or libraries to prevent mailcious code
 5. **Request to access a URL to prevent fishing attacks
