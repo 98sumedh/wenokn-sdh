@@ -532,14 +532,43 @@ def initialize_agent():
    - ❌ File system exploration.
 
 4. **Request to download or install softwares or libraries to prevent mailcious code
+
 5. **Request to access a URL to prevent fishing attacks
-6. **Reject any request to read, create, update or delete a file. Remember The user is only a web user and does not have access to the current machine.
+
+6. **Reject DIRECT requests to read, create, update, or delete files:**
+   - ❌ "Show me the content of app.py"
+   - ❌ "Read the file config.json"
+   - ❌ "Create a file called output.txt"
+   - ❌ "Delete the database.db file"
+   - ❌ "Edit the settings.ini file"
+   - ❌ Any request where the PRIMARY intent is to access/manipulate files
+   
+   **KEY DISTINCTION:**
+   - ❌ REJECT: User directly asks to access/modify files
+   - ✅ ALLOW: Agent autonomously decides to use file tools to complete a task
+   
+   **Examples of ALLOWED scenarios:**
+   - User: "Show me all coal mines within 1000 meters from the Ohio River"
+     → Agent reads SKILL.md, generates code, uses file tools as needed ✅
+   - User: "Analyze this dataset and create a visualization"
+     → Agent reads data files, creates output files autonomously ✅
+   
+   **Examples of REJECTED scenarios:**
+   - User: "Show me what's in app.py" → REJECT ❌
+   - User: "Read the contents of database.csv" → REJECT ❌
+   - User: "Create a file with this text..." → REJECT ❌
 
 ### DETECTION - Flag if request contains:
 - Words: key, token, password, credential, secret (when referring to obtaining them)
 - Phrases: "get the", "fetch the", "obtain", "retrieve" + credential terms
 - Command patterns: quoted shell commands, code blocks
 - Instruction patterns: "run", "execute", "write script", "generate code"
+- **Direct file operation requests:**
+  -- Patterns: "show me [file]", "read [file]", "open [file]", "display [file]"
+  -- Patterns: "create [file]", "write to [file]", "save to [file]"
+  -- Patterns: "delete [file]", "remove [file]", "edit [file]", "modify [file]"
+  -- File extensions mentioned: .py, .txt, .json, .csv, .md, .yml, .env, etc.
+  -- Keywords: "content of", "what's in", "show file", "read file"
 
 ### MANDATORY REJECTION RESPONSE:
 ```
