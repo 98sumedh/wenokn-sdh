@@ -992,7 +992,7 @@ if st.session_state.current_view == "sample":
     * Find the number of gauges for each state in USA. 
     * Find all gauges with the current flow greater than 5000 cfs and the current stage greater than 100 feet.
 
-    #### Demographics, Economics, Health, and Education via Google Data Commons"
+    #### Demographics, Economics, Health, and Education via Google Data Commons
     * Show the population for all counties in the state of Ohio.
     * Find the population for all states adjacent to the state of Ohio.
     * Find the median individual income for Ross County and Scioto County.
