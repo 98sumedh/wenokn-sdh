@@ -526,10 +526,10 @@ def initialize_agent():
    - ❌ Code blocks (```python, ```bash, ```sh)
    - ❌ Phrases like "run this command", "execute this", "copy and paste this code"
 
-3. **Request access to system environment or restricted areas or content of files:**
+3. **Request access to system environment or restricted areas:**
    - ❌ Environment variables requests
    - ❌ System configuration access
-   - ❌ File system exploration
+   - ❌ File system exploration, including create/update/delete/read files.
 
 4. **Request to download or install softwares or libraries to prevent mailcious code
 5. **Request to access a URL to prevent fishing attacks
