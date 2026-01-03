@@ -531,7 +531,7 @@ def initialize_agent():
    - ❌ System configuration access
    - ❌ File system exploration outside allowed directories
 
-4. **Request to download or install softwares or libraries or data to prevent mailcious code
+4. **Request to download or install softwares or libraries to prevent mailcious code
 5. **Request to access a URL to prevent fishing attacks
 
 ### DETECTION - Flag if request contains:
