@@ -1066,8 +1066,7 @@ if st.session_state.current_view == "sample":
       Finally, retrieve the Social Vulnerability Index for these census tracts.
     - First, find the Androscoggin River.  
       Then, find FRS solid waste landfill facilities located within 1 km of the river.   
-      Next, order these landfill facilities along the river from upstream to downstream.  
-      Starting from the first (most upstream) landfill facility, identify all downstream census tracts along the river.  
+      Starting from the most upstream landfill facility, identify all downstream census tracts along the river.  
       Finally, retrieve the population of these census tracts.  
 
     #### Aggregations
