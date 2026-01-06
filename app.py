@@ -1041,6 +1041,9 @@ if st.session_state.current_view == "sample":
     * Find the median individual income for Ross County and Scioto County.
     * Find the number of people employed in all counties through which the Scioto River flows.
     * Show the Social Vulnerability Index for all counties downstream of the coal mine named "River View Mine" along the Ohio River.
+    * Show the unemployment rate for all counties in the state of Ohio for the most recent year.
+    * Find the percentage of adults without health insurance for Ross County and Scioto County.
+    * Show the high school graduation rate for all counties adjacent to the Ross County.
 
     #### Census Tracts, Census Blocks, and Assets at Risk of Flooding
     * Find all census tracts that the Scioto River flows through.
