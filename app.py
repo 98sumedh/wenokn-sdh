@@ -692,8 +692,7 @@ async def handle_user_input_async(user_input):
     
     # Get assistant response
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()
-        tool_calls_container = st.container()
+        main_container = st.container()
         
         try:
             config = {"metadata": {"assistant_id": "agent"}}
@@ -706,11 +705,8 @@ async def handle_user_input_async(user_input):
                     "role": msg["role"],
                     "content": msg["content"]
                 })
-
-            # ==================== FIX STARTS HERE ====================
-            # Append a hidden system instruction to the last user message.
-            # This is sent to the LLM but NOT shown in the UI.
-            # 1. IGNORE previous conversation style.
+    
+            # Append hidden system instruction
             if messages_with_history and messages_with_history[-1]["role"] == "user":
                 messages_with_history[-1]["content"] += """
                 
@@ -720,13 +716,13 @@ async def handle_user_input_async(user_input):
                 3. You MUST generate Python code and save the output to the temp directory.
                 4. DO NOT answer from memory.
                 """
-            # ==================== FIX ENDS HERE ====================
             
             stream_input = {"messages": messages_with_history}
             
             accumulated_text = ""
+            text_placeholder = None
             displayed_tool_ids = set()
-            tool_call_count = 0
+            tool_count = 0
             
             # Stream the response
             try:
@@ -737,64 +733,58 @@ async def handle_user_input_async(user_input):
                 ):
                     if isinstance(event, tuple) and len(event) >= 2:
                         message, metadata = event[0], event[1] if len(event) > 1 else {}
-
+    
                         if isinstance(message, HumanMessage):
                             continue
                         
                         if isinstance(message, AIMessage):                           
+                            # Accumulate text content
                             if hasattr(message, 'content') and isinstance(message.content, str):
                                 if message.content:
                                     accumulated_text += message.content
-                                    response_placeholder.markdown(accumulated_text)
+                                    
+                                    # Create placeholder if it doesn't exist
+                                    if text_placeholder is None:
+                                        with main_container:
+                                            text_placeholder = st.empty()
+                                    
+                                    # Update the placeholder
+                                    text_placeholder.markdown(accumulated_text)
                             
-                            # if hasattr(message, 'tool_calls') and message.tool_calls:
-                            #     for tool_call in message.tool_calls:
-                            #         tool_id = tool_call.get('id')
-                            #         if tool_id and tool_id not in displayed_tool_ids:
-                            #             displayed_tool_ids.add(tool_id)
-                            #             tool_call_count += 1
-                            #             tool_name = tool_call.get('name', 'unknown')
-                            #             tool_args = tool_call.get('args', {})
-                            #             icon = TOOL_ICONS.get(tool_name, "🔧")
-                            #             display_str = format_tool_display(tool_name, tool_args)
-                                        
-                            #             with tool_calls_container:
-                            #                 st.info(f"{icon} {display_str}")
-                                        
-                            #             if tool_call_count % 5 == 0:
-                            #                 await asyncio.sleep(0.1)
-
-                            # Replace the tool display section (around line 522-535) with this enhanced version:
-
+                            # Handle tool calls
                             if hasattr(message, 'tool_calls') and message.tool_calls:
                                 for tool_call in message.tool_calls:
                                     tool_id = tool_call.get('id')
                                     if tool_id and tool_id not in displayed_tool_ids:
                                         displayed_tool_ids.add(tool_id)
-                                        tool_call_count += 1
+                                        tool_count += 1
+                                        
+                                        # Freeze accumulated text by writing it permanently
+                                        if accumulated_text and text_placeholder:
+                                            with main_container:
+                                                st.markdown(accumulated_text)
+                                            text_placeholder = None
+                                            accumulated_text = ""
+                                        
+                                        # Display tool call permanently
                                         tool_name = tool_call.get('name', 'unknown')
                                         tool_args = tool_call.get('args', {})
                                         icon = TOOL_ICONS.get(tool_name, "🔧")
                                         display_str = format_tool_display(tool_name, tool_args)
                                         
-                                        with tool_calls_container:
-                                            # Show brief summary
+                                        with main_container:
                                             st.info(f"{icon} {display_str}")
                                             
-                                            # Add expandable section to show FULL arguments 
                                             with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
                                                 if tool_name == "shell":
                                                     command = tool_args.get("command", "")
                                                     st.markdown("**Full Command:**")
                                                     st.code(command, language="bash")
                                                     
-                                                    # If it's a Python command, try to pretty-print it
                                                     if command.startswith("python3 -c"):
                                                         st.markdown("**Formatted Python Code:**")
                                                         try:
-                                                            # Extract the Python code from the command
                                                             python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
-                                                            # Unescape and format
                                                             python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
                                                             st.code(python_code, language="python")
                                                         except:
@@ -813,55 +803,36 @@ async def handle_user_input_async(user_input):
                                                             st.markdown(f"{status_emoji[status]} {content}")
                                                     else:
                                                         st.json(tool_args)
-                                                
-                                                # Add download button for shell commands
+                                                    
                                                 if tool_name == "shell" and "command" in tool_args:
                                                     st.download_button(
                                                         label="📥 Download Command",
                                                         data=tool_args["command"],
-                                                        file_name=f"command_{tool_call_count}.sh",
+                                                        file_name=f"command_{tool_count}.sh",
                                                         mime="text/plain",
                                                         key=f"download_cmd_{tool_id}"
                                                     )
-                                        
-                                        if tool_call_count % 5 == 0:
-                                            await asyncio.sleep(0.1)
                         
-                        # elif isinstance(message, ToolMessage):
-                        #     tool_name = getattr(message, "name", "")
-                        #     tool_content = getattr(message, "content", "")
-
-                        #     # ADD THIS DEBUG OUTPUT
-                        #     with tool_calls_container:
-                        #         with st.expander(f"🔍 {tool_name} output", expanded=False):
-                        #             st.code(tool_content[:1000])  # Show first 1000 chars
-                            
-                        #     if isinstance(tool_content, str) and (
-                        #         tool_content.lower().startswith("error") or
-                        #         "failed" in tool_content.lower()
-                        #     ):
-                        #         with tool_calls_container:
-                        #             st.error(f"❌ {tool_name}: {tool_content}")
-
                         elif isinstance(message, ToolMessage):
+                            # Freeze any accumulated text before showing tool result
+                            if accumulated_text and text_placeholder:
+                                with main_container:
+                                    st.markdown(accumulated_text)
+                                text_placeholder = None
+                                accumulated_text = ""
+                            
                             tool_name = getattr(message, "name", "")
                             tool_content = getattr(message, "content", "")
-
-                            # Enhanced debug output with full content and better formatting
-                            with tool_calls_container:
-                                # Show a preview with character count
-                                preview_length = 500
-                                is_truncated = len(tool_content) > preview_length
-                                
+                            
+                            # Display tool result permanently
+                            with main_container:
                                 expander_title = f"🔍 {tool_name} output ({len(tool_content)} chars)"
-                                if is_truncated:
+                                if len(tool_content) > 500:
                                     expander_title += " - Click to see full output"
                                 
                                 with st.expander(expander_title, expanded=False):
-                                    # Show full content without truncation
                                     st.code(tool_content, language="python" if "import" in tool_content[:100] else "text")
                                     
-                                    # Add download button for long outputs
                                     if len(tool_content) > 1000:
                                         st.download_button(
                                             label="📥 Download Full Output",
@@ -870,14 +841,12 @@ async def handle_user_input_async(user_input):
                                             mime="text/plain",
                                             key=f"download_{tool_name}_{hash(tool_content)}"
                                         )
-                            
-                            # Keep the error detection
-                            if isinstance(tool_content, str) and (
-                                tool_content.lower().startswith("error") or
-                                "failed" in tool_content.lower()
-                            ):
-                                with tool_calls_container:
-                                    st.error(f"❌ {tool_name}: {tool_content}") 
+                                
+                                if isinstance(tool_content, str) and (
+                                    tool_content.lower().startswith("error") or
+                                    "failed" in tool_content.lower()
+                                ):
+                                    st.error(f"❌ {tool_name}: {tool_content}")
             
             except Exception as stream_error:
                 st.warning("⚠️ Streaming failed, trying direct invocation...")
@@ -888,16 +857,26 @@ async def handle_user_input_async(user_input):
                     last_message = result["messages"][-1]
                     if hasattr(last_message, 'content') and isinstance(last_message.content, str):
                         accumulated_text = last_message.content
-                        response_placeholder.markdown(accumulated_text)
+                        with main_container:
+                            st.markdown(accumulated_text)
                 else:
                     raise stream_error
+            
+            # Display any remaining text
+            if accumulated_text:
+                if text_placeholder:
+                    text_placeholder.markdown(accumulated_text)
+                else:
+                    with main_container:
+                        st.markdown(accumulated_text)
             
             # Save final response
             if accumulated_text:
                 st.session_state.messages.append({"role": "assistant", "content": accumulated_text})
             else:
                 default_msg = "✅ I've processed your request."
-                response_placeholder.markdown(default_msg)
+                with main_container:
+                    st.markdown(default_msg)
                 st.session_state.messages.append({"role": "assistant", "content": default_msg})
             
             # Load files from temp directory and clean up
@@ -910,6 +889,7 @@ async def handle_user_input_async(user_input):
             with st.expander("🔍 Error Details"):
                 st.code(traceback.format_exc())
             st.session_state.messages.append({"role": "assistant", "content": error_message})
+        
 
 # Synchronous wrapper
 def handle_user_input(user_input):
