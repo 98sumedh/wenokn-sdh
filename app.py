@@ -15,6 +15,7 @@ from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langgraph.types import Command
 import uuid
 import tempfile
+import atexit
 
 from deepagents_cli.skills.middleware import SkillsMiddleware
 from deepagents_cli.config import settings
@@ -63,7 +64,60 @@ if "temp_dir" not in st.session_state:
 if "current_view" not in st.session_state:
     st.session_state.current_view = "conversation"  # "conversation" or "map"
 
+
+# ========== CLEANUP FUNCTIONS ==========
+if "last_cleanup_check" not in st.session_state:
+    st.session_state.last_cleanup_check = time.time()
+
+def cleanup_temp_dir():
+    """Clean up the current session's temporary directory."""
+    if "temp_dir" in st.session_state and st.session_state.temp_dir:
+        temp_dir = Path(st.session_state.temp_dir)
+        if temp_dir.exists():
+            try:
+                shutil.rmtree(temp_dir)
+                print(f"✓ Cleaned up temp directory: {temp_dir}")
+            except Exception as e:
+                print(f"✗ Error cleaning up temp directory: {e}")
+
+def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
+    """Remove temp directories older than max_age_hours."""
+    try:
+        temp_path = Path(base_temp_dir)
+        cutoff_time = time.time() - (max_age_hours * 3600)
+        cleaned_count = 0
+        
+        # Find all wenokn_* directories
+        for temp_dir in temp_path.glob("wenokn_*"):
+            if temp_dir.is_dir():
+                # Check if directory is older than cutoff
+                dir_mtime = temp_dir.stat().st_mtime
+                if dir_mtime < cutoff_time:
+                    try:
+                        shutil.rmtree(temp_dir)
+                        cleaned_count += 1
+                        print(f"✓ Cleaned up old temp directory: {temp_dir}")
+                    except Exception as e:
+                        print(f"✗ Error removing old directory {temp_dir}: {e}")
+        
+        if cleaned_count > 0:
+            print(f"✓ Cleaned up {cleaned_count} old session directories")
+            
+    except Exception as e:
+        print(f"✗ Error in cleanup_old_sessions: {e}")
+
+# Register cleanup on exit
+atexit.register(cleanup_temp_dir)
+
+# Periodic cleanup of old sessions (runs every hour)
+current_time = time.time()
+if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
+    cleanup_old_sessions(max_age_hours=24)  # Remove dirs older than 24 hours
+    st.session_state.last_cleanup_check = current_time
+
+
 # current_dir = os.getcwd()
+# current_dir = "/tmp"
 # for root, dirs, files in os.walk(current_dir):
 #     for file in files:
 #         # Join the root path and filename to get the full path
@@ -72,6 +126,7 @@ if "current_view" not in st.session_state:
 
 # current_dir = st.session_state.temp_dir
 # st.markdown(f"==================== {current_dir}")
+
 # for root, dirs, files in os.walk(current_dir):
 #     for file in files:
 #         # Join the root path and filename to get the full path
@@ -81,6 +136,7 @@ if "current_view" not in st.session_state:
 # import sys
 # st.code(sys.executable)
 # st.write(f"""When you need to run Python via shell, always use {sys.executable} -c "....." """)
+
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
@@ -425,7 +481,7 @@ def load_and_cleanup_temp_files():
                     st.success(f"✅ Loaded {name} into map layers")
                 
                 # Delete the file after loading
-                gf.unlink()
+                # gf.unlink()
             except Exception as e:
                 st.error(f"Error loading {gf.name}: {e}")
         
@@ -441,7 +497,7 @@ def load_and_cleanup_temp_files():
                     st.success(f"✅ Loaded {name} data")
                 
                 # Delete the file after loading
-                cf.unlink()
+                # cf.unlink()
             except Exception as e:
                 st.error(f"Error loading {cf.name}: {e}")
         
@@ -594,6 +650,7 @@ You have NO internal knowledge of the file system or specific data.
 You MUST use the `shell` tool to read `SKILL.md` files to know how to perform tasks.
 You MUST use Python code execution to generate results.
 Never show the paths of the saved files in the response. Just say that the saved data is available via "Map & Data".
+Users cannot access any files other than CSV or GeoJSON. Do not store results in .md or .txt files for user access. You must display the results in the final response.
 
 ## YOUR SKILLS
 Working directory: /mount/src/deep-wenokn/
@@ -623,6 +680,35 @@ For simple 1-2 step tasks, just do them without todos.
 - **NEVER** simulate the output of a tool. If you need to know something, RUN THE TOOL.
 
 **User Temp Directory:** {st.session_state.temp_dir}
+
+## REPORT GENERATION - CRITICAL INSTRUCTIONS
+When asked to generate a report, you MUST create the report directly in your final response using markdown format.
+
+**ABSOLUTE REQUIREMENTS:**
+- ❌ DO NOT save reports to files (.md, .txt, .pdf, etc.)
+- ❌ DO NOT create `report.md` or any markdown files
+- ✅ ALWAYS include the full report in your response text
+- ✅ The report should be part of your conversational response
+
+**Report Structure:**
+1. **Title and Metadata**: Start with report title (# heading) and generation date
+2. **Executive Summary**: Brief overview of key findings (2-3 sentences)
+3. **Data Overview**: Summary statistics and counts
+4. **Detailed Analysis**: Use subsections (## and ###) to organize content
+5. **Tables**: Format data as markdown tables for readability
+6. **Key Findings**: Bullet points of important insights
+7. **Data Access Note**: At the END, remind user that raw data is available in "Map & Data"
+
+**Formatting Guidelines:**
+- Use proper markdown headers: #, ##, ### for hierarchy
+- Create tables with | column | format |
+- Use **bold** for emphasis and metrics
+- Use bullet points for lists
+- Include horizontal rules (---) to separate major sections
+- Add emojis for visual interest: 📊 📈 📍 🗺️ ✅ ⚠️ 💡
+- Keep tables concise (max 10-15 rows visible, summarize if more)
+- For large datasets, show top entries and mention totals
+
 """
             
             # Create the agent WITHOUT checkpointer
