@@ -1163,6 +1163,11 @@ if st.session_state.current_view == "sample":
     * Find all counties in Southern California.
     * Find all counties adjacent to Los Angeles to the east.
     * Find the longest river flowing through counties adjacent to LA's eastern border that does not intersect LA County.
+
+    #### Context Memory
+    * Identify the coal mine with the largest production.
+    * Determine the census tract in which this coal mine is located, as well as all adjacent census tracts.
+    * Retrieve the population for each of these census tracts.
     """)
 
 elif st.session_state.current_view == "map":
@@ -1225,7 +1230,19 @@ elif st.session_state.current_view == "map":
                     with col3:
                         # Delete layer
                         if st.button("🗑️ Delete", key=f"delete_{name}", width='stretch'):
+                            # Remove from session state
                             del st.session_state.geodataframes[name]
+                            
+                            # Also delete the file from temp directory if it exists
+                            temp_dir = Path(st.session_state.temp_dir)
+                            geojson_file = temp_dir / f"{name}.geojson"
+                            if geojson_file.exists():
+                                try:
+                                    geojson_file.unlink()
+                                    print(f"✓ Deleted file: {geojson_file}")
+                                except Exception as e:
+                                    print(f"✗ Error deleting file {geojson_file}: {e}")
+                            
                             st.rerun()
                     
                     # Show attribute table (exclude geometry columns)
@@ -1282,7 +1299,19 @@ elif st.session_state.current_view == "map":
                     with col3:
                         # Delete table
                         if st.button("🗑️ Delete", key=f"delete_table_{name}", width='stretch'):
+                            # Remove from session state
                             del st.session_state.dataframes[name]
+                            
+                            # Also delete the file from temp directory if it exists
+                            temp_dir = Path(st.session_state.temp_dir)
+                            csv_file = temp_dir / f"{name}.csv"
+                            if csv_file.exists():
+                                try:
+                                    csv_file.unlink()
+                                    print(f"✓ Deleted file: {csv_file}")
+                                except Exception as e:
+                                    print(f"✗ Error deleting file {csv_file}: {e}")
+                            
                             st.rerun()
                     
                     # # Show basic statistics
