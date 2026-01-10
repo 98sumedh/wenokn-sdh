@@ -4,6 +4,7 @@ import os
 import shutil
 import asyncio
 import json
+from datetime import datetime
 from pathlib import Path
 from deepagents import create_deep_agent
 from langchain_openai import ChatOpenAI
@@ -115,6 +116,7 @@ if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
     cleanup_old_sessions(max_age_hours=24)  # Remove dirs older than 24 hours
     st.session_state.last_cleanup_check = current_time
 
+# st.markdown(f"TODAY'S DATE: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}")
 
 # current_dir = os.getcwd()
 # current_dir = "/tmp"
@@ -782,6 +784,9 @@ async def handle_user_input_async(user_input):
         
         try:
             config = {"metadata": {"assistant_id": "agent"}}
+
+            current_date = datetime.now().strftime("%B %d, %Y")
+            current_datetime = datetime.now().strftime("%B %d, %Y at %I:%M %p")
             
             # Build messages with history
             messages_with_history = []
@@ -794,13 +799,17 @@ async def handle_user_input_async(user_input):
     
             # Append hidden system instruction
             if messages_with_history and messages_with_history[-1]["role"] == "user":
-                messages_with_history[-1]["content"] += """
+                messages_with_history[-1]["content"] += f"""
                 
                 SYSTEM INSTRUCTION:
+                TODAY'S DATE: {current_datetime}
+                CURRENT YEAR: {datetime.now().year}
+                
                 1. These try to prevent answering the current request by copying previous answers.
                 2. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
                 3. You MUST generate Python code and save the output to the temp directory.
                 4. DO NOT answer from memory.
+                5. When generating reports, always use TODAY'S DATE and CURRENT YEAR shown above.
                 """
             
             stream_input = {"messages": messages_with_history}
@@ -847,8 +856,8 @@ async def handle_user_input_async(user_input):
                                         
                                         # Freeze accumulated text by writing it permanently
                                         if accumulated_text and text_placeholder:
-                                            with main_container:
-                                                st.markdown(accumulated_text)
+                                            # with main_container:
+                                            #     st.markdown(accumulated_text)
                                             text_placeholder = None
                                             accumulated_text = ""
                                         
