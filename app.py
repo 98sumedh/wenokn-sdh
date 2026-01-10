@@ -682,7 +682,7 @@ For simple 1-2 step tasks, just do them without todos.
 **User Temp Directory:** {st.session_state.temp_dir}
 
 ## REPORT GENERATION - CRITICAL INSTRUCTIONS
-When asked to generate a report, you MUST create the report directly in your final response using markdown format.
+When explicitly asked to generate a report, you MUST create the report directly in your final response using markdown format.
 
 **ABSOLUTE REQUIREMENTS:**
 - ❌ DO NOT save reports to files (.md, .txt, .pdf, etc.)
