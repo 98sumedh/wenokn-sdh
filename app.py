@@ -1170,6 +1170,7 @@ if st.session_state.current_view == "sample":
     
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
+    * Find all flood alerts.
     * Find all counties in Southern California.
     * Find all counties adjacent to Los Angeles to the east.
     * Find the longest river flowing through counties adjacent to LA's eastern border that does not intersect LA County.
