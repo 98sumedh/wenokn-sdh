@@ -354,11 +354,15 @@ def display_all_layers_map():
                     style="""
                           font-size: 11px;
                           max-width: 400px;
-                          max-height: 400px;
+                          min-width: 400px;
+                          max-height: 300px;
                           overflow-y: auto;
-                          overflow-x: auto;
+                          word-wrap: break-word;
+                          white-space: normal;
+                          line-height: 1.4;
                           """,
                     max_width=400,
+                    width=400,
                 )         
             else:
                 popup = None
@@ -405,6 +409,22 @@ def display_all_layers_map():
         .leaflet-control-layers-base,
         .leaflet-control-layers-overlays {
             line-height: 1.3 !important;
+        }
+
+        .leaflet-popup-content table {
+            width: 100%;
+        }
+        .leaflet-popup-content table td, 
+        .leaflet-popup-content table th {
+            vertical-align: top !important;
+            word-wrap: break-word !important;
+            white-space: normal !important;
+            max-width: 200px;
+            padding: 3px 5px !important;
+        }
+        .leaflet-popup-content table th {
+            text-align: left !important;
+            font-weight: bold;
         }
         </style>
         """
@@ -690,16 +710,7 @@ When explicitly asked to generate a report, you MUST create the report directly 
 - ❌ DO NOT save reports to files (.md, .txt, .pdf, etc.)
 - ❌ DO NOT create `report.md` or any markdown files
 - ✅ ALWAYS include the full report in your response text
-- ✅ The report should be part of your conversational response
-
-**Report Structure:**
-1. **Title and Metadata**: Start with report title (# heading) and generation date
-2. **Executive Summary**: Brief overview of key findings (2-3 sentences)
-3. **Data Overview**: Summary statistics and counts
-4. **Detailed Analysis**: Use subsections (## and ###) to organize content
-5. **Tables**: Format data as markdown tables for readability
-6. **Key Findings**: Bullet points of important insights
-7. **Data Access Note**: At the END, remind user that raw data is available in "Map & Data"
+- ✅ The report MUST be the last response. No more any additional text and tool calls after the report.
 
 **Formatting Guidelines:**
 - Use proper markdown headers: #, ##, ### for hierarchy
@@ -707,7 +718,6 @@ When explicitly asked to generate a report, you MUST create the report directly 
 - Use **bold** for emphasis and metrics
 - Use bullet points for lists
 - Include horizontal rules (---) to separate major sections
-- Add emojis for visual interest: 📊 📈 📍 🗺️ ✅ ⚠️ 💡
 - Keep tables concise (max 10-15 rows visible, summarize if more)
 - For large datasets, show top entries and mention totals
 
