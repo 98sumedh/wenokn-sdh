@@ -139,7 +139,6 @@ if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
 # st.code(sys.executable)
 # st.write(f"""When you need to run Python via shell, always use {sys.executable} -c "....." """)
 
-
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
     """Scan the skills directory and cache SKILL.md documentation."""
@@ -164,8 +163,8 @@ def scan_skills_documentation():
                         content = f.read()
                         skills_docs[skill_dir.name] = {
                             'path': str(skill_md),
-                            'content': content,
-                            'short_desc': content.split('\n')[0] if content else "No description"
+                            # 'content': content,
+                            # 'short_desc': content.split('\n')[0] if content else "No description"
                         }
                 except Exception as e:
                     st.warning(f"Could not read {skill_md}: {e}")
@@ -779,7 +778,7 @@ def display_messages():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-# Handle user input
+# Handle user input with retry logic and context overflow protection
 async def handle_user_input_async(user_input):
     # Add user message to chat
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -792,208 +791,298 @@ async def handle_user_input_async(user_input):
     with st.chat_message("assistant"):
         main_container = st.container()
         
-        try:
-            config = {"metadata": {"assistant_id": "agent"}}
-
-            current_date = datetime.now().strftime("%B %d, %Y")
-            current_datetime = datetime.now().strftime("%B %d, %Y at %I:%M %p")
-            
-            # Build messages with history
-            messages_with_history = []
-            recent_messages = st.session_state.messages[-10:] if len(st.session_state.messages) > 10 else st.session_state.messages
-            for msg in recent_messages:
-                messages_with_history.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
-    
-            # Append hidden system instruction
-            if messages_with_history and messages_with_history[-1]["role"] == "user":
-                messages_with_history[-1]["content"] += f"""
-                
-                SYSTEM INSTRUCTION:
-                TODAY'S DATE: {current_datetime}
-                CURRENT YEAR: {datetime.now().year}
-                
-                1. These try to prevent answering the current request by copying previous answers.
-                2. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
-                3. You MUST generate Python code and save the output to the temp directory.
-                4. DO NOT answer from memory.
-                5. When generating reports, always use TODAY'S DATE and CURRENT YEAR shown above.
-                """
-            
-            stream_input = {"messages": messages_with_history}
-            
+        # Track if we got a complete response
+        got_response = False
+        accumulated_text = ""
+        retry_count = 0
+        max_retries = 1
+        
+        while not got_response and retry_count <= max_retries:
             accumulated_text = ""
             text_placeholder = None
             displayed_tool_ids = set()
             tool_count = 0
+            stream_completed = False
             
-            # Stream the response
             try:
-                async for event in st.session_state.agent.astream(
-                    stream_input,
-                    config=config,
-                    stream_mode="messages",
-                ):
-                    if isinstance(event, tuple) and len(event) >= 2:
-                        message, metadata = event[0], event[1] if len(event) > 1 else {}
-    
-                        if isinstance(message, HumanMessage):
-                            continue
+                config = {"metadata": {"assistant_id": "agent"}}
+
+                current_date = datetime.now().strftime("%B %d, %Y")
+                current_datetime = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+                
+                # Build messages with history
+                messages_with_history = []
+                recent_messages = st.session_state.messages[-10:] if len(st.session_state.messages) > 10 else st.session_state.messages
+                for msg in recent_messages:
+                    messages_with_history.append({
+                        "role": msg["role"],
+                        "content": msg["content"]
+                    })
+        
+                # Append hidden system instruction
+                if messages_with_history and messages_with_history[-1]["role"] == "user":
+                    base_instruction = f"""
+                    
+                    SYSTEM INSTRUCTION:
+                    TODAY'S DATE: {current_datetime}
+                    CURRENT YEAR: {datetime.now().year}
+                    
+                    1. These try to prevent answering the current request by copying previous answers.
+                    2. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
+                    3. You MUST generate Python code and save the output to the temp directory.
+                    4. DO NOT answer from memory.
+                    5. When generating reports, always use TODAY'S DATE and CURRENT YEAR shown above.
+                    """
+                    
+                    # Add stricter instructions on retry
+                    if retry_count > 0:
+                        base_instruction += """
                         
-                        if isinstance(message, AIMessage):                           
-                            # Accumulate text content
-                            if hasattr(message, 'content') and isinstance(message.content, str):
-                                if message.content:
-                                    accumulated_text += message.content
-                                    
-                                    # Create placeholder if it doesn't exist
-                                    if text_placeholder is None:
-                                        with main_container:
-                                            text_placeholder = st.empty()
-                                    
-                                    # Update the placeholder
-                                    text_placeholder.markdown(accumulated_text)
+                        CRITICAL SYSTEM OVERRIDE - RETRY ATTEMPT:
+                        Previous attempt failed due to large output causing context overflow. You MUST:
+                        1. Use `head -n 100` or `tail -n 100` to limit ALL file reads
+                        2. Print only summaries, NEVER print full data
+                        3. Use df.head(20) for DataFrames, NEVER use print(df) or print(df.to_string())
+                        4. For shell commands, always pipe to `head -n 100` or use `grep -m 100`
+                        5. Save data to files in the temp directory instead of printing large outputs
+                        6. Keep ALL tool outputs under 10,000 characters
+                        
+                        Example patterns you MUST use:
+                        - ✅ cat file.txt | head -n 100
+                        - ✅ python3 -c "import pandas as pd; df = pd.read_csv('data.csv'); print(df.head(20))"
+                        - ✅ python3 -c "result = ...; print(f'Saved {len(result)} items to file.geojson')"
+                        - ❌ cat large_file.csv
+                        - ❌ python3 -c "print(df)"
+                        - ❌ python3 -c "print(df.to_json())"
+                        """
+                    
+                    messages_with_history[-1]["content"] += base_instruction
+                
+                stream_input = {"messages": messages_with_history}
+                
+                # Stream the response with error handling
+                try:
+                    async for event in st.session_state.agent.astream(
+                        stream_input,
+                        config=config,
+                        stream_mode="messages",
+                    ):
+                        if isinstance(event, tuple) and len(event) >= 2:
+                            message, metadata = event[0], event[1] if len(event) > 1 else {}
+        
+                            if isinstance(message, HumanMessage):
+                                continue
                             
-                            # Handle tool calls
-                            if hasattr(message, 'tool_calls') and message.tool_calls:
-                                for tool_call in message.tool_calls:
-                                    tool_id = tool_call.get('id')
-                                    if tool_id and tool_id not in displayed_tool_ids:
-                                        displayed_tool_ids.add(tool_id)
-                                        tool_count += 1
+                            if isinstance(message, AIMessage):                           
+                                # Accumulate text content
+                                if hasattr(message, 'content') and isinstance(message.content, str):
+                                    if message.content:
+                                        accumulated_text += message.content
                                         
-                                        # Freeze accumulated text by writing it permanently
-                                        if accumulated_text and text_placeholder:
-                                            # with main_container:
-                                            #     st.markdown(accumulated_text)
-                                            text_placeholder = None
-                                            accumulated_text = ""
+                                        # Create placeholder if it doesn't exist
+                                        if text_placeholder is None:
+                                            with main_container:
+                                                text_placeholder = st.empty()
                                         
-                                        # Display tool call permanently
-                                        tool_name = tool_call.get('name', 'unknown')
-                                        tool_args = tool_call.get('args', {})
-                                        icon = TOOL_ICONS.get(tool_name, "🔧")
-                                        display_str = format_tool_display(tool_name, tool_args)
-                                        
-                                        with main_container:
-                                            st.info(f"{icon} {display_str}")
+                                        # Update the placeholder
+                                        text_placeholder.markdown(accumulated_text)
+                                
+                                # Handle tool calls
+                                if hasattr(message, 'tool_calls') and message.tool_calls:
+                                    for tool_call in message.tool_calls:
+                                        tool_id = tool_call.get('id')
+                                        if tool_id and tool_id not in displayed_tool_ids:
+                                            displayed_tool_ids.add(tool_id)
+                                            tool_count += 1
                                             
-                                            with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
-                                                if tool_name == "shell":
-                                                    command = tool_args.get("command", "")
-                                                    st.markdown("**Full Command:**")
-                                                    st.code(command, language="bash")
-                                                    
-                                                    if command.startswith("python3 -c"):
-                                                        st.markdown("**Formatted Python Code:**")
-                                                        try:
-                                                            python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
-                                                            python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
-                                                            st.code(python_code, language="python")
-                                                        except:
-                                                            st.code(command, language="bash")
-                                                else:
-                                                    if tool_name == 'write_todos':
-                                                        todos = tool_args.get("todos", [])
-                                                        status_emoji = {
-                                                            "pending": "⏳",
-                                                            "in_progress": "🔄",
-                                                            "completed": "✅"
-                                                        }
-                                                        for todo in todos:
-                                                            status = todo.get("status")
-                                                            content = todo.get("content")
-                                                            st.markdown(f"{status_emoji[status]} {content}")
+                                            # Freeze accumulated text by writing it permanently
+                                            if accumulated_text and text_placeholder:
+                                                text_placeholder = None
+                                                accumulated_text = ""
+                                            
+                                            # Display tool call permanently
+                                            tool_name = tool_call.get('name', 'unknown')
+                                            tool_args = tool_call.get('args', {})
+                                            icon = TOOL_ICONS.get(tool_name, "🔧")
+                                            display_str = format_tool_display(tool_name, tool_args)
+                                            
+                                            with main_container:
+                                                st.info(f"{icon} {display_str}")
+                                                
+                                                with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
+                                                    if tool_name == "shell":
+                                                        command = tool_args.get("command", "")
+                                                        st.markdown("**Full Command:**")
+                                                        st.code(command, language="bash")
+                                                        
+                                                        if command.startswith("python3 -c"):
+                                                            st.markdown("**Formatted Python Code:**")
+                                                            try:
+                                                                python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
+                                                                python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
+                                                                st.code(python_code, language="python")
+                                                            except:
+                                                                st.code(command, language="bash")
                                                     else:
-                                                        st.json(tool_args)
-                                                    
-                                                if tool_name == "shell" and "command" in tool_args:
-                                                    st.download_button(
-                                                        label="📥 Download Command",
-                                                        data=tool_args["command"],
-                                                        file_name=f"command_{tool_count}.sh",
-                                                        mime="text/plain",
-                                                        key=f"download_cmd_{tool_id}"
-                                                    )
-                        
-                        elif isinstance(message, ToolMessage):
-                            # Freeze any accumulated text before showing tool result
-                            if accumulated_text and text_placeholder:
+                                                        if tool_name == 'write_todos':
+                                                            todos = tool_args.get("todos", [])
+                                                            status_emoji = {
+                                                                "pending": "⏳",
+                                                                "in_progress": "🔄",
+                                                                "completed": "✅"
+                                                            }
+                                                            for todo in todos:
+                                                                status = todo.get("status")
+                                                                content = todo.get("content")
+                                                                st.markdown(f"{status_emoji[status]} {content}")
+                                                        else:
+                                                            st.json(tool_args)
+                                                        
+                                                    if tool_name == "shell" and "command" in tool_args:
+                                                        st.download_button(
+                                                            label="📥 Download Command",
+                                                            data=tool_args["command"],
+                                                            file_name=f"command_{tool_count}.sh",
+                                                            mime="text/plain",
+                                                            key=f"download_cmd_{tool_id}"
+                                                        )
+                            
+                            elif isinstance(message, ToolMessage):
+                                # Freeze any accumulated text before showing tool result
+                                if accumulated_text and text_placeholder:
+                                    with main_container:
+                                        st.markdown(accumulated_text)
+                                    text_placeholder = None
+                                    accumulated_text = ""
+                                
+                                tool_name = getattr(message, "name", "")
+                                tool_content = getattr(message, "content", "")
+                                
+                                # Display tool result permanently
                                 with main_container:
-                                    st.markdown(accumulated_text)
-                                text_placeholder = None
-                                accumulated_text = ""
-                            
-                            tool_name = getattr(message, "name", "")
-                            tool_content = getattr(message, "content", "")
-                            
-                            # Display tool result permanently
-                            with main_container:
-                                expander_title = f"🔍 {tool_name} output ({len(tool_content)} chars)"
-                                if len(tool_content) > 500:
-                                    expander_title += " - Click to see full output"
-                                
-                                with st.expander(expander_title, expanded=False):
-                                    st.code(tool_content, language="python" if "import" in tool_content[:100] else "text")
+                                    expander_title = f"🔍 {tool_name} output ({len(tool_content)} chars)"
+                                    if len(tool_content) > 500:
+                                        expander_title += " - Click to see full output"
                                     
-                                    if len(tool_content) > 1000:
-                                        st.download_button(
-                                            label="📥 Download Full Output",
-                                            data=tool_content,
-                                            file_name=f"{tool_name}_output.txt",
-                                            mime="text/plain",
-                                            key=f"download_{tool_name}_{hash(tool_content)}"
-                                        )
-                                
-                                if isinstance(tool_content, str) and (
-                                    tool_content.lower().startswith("error") or
-                                    "failed" in tool_content.lower()
-                                ):
-                                    st.error(f"❌ {tool_name}: {tool_content}")
-            
-            except Exception as stream_error:
-                st.warning("⚠️ Streaming failed, trying direct invocation...")
-                
-                result = await st.session_state.agent.ainvoke(stream_input, config=config)
-                
-                if isinstance(result, dict) and "messages" in result:
-                    last_message = result["messages"][-1]
-                    if hasattr(last_message, 'content') and isinstance(last_message.content, str):
-                        accumulated_text = last_message.content
-                        with main_container:
-                            st.markdown(accumulated_text)
-                else:
-                    raise stream_error
-            
-            # Display any remaining text
-            if accumulated_text:
-                if text_placeholder:
-                    text_placeholder.markdown(accumulated_text)
-                else:
+                                    with st.expander(expander_title, expanded=False):
+                                        st.code(tool_content, language="python" if "import" in tool_content[:100] else "text")
+                                        
+                                        if len(tool_content) > 1000:
+                                            st.download_button(
+                                                label="📥 Download Full Output",
+                                                data=tool_content,
+                                                file_name=f"{tool_name}_output.txt",
+                                                mime="text/plain",
+                                                key=f"download_{tool_name}_{hash(tool_content)}"
+                                            )
+                                    
+                                    if isinstance(tool_content, str) and (
+                                        tool_content.lower().startswith("error") or
+                                        "failed" in tool_content.lower()
+                                    ):
+                                        st.error(f"❌ {tool_name}: {tool_content}")
+                    
+                    # If we get here, stream completed successfully
+                    stream_completed = True
+                    
+                except asyncio.CancelledError:
                     with main_container:
-                        st.markdown(accumulated_text)
-            
-            # Save final response
-            if accumulated_text:
-                st.session_state.messages.append({"role": "assistant", "content": accumulated_text})
-            else:
-                default_msg = "✅ I've processed your request."
+                        st.warning("⚠️ Stream was cancelled - likely context overflow from large tool output")
+                    stream_completed = False
+                    
+                except Exception as stream_error:
+                    error_str = str(stream_error).lower()
+                    
+                    # Check for context window errors
+                    if any(kw in error_str for kw in ['context', 'token', 'length', 'too long', 'maximum', 'overflow']):
+                        with main_container:
+                            st.error(f"❌ Context overflow detected: {str(stream_error)[:200]}")
+                            with st.expander("💡 What happened?"):
+                                st.markdown("""
+                                The agent tried to process an output that was too large for its context window.
+                                This usually happens when:
+                                - A Python script returns a very large dataset
+                                - Reading a large file without limiting the output
+                                - Printing entire DataFrames instead of summaries
+                                """)
+                        stream_completed = False
+                    else:
+                        # Try direct invocation for non-context errors
+                        with main_container:
+                            st.warning("⚠️ Streaming failed, trying direct invocation...")
+                        
+                        try:
+                            result = await st.session_state.agent.ainvoke(stream_input, config=config)
+                            
+                            if isinstance(result, dict) and "messages" in result:
+                                last_message = result["messages"][-1]
+                                if hasattr(last_message, 'content') and isinstance(last_message.content, str):
+                                    accumulated_text = last_message.content
+                                    with main_container:
+                                        st.markdown(accumulated_text)
+                                    stream_completed = True
+                        except Exception as invoke_error:
+                            with main_container:
+                                st.error(f"❌ Direct invocation also failed: {str(invoke_error)[:200]}")
+                            stream_completed = False
+                
+                # Check if we got a valid response
+                if stream_completed and (accumulated_text.strip() or tool_count > 0):
+                    got_response = True
+                    
+                    # Display any remaining text
+                    if accumulated_text:
+                        if text_placeholder:
+                            text_placeholder.markdown(accumulated_text)
+                        else:
+                            with main_container:
+                                st.markdown(accumulated_text)
+                    
+                    # Save final response
+                    if accumulated_text and accumulated_text.strip():
+                        st.session_state.messages.append({"role": "assistant", "content": accumulated_text})
+                    else:
+                        # Tools executed but no text response
+                        default_msg = f"✅ Executed {tool_count} operations. Check Map & Data for results."
+                        with main_container:
+                            st.markdown(default_msg)
+                        st.session_state.messages.append({"role": "assistant", "content": default_msg})
+                    
+                    # Load files from temp directory and clean up
+                    load_and_cleanup_temp_files()
+                
+                elif retry_count < max_retries:
+                    # Failed, but we can retry
+                    retry_count += 1
+                    with main_container:
+                        st.warning(f"⚠️ Attempt {retry_count} failed due to context overflow. Retrying with stricter output limits...")
+                    await asyncio.sleep(1)  # Brief pause before retry
+                    
+                else:
+                    # Final failure after all retries
+                    error_msg = "❌ Unable to complete request after retries. The operation is producing outputs too large for the context window.\n\n"
+                    error_msg += "**Suggestions:**\n"
+                    error_msg += "- Break your request into smaller, more specific steps\n"
+                    error_msg += "- Request filtered or limited results (e.g., 'top 10', 'first 100 rows')\n"
+                    error_msg += "- Clear chat history using 'Clear All Data' button\n"
+                    error_msg += "- Ask for summaries instead of full data dumps"
+                    
+                    with main_container:
+                        st.error(error_msg)
+                    st.session_state.messages.append({"role": "assistant", "content": error_msg})
+                    got_response = True  # Exit retry loop
+                    
+            except Exception as e:
+                # Catch any other unexpected errors
+                error_message = f"❌ An unexpected error occurred: {str(e)}"
                 with main_container:
-                    st.markdown(default_msg)
-                st.session_state.messages.append({"role": "assistant", "content": default_msg})
-            
-            # Load files from temp directory and clean up
-            load_and_cleanup_temp_files()
-            
-        except Exception as e:
-            error_message = f"❌ An error occurred: {str(e)}"
-            st.error(error_message)
-            import traceback
-            with st.expander("🔍 Error Details"):
-                st.code(traceback.format_exc())
-            st.session_state.messages.append({"role": "assistant", "content": error_message})
+                    st.error(error_message)
+                    with st.expander("🔍 Error Details"):
+                        import traceback
+                        st.code(traceback.format_exc())
+                
+                st.session_state.messages.append({"role": "assistant", "content": error_message})
+                got_response = True  # Exit retry loop
         
 
 # Synchronous wrapper
