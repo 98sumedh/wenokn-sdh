@@ -67,8 +67,20 @@ if "current_view" not in st.session_state:
 
 
 # ========== CLEANUP FUNCTIONS ==========
+# if "last_cleanup_check" not in st.session_state:
+#     st.session_state.last_cleanup_check = time.time()
+
+# Initialize last cleanup check with persistent timestamp
 if "last_cleanup_check" not in st.session_state:
-    st.session_state.last_cleanup_check = time.time()
+    # Check if we have a persistent timestamp file
+    cleanup_timestamp_file = Path("/tmp/.wenokn_last_cleanup")
+    if cleanup_timestamp_file.exists():
+        try:
+            st.session_state.last_cleanup_check = float(cleanup_timestamp_file.read_text())
+        except:
+            st.session_state.last_cleanup_check = 0
+    else:
+        st.session_state.last_cleanup_check = 0
 
 def cleanup_temp_dir():
     """Clean up the current session's temporary directory."""
@@ -82,7 +94,7 @@ def cleanup_temp_dir():
                 print(f"✗ Error cleaning up temp directory: {e}")
 
 def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
-    """Remove temp directories older than max_age_hours."""
+    """Remove temp directories older than max_age_hours based on their oldest file."""
     try:
         temp_path = Path(base_temp_dir)
         cutoff_time = time.time() - (max_age_hours * 3600)
@@ -91,15 +103,26 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
         # Find all wenokn_* directories
         for temp_dir in temp_path.glob("wenokn_*"):
             if temp_dir.is_dir():
-                # Check if directory is older than cutoff
-                dir_mtime = temp_dir.stat().st_mtime
-                if dir_mtime < cutoff_time:
-                    try:
+                try:
+                    # Get all files in the directory
+                    files = list(temp_dir.rglob("*"))
+                    if not files:
+                        # Empty directory, remove it
                         shutil.rmtree(temp_dir)
                         cleaned_count += 1
-                        print(f"✓ Cleaned up old temp directory: {temp_dir}")
-                    except Exception as e:
-                        print(f"✗ Error removing old directory {temp_dir}: {e}")
+                        print(f"✓ Cleaned up empty directory: {temp_dir}")
+                        continue
+                    
+                    # Find the newest file modification time
+                    newest_mtime = max(f.stat().st_mtime for f in files if f.is_file())
+                    
+                    # If even the newest file is older than cutoff, remove entire directory
+                    if newest_mtime < cutoff_time:
+                        shutil.rmtree(temp_dir)
+                        cleaned_count += 1
+                        print(f"✓ Cleaned up old directory: {temp_dir}")
+                except Exception as e:
+                    print(f"✗ Error processing directory {temp_dir}: {e}")
         
         if cleaned_count > 0:
             print(f"✓ Cleaned up {cleaned_count} old session directories")
@@ -110,21 +133,29 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
 # Register cleanup on exit
 atexit.register(cleanup_temp_dir)
 
-# Periodic cleanup of old sessions (runs every hour)
+# Periodic cleanup of old sessions (runs every hour GLOBALLY, not per session)
 current_time = time.time()
 if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
     cleanup_old_sessions(max_age_hours=24)  # Remove dirs older than 24 hours
     st.session_state.last_cleanup_check = current_time
+    # Save to persistent file so it works across all sessions
+    Path("/tmp/.wenokn_last_cleanup").write_text(str(current_time))
 
 # st.markdown(f"TODAY'S DATE: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}")
 
 # current_dir = os.getcwd()
-# current_dir = "/tmp"
-# for root, dirs, files in os.walk(current_dir):
-#     for file in files:
-#         # Join the root path and filename to get the full path
-#         full_path = os.path.join(root, file)
-#         st.markdown(full_path)
+current_dir = "/tmp"
+for root, dirs, files in os.walk(current_dir):
+    for file in files:
+        # Join the root path and filename to get the full path
+        full_path = os.path.join(root, file)
+        st.markdown(full_path)
+        
+        dir_mtime = Path(full_path).stat().st_mtime
+        mtime_datetime = datetime.fromtimestamp(dir_mtime)
+        current_datetime = datetime.now()  # Get current datetime instance
+        st.markdown(f"Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+        
 
 # current_dir = st.session_state.temp_dir
 # st.markdown(f"==================== {current_dir}")
