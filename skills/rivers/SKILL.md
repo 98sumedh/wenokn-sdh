@@ -107,7 +107,7 @@ PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX schema: <https://schema.org/>
 
-SELECT ?riverName (SAMPLE(?riverGeometry) AS ?geom)
+SELECT ?riverName (SAMPLE(?riverGeom) AS ?riverGeometry)
 WHERE {
   ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
           rdfs:label "Ross County, Ohio" .
@@ -118,7 +118,7 @@ WHERE {
   ?river rdf:type hyf:HY_FlowPath ;
          schema:name ?riverName ;
          kwg-ont:sfCrosses ?s2cell ;
-         geo:hasGeometry/geo:asWKT ?riverGeometry .
+         geo:hasGeometry/geo:asWKT ?riverGeom .
 }
 GROUP BY ?riverName
 ```
@@ -137,30 +137,35 @@ Use the following SPARQL query in the first step:
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX schema: <https://schema.org/>
 
-SELECT DISTINCT ?riverName ?riverGeometry
-WHERE {{
-  ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
-         rdfs:label ?stateName ;
-         geo:hasGeometry/geo:asWKT ?stateGeometry .
-  FILTER(STRSTARTS(STR(?state), STR(kwgr:)))
-  FILTER(STRSTARTS(LCASE(?stateName), LCASE("Ohio")))
+SELECT ?riverName ?riverGeometry
+WHERE {
+  {
+    SELECT ?riverName (SAMPLE(?geom) AS ?riverGeometry)
+    WHERE {
+      # Ohio
+      ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
+             rdfs:label "Ohio" .
 
-  ?river a hyf:HY_FlowPath ;
-         a hyf:HY_WaterBody ;
-         a schema:Place ;
-         schema:name ?riverName ;
-         geo:hasGeometry/geo:asWKT ?riverGeometry .
+      # S2 cells for Ohio
+      ?s2cell rdf:type kwg-ont:S2Cell_Level13 ;
+              kwg-ont:sfWithin | kwg-ont:sfOverlaps ?state .
 
-  FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
-  FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
-}}
-LIMIT 2000
+      # Rivers crossing those cells
+      ?river rdf:type hyf:HY_FlowPath ;
+             schema:name ?riverName ;
+             kwg-ont:sfCrosses ?s2cell ;
+             geo:hasGeometry/geo:asWKT ?geom .
+
+      FILTER(STRLEN(STR(?riverName)) > 0)
+    }
+    GROUP BY ?riverName
+  }
+}
 ```
 
 ### Example 2: Find all counties that a specific river passes
@@ -211,31 +216,32 @@ Use the following SPARQL query in the first step:
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX schema: <https://schema.org/>
 
-SELECT DISTINCT ?stateName ?stateGeometry 
+SELECT DISTINCT ?stateName ?stateGeometry
 WHERE {
-  ?river a hyf:HY_FlowPath ;
-         a hyf:HY_WaterBody ;
-         a schema:Place ;
-         schema:name ?riverName ;
+  # The Ohio River
+  ?river rdf:type hyf:HY_FlowPath ;
+         schema:name "Ohio River" ;
+         kwg-ont:sfCrosses ?s2cell ;
          geo:hasGeometry/geo:asWKT ?riverGeometry .
-  FILTER(LCASE(?riverName) = LCASE("Ohio River")) .
-  
-  ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
-          rdfs:label ?stateName ;
-          geo:hasGeometry/geo:asWKT ?stateGeometry .
-  FILTER(STRSTARTS(STR(?state), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-  FILTER(strlen(?stateName) > 2)
 
-  FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
-  FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
+  # S2 cells crossed by Ohio River
+  ?s2cell rdf:type kwg-ont:S2Cell_Level13 .
+
+  # States that overlap those S2 cells
+  ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
+         rdfs:label ?stateName ;
+         geo:hasGeometry/geo:asWKT ?stateGeometry .
+
+  ?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps ?state .
+
+  FILTER(STRSTARTS(STR(?state), STR(kwgr:)))
+  FILTER(STRLEN(?stateName) > 2)
 }
-LIMIT 200
 ```
                        
 ## Notes 
