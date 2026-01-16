@@ -102,30 +102,25 @@ Use the following SPARQL query in the first step:
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX schema: <https://schema.org/>
 
-SELECT DISTINCT ?riverName ?riverGeometry
-WHERE {{
-    ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
-                    rdfs:label ?countyName ;
-                    geo:hasGeometry/geo:asWKT ?countyGeometry.
-    FILTER(STRSTARTS(STR(?county), STR(kwgr:)))
-    FILTER(STRSTARTS(LCASE(?countyName), LCASE("Ross County, Ohio")))
+SELECT ?riverName (SAMPLE(?riverGeometry) AS ?geom)
+WHERE {
+  ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
+          rdfs:label "Ross County, Ohio" .
 
-  ?river a hyf:HY_FlowPath ;
-         a hyf:HY_WaterBody ;
-         a schema:Place ;
+  ?s2cell rdf:type kwg-ont:S2Cell_Level13 ;
+          kwg-ont:sfWithin | kwg-ont:sfOverlaps ?county .
+
+  ?river rdf:type hyf:HY_FlowPath ;
          schema:name ?riverName ;
+         kwg-ont:sfCrosses ?s2cell ;
          geo:hasGeometry/geo:asWKT ?riverGeometry .
-   
-   FILTER(geof:sfIntersects(?riverGeometry, ?countyGeometry)) .
-   FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
-}}
-LIMIT 300
+}
+GROUP BY ?riverName
 ```
 
 Note that a county name must use the format like "Ross County" (a county name only) or "Ross County, Ohio" (a county name with a state name).
