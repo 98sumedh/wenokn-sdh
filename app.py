@@ -144,17 +144,17 @@ if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
 # st.markdown(f"TODAY'S DATE: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}")
 
 # current_dir = os.getcwd()
-current_dir = "/tmp"
-for root, dirs, files in os.walk(current_dir):
-    for file in files:
-        # Join the root path and filename to get the full path
-        full_path = os.path.join(root, file)
-        st.markdown(full_path)
+# current_dir = "/tmp"
+# for root, dirs, files in os.walk(current_dir):
+#     for file in files:
+#         # Join the root path and filename to get the full path
+#         full_path = os.path.join(root, file)
+#         st.markdown(full_path)
         
-        dir_mtime = Path(full_path).stat().st_mtime
-        mtime_datetime = datetime.fromtimestamp(dir_mtime)
-        current_datetime = datetime.now()  # Get current datetime instance
-        st.markdown(f"       Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+#         dir_mtime = Path(full_path).stat().st_mtime
+#         mtime_datetime = datetime.fromtimestamp(dir_mtime)
+#         current_datetime = datetime.now()  # Get current datetime instance
+#         st.markdown(f"Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
         
 
 # current_dir = st.session_state.temp_dir
