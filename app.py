@@ -154,7 +154,7 @@ for root, dirs, files in os.walk(current_dir):
         dir_mtime = Path(full_path).stat().st_mtime
         mtime_datetime = datetime.fromtimestamp(dir_mtime)
         current_datetime = datetime.now()  # Get current datetime instance
-        st.markdown(f"Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+        st.markdown(f"       Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
         
 
 # current_dir = st.session_state.temp_dir
