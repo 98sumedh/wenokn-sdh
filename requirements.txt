@@ -1,4 +1,4 @@
-deepagents-cli
+deepagents-cli==0.0.12
 geopandas
 pandas
 numpy
