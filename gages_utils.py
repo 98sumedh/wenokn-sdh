@@ -103,29 +103,31 @@ def get_states_for_river(river_name):
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX schema: <https://schema.org/>
 
 SELECT DISTINCT ?stateName 
-WHERE {{
-  ?river a hyf:HY_FlowPath ;
-         a hyf:HY_WaterBody ;
-         a schema:Place ;
-         schema:name ?riverName ;
+WHERE {
+  ?river rdf:type hyf:HY_FlowPath ;
+         schema:name "{river_name}" ;
+         kwg-ont:sfCrosses ?s2cell ;
          geo:hasGeometry/geo:asWKT ?riverGeometry .
-  FILTER(LCASE(?riverName) = LCASE("{river_name}")) .
-  
-  ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
-          rdfs:label ?stateName ;
-          geo:hasGeometry/geo:asWKT ?stateGeometry .
-  FILTER(STRSTARTS(STR(?state), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-  FILTER(strlen(?stateName) > 2)
 
-  FILTER(geof:sfIntersects(?riverGeometry, ?stateGeometry))
-}}
-LIMIT 60
+  # S2 cells crossed by the River
+  ?s2cell rdf:type kwg-ont:S2Cell_Level13 .
+
+  # States that overlap those S2 cells
+  ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
+         rdfs:label ?stateName ;
+         geo:hasGeometry/geo:asWKT ?stateGeometry .
+
+  ?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps ?state .
+
+  FILTER(STRSTARTS(STR(?state), STR(kwgr:)))
+  FILTER(STRLEN(?stateName) > 2)
+}
 '''
     
     try:
