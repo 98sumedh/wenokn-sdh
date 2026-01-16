@@ -367,7 +367,7 @@ def list_files_with_timestamps(directory="/tmp"):
             # Display dataframe
             st.dataframe(
                 filtered_df,
-                width='stretch'
+                width='stretch',
                 height=400,
                 column_config={
                     "Modified": st.column_config.DatetimeColumn(
