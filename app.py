@@ -57,18 +57,27 @@ if "generated_code" not in st.session_state:
     st.session_state.generated_code = []  # List of code snippets
 if "skills_documentation" not in st.session_state:
     st.session_state.skills_documentation = {}
-if "user_session_id" not in st.session_state:
-    st.session_state.user_session_id = str(uuid.uuid4())[:8]  # Unique per session
-if "temp_dir" not in st.session_state:
-    # Create user-specific temp directory
-    st.session_state.temp_dir = tempfile.mkdtemp(prefix=f"wenokn_{st.session_state.user_session_id}_")
 if "current_view" not in st.session_state:
     st.session_state.current_view = "conversation"  # "conversation" or "map"
 
 
 # ========== CLEANUP FUNCTIONS ==========
-if "last_cleanup_check" not in st.session_state:
-    st.session_state.last_cleanup_check = time.time()
+import fcntl  # For file locking (Unix/Linux only)
+
+# Global cleanup state file - shared across ALL sessions
+CLEANUP_LOCK_FILE = "/tmp/wenokn_cleanup.lock"
+CLEANUP_STATE_FILE = "/tmp/wenokn_cleanup_state.json"
+
+# Initialize session state
+if "user_session_id" not in st.session_state:
+    st.session_state.user_session_id = str(uuid.uuid4())[:8]  # Unique per session
+if "temp_dir" not in st.session_state:
+    # Create user-specific temp directory with timestamp
+    # Format: wenokn_<session_id>_<unix_timestamp>
+    timestamp = int(time.time())
+    st.session_state.temp_dir = tempfile.mkdtemp(
+        prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
+    )
 
 def cleanup_temp_dir():
     """Clean up the current session's temporary directory."""
@@ -81,41 +90,139 @@ def cleanup_temp_dir():
             except Exception as e:
                 print(f"✗ Error cleaning up temp directory: {e}")
 
-def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
-    """Remove temp directories older than max_age_hours."""
+def get_last_cleanup_time():
+    """Get the last cleanup timestamp from the shared state file."""
     try:
+        if os.path.exists(CLEANUP_STATE_FILE):
+            with open(CLEANUP_STATE_FILE, 'r') as f:
+                state = json.load(f)
+                return state.get('last_cleanup_time', 0)
+    except Exception as e:
+        print(f"✗ Error reading cleanup state: {e}")
+    return 0
+
+def update_cleanup_time():
+    """Update the last cleanup timestamp in the shared state file."""
+    try:
+        with open(CLEANUP_STATE_FILE, 'w') as f:
+            json.dump({'last_cleanup_time': time.time()}, f)
+    except Exception as e:
+        print(f"✗ Error updating cleanup state: {e}")
+
+def parse_timestamp_from_dirname(dirname):
+    """
+    Extract the Unix timestamp from a directory name.
+    Expected format: wenokn_<session_id>_<timestamp>_<random>
+    
+    Returns:
+        int: Unix timestamp, or None if parsing fails
+    """
+    try:
+        # Split by underscore: ['wenokn', '<session_id>', '<timestamp>', '<random>']
+        parts = dirname.split('_')
+        if len(parts) >= 3 and parts[0] == 'wenokn':
+            # The timestamp is the third part (index 2)
+            return int(parts[2])
+    except (ValueError, IndexError) as e:
+        print(f"⚠️ Could not parse timestamp from directory name '{dirname}': {e}")
+    return None
+
+def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
+    """
+    Remove temp directories that are older than max_age_hours based on the
+    timestamp embedded in their directory name.
+    
+    This is much more reliable than filesystem timestamps because:
+    - The creation time is explicitly part of the directory name
+    - No dependency on filesystem mount options (noatime, relatime)
+    - Simple integer comparison
+    
+    This function uses file locking to ensure only ONE session performs cleanup
+    at a time, even with multiple concurrent users.
+    """
+    lock_file = None
+    try:
+        # Try to acquire an exclusive lock with non-blocking mode
+        lock_file = open(CLEANUP_LOCK_FILE, 'w')
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        
+        # Successfully acquired lock - this session will do the cleanup
+        print(f"✓ Acquired cleanup lock, starting cleanup...")
+        
         temp_path = Path(base_temp_dir)
         cutoff_time = time.time() - (max_age_hours * 3600)
         cleaned_count = 0
+        skipped_active = 0
+        skipped_unparseable = 0
         
         # Find all wenokn_* directories
         for temp_dir in temp_path.glob("wenokn_*"):
             if temp_dir.is_dir():
-                # Check if directory is older than cutoff
-                dir_mtime = temp_dir.stat().st_mtime
-                if dir_mtime < cutoff_time:
-                    try:
-                        shutil.rmtree(temp_dir)
-                        cleaned_count += 1
-                        print(f"✓ Cleaned up old temp directory: {temp_dir}")
-                    except Exception as e:
-                        print(f"✗ Error removing old directory {temp_dir}: {e}")
+                try:
+                    # Extract timestamp from directory name
+                    dir_timestamp = parse_timestamp_from_dirname(temp_dir.name)
+                    
+                    if dir_timestamp is None:
+                        # Could not parse timestamp - skip this directory
+                        skipped_unparseable += 1
+                        print(f"⚠️ Skipping directory with unparseable name: {temp_dir.name}")
+                        continue
+                    
+                    # Calculate age in hours
+                    age_hours = (time.time() - dir_timestamp) / 3600
+                    
+                    if dir_timestamp < cutoff_time:
+                        # Directory is older than max_age_hours
+                        try:
+                            shutil.rmtree(temp_dir)
+                            cleaned_count += 1
+                            print(f"✓ Cleaned up old temp directory: {temp_dir.name} (age: {age_hours:.1f} hours)")
+                        except Exception as e:
+                            print(f"✗ Error removing old directory {temp_dir}: {e}")
+                    else:
+                        skipped_active += 1
+                        
+                except Exception as e:
+                    print(f"✗ Error checking directory {temp_dir}: {e}")
         
         if cleaned_count > 0:
-            print(f"✓ Cleaned up {cleaned_count} old session directories")
+            print(f"✓ Cleaned up {cleaned_count} old session directories (skipped {skipped_active} active, {skipped_unparseable} unparseable)")
+        elif skipped_active > 0 or skipped_unparseable > 0:
+            print(f"✓ Cleanup check complete: {skipped_active} active sessions preserved, {skipped_unparseable} unparseable skipped")
+        
+        # Update the global cleanup timestamp
+        update_cleanup_time()
             
+    except BlockingIOError:
+        # Another session is already running cleanup - skip silently
+        print(f"⏭️ Cleanup already in progress by another session, skipping...")
+        
     except Exception as e:
         print(f"✗ Error in cleanup_old_sessions: {e}")
+        
+    finally:
+        # Release the lock if we acquired it
+        if lock_file:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                lock_file.close()
+            except Exception as e:
+                print(f"✗ Error releasing lock: {e}")
 
-# Register cleanup on exit
+# Register cleanup on exit for current session only
 atexit.register(cleanup_temp_dir)
 
-# Periodic cleanup of old sessions (runs every hour)
-current_time = time.time()
-if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
-    cleanup_old_sessions(max_age_hours=24)  # Remove dirs older than 24 hours
-    st.session_state.last_cleanup_check = current_time
+# Cross-session cleanup - runs every 10 minutes, but only ONE session executes it
+CLEANUP_INTERVAL_SECONDS = 600  # 10 minutes
 
+current_time = time.time()
+last_cleanup_time = get_last_cleanup_time()
+
+# Check if cleanup is due (10+ minutes since last cleanup across ALL sessions)
+if current_time - last_cleanup_time > CLEANUP_INTERVAL_SECONDS:
+    # Try to run cleanup (will only succeed if no other session is running it)
+    cleanup_old_sessions(max_age_hours=24)
+    
 # st.markdown(f"TODAY'S DATE: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}")
 
 # current_dir = os.getcwd()
@@ -138,6 +245,163 @@ if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
 # import sys
 # st.code(sys.executable)
 # st.write(f"""When you need to run Python via shell, always use {sys.executable} -c "....." """)
+
+def list_files_with_timestamps(directory="/tmp"):
+    """
+    List all files and folders under a directory with their timestamps.
+    
+    Args:
+        directory: The root directory to scan (default: /tmp)
+    """
+    st.subheader(f"📁 Scanning directory: {directory}")
+    
+    # Collect data in a list
+    data = []
+    
+    try:
+        # First pass: collect all data
+        temp_data = []
+        for root, dirs, files in os.walk(directory):
+            # Process directories
+            for dir_name in dirs:
+                path = os.path.join(root, dir_name)
+                try:
+                    stat_info = os.stat(path)
+                    temp_data.append({
+                        'Type': '📂 DIR',
+                        'Name': dir_name,
+                        'Path': path,
+                        'Modified': datetime.fromtimestamp(stat_info.st_mtime),
+                        'Created': datetime.fromtimestamp(stat_info.st_ctime),
+                        'Accessed': datetime.fromtimestamp(stat_info.st_atime),
+                        'Size': None  # Will be calculated later
+                    })
+                except (PermissionError, FileNotFoundError) as e:
+                    temp_data.append({
+                        'Type': '📂 DIR',
+                        'Name': dir_name,
+                        'Path': path,
+                        'Modified': None,
+                        'Created': None,
+                        'Accessed': None,
+                        'Size': f'Error: {str(e)[:30]}'
+                    })
+            
+            # Process files
+            for file_name in files:
+                path = os.path.join(root, file_name)
+                try:
+                    stat_info = os.stat(path)
+                    size_kb = stat_info.st_size / 1024
+                    temp_data.append({
+                        'Type': '📄 FILE',
+                        'Name': file_name,
+                        'Path': path,
+                        'Modified': datetime.fromtimestamp(stat_info.st_mtime),
+                        'Created': datetime.fromtimestamp(stat_info.st_ctime),
+                        'Accessed': datetime.fromtimestamp(stat_info.st_atime),
+                        'Size': f'{size_kb:.2f} KB' if size_kb < 1024 else f'{size_kb/1024:.2f} MB'
+                    })
+                except (PermissionError, FileNotFoundError) as e:
+                    temp_data.append({
+                        'Type': '📄 FILE',
+                        'Name': file_name,
+                        'Path': path,
+                        'Modified': None,
+                        'Created': None,
+                        'Accessed': None,
+                        'Size': f'Error: {str(e)[:30]}'
+                    })
+        
+        # Second pass: count files in each directory
+        dir_file_counts = {}
+        for root, dirs, files in os.walk(directory):
+            try:
+                file_count = len([f for f in files if os.path.isfile(os.path.join(root, f))])
+                dir_file_counts[root] = file_count
+            except (PermissionError, FileNotFoundError):
+                dir_file_counts[root] = 0
+        
+        # Update directory sizes with file counts
+        data = []
+        for item in temp_data:
+            if item['Type'] == '📂 DIR' and item['Size'] is None:
+                path = item['Path']
+                count = dir_file_counts.get(path, 0)
+                item['Size'] = f"{count} file{'s' if count != 1 else ''}"
+            data.append(item)
+        
+        # Create DataFrame
+        if data:
+            df = pd.DataFrame(data)
+            
+            # Display summary metrics
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Items", len(df))
+            with col2:
+                st.metric("Files", len(df[df['Type'] == '📄 FILE']))
+            with col3:
+                st.metric("Directories", len(df[df['Type'] == '📂 DIR']))
+            
+            # Add filters
+            st.subheader("Filters")
+            col1, col2 = st.columns(2)
+            with col1:
+                type_filter = st.multiselect(
+                    "Filter by type",
+                    options=df['Type'].unique(),
+                    default=df['Type'].unique()
+                )
+            with col2:
+                search_term = st.text_input("Search in name/path", "")
+            
+            # Apply filters
+            filtered_df = df[df['Type'].isin(type_filter)]
+            if search_term:
+                filtered_df = filtered_df[
+                    filtered_df['Name'].str.contains(search_term, case=False, na=False) |
+                    filtered_df['Path'].str.contains(search_term, case=False, na=False)
+                ]
+            
+            # Display dataframe
+            st.dataframe(
+                filtered_df,
+                use_container_width=True,
+                height=400,
+                column_config={
+                    "Modified": st.column_config.DatetimeColumn(
+                        "Modified",
+                        format="YYYY-MM-DD HH:mm:ss"
+                    ),
+                    "Created": st.column_config.DatetimeColumn(
+                        "Created",
+                        format="YYYY-MM-DD HH:mm:ss"
+                    ),
+                    "Accessed": st.column_config.DatetimeColumn(
+                        "Accessed",
+                        format="YYYY-MM-DD HH:mm:ss"
+                    ),
+                }
+            )
+            
+            # Download option
+            csv = filtered_df.to_csv(index=False)
+            st.download_button(
+                label="📥 Download as CSV",
+                data=csv,
+                file_name=f"file_list_{directory.replace('/', '_')}.csv",
+                mime="text/csv"
+            )
+        else:
+            st.warning("No files or directories found.")
+    
+    except PermissionError:
+        st.error(f"❌ Permission denied: Cannot access {directory}")
+    except Exception as e:
+        st.error(f"❌ Error scanning directory: {e}")
+
+list_files_with_timestamps("/tmp")
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
