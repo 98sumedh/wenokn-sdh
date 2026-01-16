@@ -401,7 +401,7 @@ def list_files_with_timestamps(directory="/tmp"):
     except Exception as e:
         st.error(f"❌ Error scanning directory: {e}")
 
-list_files_with_timestamps("/tmp")
+# list_files_with_timestamps("/tmp")
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
