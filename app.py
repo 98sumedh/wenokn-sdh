@@ -60,31 +60,15 @@ if "skills_documentation" not in st.session_state:
 if "user_session_id" not in st.session_state:
     st.session_state.user_session_id = str(uuid.uuid4())[:8]  # Unique per session
 if "temp_dir" not in st.session_state:
-    # Create user-specific temp directory with timestamp
-    timestamp = int(time.time())  # Unix timestamp
-    st.session_state.temp_dir = tempfile.mkdtemp(
-        prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
-    )
-    # Example: /tmp/wenokn_abc12345_1737014400_xy
+    # Create user-specific temp directory
+    st.session_state.temp_dir = tempfile.mkdtemp(prefix=f"wenokn_{st.session_state.user_session_id}_")
 if "current_view" not in st.session_state:
     st.session_state.current_view = "conversation"  # "conversation" or "map"
 
-# ========== CLEANUP FUNCTIONS ==========
-# if "last_cleanup_check" not in st.session_state:
-#     st.session_state.last_cleanup_check = time.time()
 
-# Initialize last cleanup check with persistent timestamp
+# ========== CLEANUP FUNCTIONS ==========
 if "last_cleanup_check" not in st.session_state:
-    # Check if we have a persistent timestamp file
-    cleanup_timestamp_file = Path("/tmp/.wenokn_last_cleanup")
-    if cleanup_timestamp_file.exists():
-        try:
-            st.session_state.last_cleanup_check = float(cleanup_timestamp_file.read_text())
-        except:
-            st.session_state.last_cleanup_check = 0
-    else:
-        st.session_state.last_cleanup_check = 0
-        
+    st.session_state.last_cleanup_check = time.time()
 
 def cleanup_temp_dir():
     """Clean up the current session's temporary directory."""
@@ -97,75 +81,40 @@ def cleanup_temp_dir():
             except Exception as e:
                 print(f"✗ Error cleaning up temp directory: {e}")
 
-def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=48):
-    """
-    Remove temp directories older than max_age_hours based on timestamp in dirname.
-    CONSERVATIVE: Default 48 hours to ensure no active sessions are affected.
-    """
+def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
+    """Remove temp directories older than max_age_hours."""
     try:
         temp_path = Path(base_temp_dir)
         cutoff_time = time.time() - (max_age_hours * 3600)
         cleaned_count = 0
-        protected_count = 0
         
         # Find all wenokn_* directories
         for temp_dir in temp_path.glob("wenokn_*"):
             if temp_dir.is_dir():
-                try:
-                    # Extract timestamp from directory name
-                    # Expected format: wenokn_{session_id}_{timestamp}_{random}/
-                    parts = temp_dir.name.split('_')
-                    if len(parts) >= 3:
-                        try:
-                            # The timestamp should be the third part (index 2)
-                            dir_timestamp = int(parts[2])
-                            
-                            # Only delete if older than cutoff
-                            if dir_timestamp < cutoff_time:
-                                # Double-check: also verify newest file is old
-                                files = [f for f in temp_dir.rglob("*") if f.is_file()]
-                                if files:
-                                    newest_file_mtime = max(f.stat().st_mtime for f in files)
-                                    # Both directory timestamp AND newest file must be old
-                                    if newest_file_mtime < cutoff_time:
-                                        shutil.rmtree(temp_dir)
-                                        cleaned_count += 1
-                                        age_hours = (time.time() - dir_timestamp) / 3600
-                                        print(f"✓ Removed: {temp_dir.name} (age: {age_hours:.1f} hours)")
-                                    else:
-                                        protected_count += 1
-                                else:
-                                    # Empty directory, but still respect the timestamp
-                                    shutil.rmtree(temp_dir)
-                                    cleaned_count += 1
-                            else:
-                                protected_count += 1
-                                
-                        except (ValueError, IndexError):
-                            # Can't parse timestamp from dirname, skip for safety
-                            print(f"⚠ Skipped: {temp_dir.name} (can't parse timestamp)")
-                            continue
-                    
-                except Exception as e:
-                    print(f"✗ Error processing {temp_dir.name}: {e}")
+                # Check if directory is older than cutoff
+                dir_mtime = temp_dir.stat().st_mtime
+                if dir_mtime < cutoff_time:
+                    try:
+                        shutil.rmtree(temp_dir)
+                        cleaned_count += 1
+                        print(f"✓ Cleaned up old temp directory: {temp_dir}")
+                    except Exception as e:
+                        print(f"✗ Error removing old directory {temp_dir}: {e}")
         
         if cleaned_count > 0:
-            print(f"✓ Cleanup: Removed {cleaned_count} old directories, protected {protected_count} recent ones")
+            print(f"✓ Cleaned up {cleaned_count} old session directories")
             
     except Exception as e:
         print(f"✗ Error in cleanup_old_sessions: {e}")
-        
+
 # Register cleanup on exit
 atexit.register(cleanup_temp_dir)
 
-# Periodic cleanup of old sessions (runs every 6 hours GLOBALLY, not per session)
+# Periodic cleanup of old sessions (runs every hour)
 current_time = time.time()
-if current_time - st.session_state.last_cleanup_check > 21600:  # 6 hours (21600 seconds)
-    cleanup_old_sessions(max_age_hours=48)  # Remove dirs older than 48 hours (CONSERVATIVE)
+if current_time - st.session_state.last_cleanup_check > 3600:  # 1 hour
+    cleanup_old_sessions(max_age_hours=24)  # Remove dirs older than 24 hours
     st.session_state.last_cleanup_check = current_time
-    # Save to persistent file so it works across all sessions
-    Path("/tmp/.wenokn_last_cleanup").write_text(str(current_time))
-    
 
 # st.markdown(f"TODAY'S DATE: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}")
 
@@ -176,12 +125,6 @@ if current_time - st.session_state.last_cleanup_check > 21600:  # 6 hours (21600
 #         # Join the root path and filename to get the full path
 #         full_path = os.path.join(root, file)
 #         st.markdown(full_path)
-        
-#         dir_mtime = Path(full_path).stat().st_mtime
-#         mtime_datetime = datetime.fromtimestamp(dir_mtime)
-#         current_datetime = datetime.now()  # Get current datetime instance
-#         st.markdown(f"Last modified: {mtime_datetime.strftime('%Y-%m-%d %H:%M:%S')},   Current Time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
-        
 
 # current_dir = st.session_state.temp_dir
 # st.markdown(f"==================== {current_dir}")
@@ -1198,17 +1141,8 @@ with st.sidebar:
         st.session_state.dataframes = {}
         st.session_state.generated_code = []
         st.session_state.messages = []
-        
-        # Remove old temp directory
-        if os.path.exists(st.session_state.temp_dir):
-            shutil.rmtree(st.session_state.temp_dir)
-        
-        # Create NEW temp directory with NEW timestamp
-        timestamp = int(time.time())
-        st.session_state.temp_dir = tempfile.mkdtemp(
-            prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
-        )
-        
+        shutil.rmtree(st.session_state.temp_dir)
+        os.makedirs(st.session_state.temp_dir)
         st.toast("All data cleared!", icon="✅")
         time.sleep(1)
         st.rerun()
@@ -1337,21 +1271,6 @@ if st.session_state.current_view == "sample":
     """)
 
 elif st.session_state.current_view == "map":
-
-    # === TEMPORARY DEBUG ===
-    st.write("### 🐛 Debug Info")
-    st.write(f"**Temp dir:** `{st.session_state.temp_dir if 'temp_dir' in st.session_state else 'NOT SET'}`")
-    st.write(f"**Geodataframes in session:** {list(st.session_state.geodataframes.keys())}")
-    st.write(f"**Dataframes in session:** {list(st.session_state.dataframes.keys())}")
-    
-    if "temp_dir" in st.session_state:
-        temp_dir = Path(st.session_state.temp_dir)
-        if temp_dir.exists():
-            all_files = list(temp_dir.glob("*"))
-            st.write(f"**Files in temp dir:** {[f.name for f in all_files]}")
-        else:
-            st.write("**Temp dir does not exist!**")
-    # === END DEBUG ===
     
     # Check if we have any data at all
     has_geodata = len(st.session_state.geodataframes) > 0
