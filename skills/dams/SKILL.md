@@ -120,44 +120,35 @@ When reporting the dams on a river, always mention the buffer size used.
 import sparql_dataframe
 import geopandas as gpd
 from shapely import wkt
+from pynhd import GeoConnex
 
-# SPARQL query with spatial filtering
+# --- Step 1: Construct SPARQL query for Ross County ---
 query = '''
-PREFIX schema: <https://schema.org/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?damName ?damGeometry ?damDescription ?countyName
+SELECT DISTINCT ?countyName ?countyGeometry
 WHERE {
-    # Specify the county
-    VALUES ?inputCounty { "Ross County, Ohio" }
-    
-    # Get county geometry
-    ?county rdf:type <http://stko-kwg.geog.ucsb.edu/lod/ontology/AdministrativeRegion_2>;
-            rdfs:label ?countyName;
-            geo:hasGeometry/geo:asWKT ?countyGeometry.
-    FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
-    FILTER(STRSTARTS(LCASE(STR(?countyName)), LCASE(?inputCounty)))
-    
-    # Get dams
-    ?dam schema:provider "https://nid.usace.army.mil"^^<https://schema.org/url>;
-         schema:name ?damName;
-         schema:description ?damDescription;
-         geo:hasGeometry/geo:asWKT ?damGeometry.
-    FILTER(STRSTARTS(STR(?dam), "https://geoconnex.us/ref/dams/"))
-    
-    # Spatial filter - dam must be contained in county
-    FILTER(geof:sfContains(?countyGeometry, ?damGeometry))
+  VALUES ?inputCounty {
+    "Ross County"
+  }
+
+  ?county rdf:type <http://stko-kwg.geog.ucsb.edu/lod/ontology/AdministrativeRegion_2> ;
+          rdfs:label ?countyName ;
+          geo:hasGeometry/geo:asWKT ?countyGeometry .
+
+  FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
+  FILTER( STRSTARTS(LCASE(STR(?countyName)), LCASE(?inputCounty)) )
 }
+LIMIT 100
 '''
 
-# Execute query
-endpoint_url = "https://frink.apps.renci.org/federation/sparql"
+# --- Step 2: Send the SPARQL query to the FRINK endpoint ---
+endpoint_url = 'https://frink.apps.renci.org/federation/sparql'
 df = sparql_dataframe.get(endpoint_url, query)
 
-# Convert to GeoDataFrame
+# --- Step 3: Wrap the dataframe as a GeoDataframe ---
 wkt_col = None
 for col in df.columns:
     col_lower = col.lower()
@@ -170,21 +161,23 @@ for col in df.columns:
                 break
 
 if wkt_col is None:
-    raise ValueError("No WKT geometry column found")
+    raise ValueError('No WKT geometry column found in SPARQL result.')
 
 df = df.dropna(subset=[wkt_col]).copy()
 df['geometry'] = df[wkt_col].apply(wkt.loads)
 gdf = gpd.GeoDataFrame(df, geometry='geometry', crs='EPSG:4326')
 
-# Display results
-print(f"Found {len(gdf)} dams in Ross County, Ohio")
-for _, row in gdf.iterrows():
-    print(f"- {row['damName']}")
+# Ensure we have the correct Ross County (e.g., in Ohio)
+ross_county_geom = gdf.geometry.iloc[0]
+
+# --- Step 4: Use PyNHD GeoConnex to find dams ---
+# The method name for GeoConnex is 'bygeometry'
+gcx = GeoConnex("dams")
+dams_in_county = gcx.bygeometry(ross_county_geom)
 ```
 
 **Key Points:**
 - Uses `AdministrativeRegion_2` for counties
-- Spatial filtering with `geof:sfContains(?countyGeometry, ?damGeometry)`
 - County name must include state: "Ross County, Ohio"
 
 ---
