@@ -1337,6 +1337,21 @@ if st.session_state.current_view == "sample":
     """)
 
 elif st.session_state.current_view == "map":
+
+    # === TEMPORARY DEBUG ===
+    st.write("### 🐛 Debug Info")
+    st.write(f"**Temp dir:** `{st.session_state.temp_dir if 'temp_dir' in st.session_state else 'NOT SET'}`")
+    st.write(f"**Geodataframes in session:** {list(st.session_state.geodataframes.keys())}")
+    st.write(f"**Dataframes in session:** {list(st.session_state.dataframes.keys())}")
+    
+    if "temp_dir" in st.session_state:
+        temp_dir = Path(st.session_state.temp_dir)
+        if temp_dir.exists():
+            all_files = list(temp_dir.glob("*"))
+            st.write(f"**Files in temp dir:** {[f.name for f in all_files]}")
+        else:
+            st.write("**Temp dir does not exist!**")
+    # === END DEBUG ===
     
     # Check if we have any data at all
     has_geodata = len(st.session_state.geodataframes) > 0
