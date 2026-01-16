@@ -98,19 +98,29 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
     try:
         temp_path = Path(base_temp_dir)
         cutoff_time = time.time() - (max_age_hours * 3600)
+        empty_dir_grace_period = time.time() - 3600  # 1 hour grace for empty dirs
         cleaned_count = 0
+        empty_count = 0
+        
+        # Get current session's temp dir to protect it
+        current_temp_dir = Path(st.session_state.temp_dir) if "temp_dir" in st.session_state else None
         
         # Find all wenokn_* directories
         for temp_dir in temp_path.glob("wenokn_*"):
             if temp_dir.is_dir():
+                # Skip current session's directory
+                if current_temp_dir and temp_dir == current_temp_dir:
+                    continue
+                
                 try:
                     # Get all files in the directory
                     files = list(temp_dir.rglob("*"))
                     if not files:
-                        # Empty directory, remove it
-                        shutil.rmtree(temp_dir)
-                        cleaned_count += 1
-                        print(f"✓ Cleaned up empty directory: {temp_dir}")
+                        # Empty directory - only remove if older than 1 hour
+                        dir_mtime = temp_dir.stat().st_mtime
+                        if dir_mtime < empty_dir_grace_period:
+                            shutil.rmtree(temp_dir)
+                            empty_count += 1
                         continue
                     
                     # Find the newest file modification time
@@ -120,15 +130,16 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24):
                     if newest_mtime < cutoff_time:
                         shutil.rmtree(temp_dir)
                         cleaned_count += 1
-                        print(f"✓ Cleaned up old directory: {temp_dir}")
                 except Exception as e:
                     print(f"✗ Error processing directory {temp_dir}: {e}")
         
-        if cleaned_count > 0:
-            print(f"✓ Cleaned up {cleaned_count} old session directories")
+        # Print summary
+        if empty_count > 0 or cleaned_count > 0:
+            print(f"✓ Cleanup summary: {empty_count} empty directories, {cleaned_count} old directories removed")
             
     except Exception as e:
         print(f"✗ Error in cleanup_old_sessions: {e}")
+        
 
 # Register cleanup on exit
 atexit.register(cleanup_temp_dir)
