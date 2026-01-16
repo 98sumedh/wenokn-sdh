@@ -177,33 +177,31 @@ LIMIT 2000
 Use the following SPARQL query in the first step:
 
 ```
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX schema: <https://schema.org/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
-PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
-PREFIX schema: <https://schema.org/>
 
-SELECT DISTINCT ?countyName ?countyGeometry 
+SELECT DISTINCT ?countyName ?countyGeometry
 WHERE {
-  ?river a hyf:HY_FlowPath ;
-         a hyf:HY_WaterBody ;
-         a schema:Place ;
-         schema:name ?riverName ;
-         geo:hasGeometry/geo:asWKT ?riverGeometry .
-  FILTER(LCASE(?riverName) = LCASE("Ohio River")) .
-  
+  # Find counties
   ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
           rdfs:label ?countyName ;
           geo:hasGeometry/geo:asWKT ?countyGeometry .
   FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/"))
   
-  FILTER(geof:sfIntersects(?riverGeometry, ?countyGeometry))
-  FILTER(BOUND(?riverName) && STRLEN(LCASE(STR(?riverName))) > 0)
+  # Check that county intersects with Ohio River
+  FILTER EXISTS {
+    ?ohioRiver rdf:type hyf:HY_FlowPath ;
+               schema:name "Ohio River" ;
+               kwg-ont:sfCrosses ?s2cell1 .
+    ?s2cell1 rdf:type kwg-ont:S2Cell_Level13 ;
+             kwg-ont:sfWithin | kwg-ont:sfOverlaps ?county .
+  }
 }
-LIMIT 200
 ```
 
 ### Example 4: Find all states that a specific river passes
