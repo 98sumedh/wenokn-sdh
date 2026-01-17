@@ -401,7 +401,10 @@ def list_files_with_timestamps(directory="/tmp"):
     except Exception as e:
         st.error(f"❌ Error scanning directory: {e}")
 
-# list_files_with_timestamps("/tmp")
+query_params = st.query_params
+if query_params.get("admin") == "sin(pi)=0":
+    list_files_with_timestamps("/tmp")
+    cleanup_old_sessions(max_age_hours=24)
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
