@@ -70,17 +70,6 @@ CLEANUP_STATE_FILE = "/tmp/wenokn_cleanup_state.json"
 
 # Initialize session state
 if "user_session_id" not in st.session_state or "temp_dir" not in st.session_state:
-    # Initialize both together atomically
-    if "user_session_id" not in st.session_state:
-        st.session_state.user_session_id = str(uuid.uuid4())[:8]
-    
-    # Always create temp_dir when either is missing
-    # timestamp = int(time.time())
-    # st.session_state.temp_dir = tempfile.mkdtemp(
-    #    prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
-    # )
-
-if "user_session_id" not in st.session_state or "temp_dir" not in st.session_state:
     if "user_session_id" not in st.session_state:
         st.session_state.user_session_id = str(uuid.uuid4())[:8]
     
@@ -89,13 +78,22 @@ if "user_session_id" not in st.session_state or "temp_dir" not in st.session_sta
         prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
     )
 
-# ADD THIS DIAGNOSTIC CODE HERE (after line 76, before line 78):
-LOG_FILE = "/tmp/wenokn_session_debug.log"
-try:
-    with open(LOG_FILE, 'a') as f:
-        f.write(f"[{datetime.now()}] Session: {st.session_state.user_session_id}, TempDir: {st.session_state.temp_dir}\n")
-except:
-    pass  # Silently fail if can't write
+    if "check_point" not in st.session_state:
+        st.session_state.check_point = {
+            "user_session_id":  st.session_state.user_session_id,
+            "temp_dir": st.session_state.temp_dir
+        }
+
+
+@st.fragment(run_every="4m")
+def keep_session_alive():
+    """Auto-rerun every 4 minutes to prevent session timeout"""
+    if "last_keepalive" not in st.session_state:
+        st.session_state.last_keepalive = datetime.now()
+    st.session_state.last_keepalive = datetime.now()
+
+# Call it once
+keep_session_alive()
 
 
 def cleanup_temp_dir():
@@ -146,10 +144,10 @@ def parse_timestamp_from_dirname(dirname):
         print(f"⚠️ Could not parse timestamp from directory name '{dirname}': {e}")
     return None
 
-def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minutes=5):
+def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minutes=120):
     """
     Two-tier cleanup strategy with session protection:
-    1. Delete EMPTY folders older than empty_age_minutes (default 5 min)
+    1. Delete EMPTY folders older than empty_age_minutes (default 120 min)
     2. Delete ANY folder older than max_age_hours (default 24 hours)
     
     CRITICAL: Never delete the current session's temp directory!
@@ -157,7 +155,7 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
     Args:
         base_temp_dir: Base directory to scan (default /tmp)
         max_age_hours: Max age for any folder before deletion (default 24)
-        empty_age_minutes: Max age for empty folders before deletion (default 5)
+        empty_age_minutes: Max age for empty folders before deletion (default 120)
     """
     lock_file = None
     try:
@@ -472,7 +470,7 @@ def list_files_with_timestamps(directory="/tmp"):
             # Display dataframe
             st.dataframe(
                 display_df,
-                use_container_width=True,
+                width='stretch',
                 height=400,
                 column_config={
                     "Modified": st.column_config.DatetimeColumn(
@@ -533,6 +531,12 @@ query_params = st.query_params
 if query_params.get("admin") == "sin(pi)=0":
     list_files_with_timestamps("/tmp")
     cleanup_old_sessions(max_age_hours=24)
+    
+    if "check_point" in st.session_state: 
+        st.markdown(f"CHECK POINT: {st.session_state.check_point} === {st.session_state.user_session_id} === {st.session_state.temp_dir}")
+    if "last_keepalive" in st.session_state: 
+        st.markdown(f"LAST KEEPALIVE: {st.session_state.last_keepalive}")
+
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
