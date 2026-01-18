@@ -78,11 +78,14 @@ if "user_session_id" not in st.session_state or "temp_dir" not in st.session_sta
         prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
     )
 
-    if "check_point" not in st.session_state:
-        st.session_state.check_point = {
-            "user_session_id":  st.session_state.user_session_id,
-            "temp_dir": st.session_state.temp_dir
-        }
+if "temp_dir" in st.session_state:
+    if not os.path.exists(st.session_state.temp_dir):
+        # Temp directory was deleted (by cleanup or system)
+        # Recreate it with the SAME session_id but NEW timestamp
+        timestamp = int(time.time())
+        st.session_state.temp_dir = tempfile.mkdtemp(
+            prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
+        )
 
 
 @st.fragment(run_every="4m")
@@ -144,10 +147,10 @@ def parse_timestamp_from_dirname(dirname):
         print(f"⚠️ Could not parse timestamp from directory name '{dirname}': {e}")
     return None
 
-def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minutes=120):
+def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minutes=60):
     """
     Two-tier cleanup strategy with session protection:
-    1. Delete EMPTY folders older than empty_age_minutes (default 120 min)
+    1. Delete EMPTY folders older than empty_age_minutes (default 60 min)
     2. Delete ANY folder older than max_age_hours (default 24 hours)
     
     CRITICAL: Never delete the current session's temp directory!
@@ -155,7 +158,7 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
     Args:
         base_temp_dir: Base directory to scan (default /tmp)
         max_age_hours: Max age for any folder before deletion (default 24)
-        empty_age_minutes: Max age for empty folders before deletion (default 120)
+        empty_age_minutes: Max age for empty folders before deletion (default 60)
     """
     lock_file = None
     try:
@@ -164,7 +167,7 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         
         # Successfully acquired lock - this session will do the cleanup
-        print(f"✓ Acquired cleanup lock, starting cleanup...")
+        # print(f"✓ Acquired cleanup lock, starting cleanup...")
         
         # Get current session's temp directory to protect it
         current_temp_dir = st.session_state.get("temp_dir", None)
@@ -185,7 +188,7 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
                     # CRITICAL: Skip current session's temp directory
                     if current_temp_dir and str(temp_dir) == current_temp_dir:
                         skipped_current += 1
-                        print(f"⚠️ Skipping current session directory: {temp_dir.name}")
+                        # print(f"⚠️ Skipping current session directory: {temp_dir.name}")
                         continue
                     
                     # Extract timestamp from directory name
@@ -194,7 +197,7 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
                     if dir_timestamp is None:
                         # Could not parse timestamp - skip this directory
                         skipped_unparseable += 1
-                        print(f"⚠️ Skipping directory with unparseable name: {temp_dir.name}")
+                        # print(f"⚠️ Skipping directory with unparseable name: {temp_dir.name}")
                         continue
                     
                     # Calculate age
@@ -223,21 +226,22 @@ def cleanup_old_sessions(base_temp_dir="/tmp", max_age_hours=24, empty_age_minut
                         try:
                             shutil.rmtree(temp_dir)
                             cleaned_count += 1
-                            print(f"✓ Cleaned up old temp directory: {temp_dir.name} ({reason})")
+                            # print(f"✓ Cleaned up old temp directory: {temp_dir.name} ({reason})")
                         except Exception as e:
-                            print(f"✗ Error removing old directory {temp_dir}: {e}")
-                        
+                            # print(f"✗ Error removing old directory {temp_dir}: {e}")
+                            pass
                 except Exception as e:
-                    print(f"✗ Error checking directory {temp_dir}: {e}")
-        
-        if cleaned_count > 0:
-            print(f"✓ Cleaned up {cleaned_count} old session directories")
-            if skipped_current > 0:
-                print(f"  Protected current session directory")
-            if skipped_active > 0:
-                print(f"  Preserved {skipped_active} active directories")
-        elif skipped_active > 0 or skipped_current > 0:
-            print(f"✓ Cleanup check complete: {skipped_active} active sessions preserved, {skipped_current} current session protected")
+                    # print(f"✗ Error checking directory {temp_dir}: {e}")
+                    pass
+                    
+        # if cleaned_count > 0:
+        #     print(f"✓ Cleaned up {cleaned_count} old session directories")
+        #     if skipped_current > 0:
+        #         print(f"  Protected current session directory")
+        #     if skipped_active > 0:
+        #         print(f"  Preserved {skipped_active} active directories")
+        # elif skipped_active > 0 or skipped_current > 0:
+        #     print(f"✓ Cleanup check complete: {skipped_active} active sessions preserved, {skipped_current} current session protected")
         
         # Update the global cleanup timestamp
         update_cleanup_time()
@@ -530,13 +534,10 @@ def parse_timestamp_from_dirname(dirname):
 query_params = st.query_params
 if query_params.get("admin") == "sin(pi)=0":
     list_files_with_timestamps("/tmp")
-    cleanup_old_sessions(max_age_hours=24)
     
-    if "check_point" in st.session_state: 
-        st.markdown(f"CHECK POINT: {st.session_state.check_point} === {st.session_state.user_session_id} === {st.session_state.temp_dir}")
     if "last_keepalive" in st.session_state: 
+        st.markdown(f"Current Session Id and temp dir: {st.session_state.user_session_id} === {st.session_state.temp_dir}")
         st.markdown(f"LAST KEEPALIVE: {st.session_state.last_keepalive}")
-
 
 # Helper function to scan and cache skills documentation
 def scan_skills_documentation():
