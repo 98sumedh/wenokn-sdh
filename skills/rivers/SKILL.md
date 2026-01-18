@@ -116,6 +116,7 @@ WHERE {
           kwg-ont:sfWithin | kwg-ont:sfOverlaps ?county .
 
   ?river rdf:type hyf:HY_FlowPath ;
+         a hyf:HY_WaterBody ;
          schema:name ?riverName ;
          kwg-ont:sfCrosses ?s2cell ;
          geo:hasGeometry/geo:asWKT ?riverGeom .
@@ -157,6 +158,7 @@ WHERE {
 
       # Rivers crossing those cells
       ?river rdf:type hyf:HY_FlowPath ;
+             a hyf:HY_WaterBody ;
              schema:name ?riverName ;
              kwg-ont:sfCrosses ?s2cell ;
              geo:hasGeometry/geo:asWKT ?geom .
@@ -196,6 +198,7 @@ WHERE {
   # Check that county intersects with Ohio River
   FILTER EXISTS {
     ?ohioRiver rdf:type hyf:HY_FlowPath ;
+               a hyf:HY_WaterBody ;
                schema:name "Ohio River" ;
                kwg-ont:sfCrosses ?s2cell1 .
     ?s2cell1 rdf:type kwg-ont:S2Cell_Level13 ;
@@ -225,6 +228,7 @@ SELECT DISTINCT ?stateName ?stateGeometry
 WHERE {
   # The Ohio River
   ?river rdf:type hyf:HY_FlowPath ;
+         a hyf:HY_WaterBody ;
          schema:name "Ohio River" ;
          kwg-ont:sfCrosses ?s2cell ;
          geo:hasGeometry/geo:asWKT ?riverGeometry .
