@@ -606,6 +606,7 @@ def get_llm():
             "thinking": {"type": "enabled"},
             "clear_thinking": False
         }
+    )
 
     # return ChatOpenAI(
     #     model="minimax-m2",
