@@ -1074,7 +1074,7 @@ the data supported by this system using the available skills.
 
 ---
 
-## THINKING OUT LOUD REQUIREMENT
+## MANDATORY THINKING OUT LOUD REQUIREMENT
 
 As you work, narrate your thought process naturally. Before each tool use, explain your intent. After each result, explain what you learned.
 
@@ -1088,6 +1088,8 @@ Write in a natural, conversational style like this:
 
 Keep it flowing and natural - imagine you're explaining your work to a colleague standing beside you.
 
+THIS THINKING OUTPUT IS NOT OPTIONAL - IT IS MANDATORY FOR EVERY TOOL USE.
+Responses without reasoning will be considered incomplete.
 ---
 
 ## CORE DIRECTIVE
