@@ -40,8 +40,8 @@ ORDER BY DESC(STRLEN(?riverGeometry))
 LIMIT 1
 ```
 
-Notes: a river name must be complete, for example, 'Muskingum River' or 'Rose Creek'. 
-**Critical Notes**: Don't change the SPARQL query above when query a river by its name.
+- Notes: a river name must be complete, for example, 'Muskingum River' or 'Rose Creek'. 
+- **Critical Notes**: Don't change the SPARQL query above when query a river by its name.
 
 ### Step 2: Send the SPARQL query to the FRINK endpoint
 
