@@ -605,7 +605,7 @@ def get_llm():
     #     model="glm-4.7",
     #     base_url="https://api.z.ai/api/coding/paas/v4",
     #     api_key=os.environ.get("ZAI_API_KEY"),
-    #     temperature=0,
+    #     temperature=0.5,
     #     extra_body={
     #         "thinking": {"type": "enabled"},
     #         "clear_thinking": False
@@ -1074,6 +1074,22 @@ the data supported by this system using the available skills.
 
 ---
 
+## THINKING OUT LOUD REQUIREMENT
+
+As you work, narrate your thought process naturally. Before each tool use, explain your intent. After each result, explain what you learned.
+
+Write in a natural, conversational style like this:
+
+"I need to find coal mines near the Ohio River. First, let me check the coal mines documentation to understand the available data..."
+[tool call]
+
+"The documentation shows I can query by location. Now I need the Ohio River geometry, so let me look at the rivers skill..."
+[tool call]
+
+Keep it flowing and natural - imagine you're explaining your work to a colleague standing beside you.
+
+---
+
 ## CORE DIRECTIVE
 You have NO internal knowledge of the file system or specific data. 
 You MUST use the `shell` tool to read `SKILL.md` files to know how to perform tasks.
@@ -1239,7 +1255,7 @@ async def handle_user_input_async(user_input):
                     1. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
                     2. You MUST generate Python code and save the output to the temp directory.
                     3. DO NOT answer from memory.
-                    4. You MUST show detailed reasoning and internal thought for using each tool.
+                    4. You MUST show why you need to use a tool and summarize the result of using a tool.
                     5. When generating reports, always use TODAY'S DATE and CURRENT YEAR shown above.
                     """
                     
@@ -1282,7 +1298,7 @@ async def handle_user_input_async(user_input):
                             if isinstance(message, HumanMessage):
                                 continue
                             
-                            if isinstance(message, AIMessage):                           
+                            if isinstance(message, AIMessage):     
                                 # Accumulate text content
                                 if hasattr(message, 'content') and isinstance(message.content, str):
                                     if message.content:
@@ -1598,7 +1614,7 @@ if st.session_state.current_view == "sample":
     * Find downstream counties of the Ohio River starting from the River View Coal Mine. 
     * Find all solar power plants with a total capacity greater than 100 megawatts in Kentucky.
     * Compare the energy usage of power plants in California and Ohio.
-    * Compare the power plants of "Pacific Gas & Electric Co." and "San Diego Gas & Electric Co."
+    * Compare the power plants of "Pacific Gas & Electric Co." and "San Diego Gas & Electric Co"
     
     #### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 6, 10, 12)
     * Find the hydrologic basin that contains the Scioto River outlet and save the basin as GeoJSON.
