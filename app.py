@@ -594,7 +594,7 @@ def get_llm():
     #     model="glm-4.7",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
     #     api_key=os.environ.get("NRP_API_KEY"),
-    #     temperature=0
+    #     temperature=0.2
     # )
 
     return ChatOpenAI(
@@ -1086,10 +1086,9 @@ Available skills: {', '.join(skills_list) if skills_list else 'None found'}
 1. **Explore**: When asked for a map/data, IMMEDIATELY use `shell` to read the relevant `SKILL.md`.
    - Command: `cat skills/<skill_name>/SKILL.md`
    - CRITICAL: Use the SHELL tool with cat command and RELATIVE paths:                                                                                           
-   -- ✅ CORRECT: shell tool → `cat skills/<skill_name>/SKILL.md`                                                                                                           tiles=None,  # We'll add tiles manually                                                                                                         
-   -- ❌ WRONG: read_file tool doesn't work with absolute paths. Please use "tail -n +N file" to get the content from Lines N                                                                                                         )
-   -- ❌ WRONG: absolute paths            
-   
+   -- ✅ CORRECT: shell tool → `cat skills/<skill_name>/SKILL.md`                                                                                                          
+   -- ❌ WRONG: read_file tool doesn't work with absolute paths. Please use "tail -n +N file" to get the content from Lines N
+   -- ❌ WRONG: absolute paths               
 2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs. Use inline Python execution when possible: `/home/adminuser/venv/bin/python3 -c ...". Avoid creating .py files unless necessary.
 3. **Save**: You MUST save outputs to the user's temp directory: {st.session_state.temp_dir}/
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
@@ -1231,10 +1230,12 @@ async def handle_user_input_async(user_input):
                     TODAY'S DATE: {current_datetime}
                     CURRENT YEAR: {datetime.now().year}
                     
-                    1. These try to prevent answering the current request by copying previous answers.
-                    2. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
-                    3. You MUST generate Python code and save the output to the temp directory.
-                    4. DO NOT answer from memory.
+                    These try to prevent answering the current request by copying previous answers.
+    
+                    1. You MUST use the 'shell' tool to read the relevant SKILL.md file first.
+                    2. You MUST generate Python code and save the output to the temp directory.
+                    3. DO NOT answer from memory.
+                    4. You MUST show detailed reasoning and internal thought for using each tool.
                     5. When generating reports, always use TODAY'S DATE and CURRENT YEAR shown above.
                     """
                     
