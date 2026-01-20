@@ -1174,7 +1174,6 @@ Use write_todos for complex multi-step tasks (2+ steps). Mark tasks in_progress 
 For simple 1-2 step tasks, just do them without todos.     
 
 ## ANTI-HALLUCINATION RULES
-- **DO NOT** narrate what you are going to do. Just run the tool.
 - **DO NOT** say "I have saved the file" unless you have successfully executed the Python code that saves it.
 - **DO NOT** guess file paths. If you haven't run the code to create the file, the file does not exist.
 - **NEVER** simulate the output of a tool. If you need to know something, RUN THE TOOL.
