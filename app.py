@@ -873,7 +873,7 @@ def display_all_layers_map():
             width=None,  # Use full width
             height=500,
             returned_objects=[],
-            use_container_width=True
+            # width='stretch'
         )
         
         # Display map legend
@@ -1058,7 +1058,7 @@ def display_chart_builder(name, df):
                 try:
                     import plotly.express as px
                     fig = px.histogram(plot_df, x=x_col, nbins=30)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                 except ImportError:
                     st.warning("Plotly not available. Using basic chart.")
                     st.bar_chart(plot_df[x_col].value_counts())
@@ -1067,7 +1067,7 @@ def display_chart_builder(name, df):
                 try:
                     import plotly.express as px
                     fig = px.box(plot_df, y=x_col)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                 except ImportError:
                     st.warning("Plotly not available. Box plot requires plotly.")
                 
@@ -1077,7 +1077,7 @@ def display_chart_builder(name, df):
                     # Aggregate if needed
                     pie_data = plot_df.groupby(x_col)[y_col].sum().reset_index()
                     fig = px.pie(pie_data, names=x_col, values=y_col)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                 except ImportError:
                     st.warning("Plotly not available. Pie chart requires plotly.")
                 
