@@ -889,6 +889,60 @@ def display_all_layers_map():
         with st.expander("🔍 Error Details"):
             st.code(traceback.format_exc())
 
+
+def check_and_load_new_files():
+    """
+    Check for new files in temp directory and load them.
+    Returns True if any new files were loaded.
+    """
+    if not GEOPANDAS_AVAILABLE:
+        return False
+    
+    # Ensure temp directory exists
+    if "temp_dir" not in st.session_state:
+        return False
+        
+    temp_dir = Path(st.session_state.temp_dir)
+    if not temp_dir.exists():
+        return False
+    
+    loaded_anything = False
+    
+    try:
+        # Check for new GeoJSON files
+        geojson_files = list(temp_dir.glob("*.geojson"))
+        for gf in geojson_files:
+            name = gf.stem
+            # Only load if not already in session state
+            if name not in st.session_state.geodataframes:
+                try:
+                    gdf = gpd.read_file(gf)
+                    if gdf is not None and len(gdf) > 0:
+                        st.session_state.geodataframes[name] = gdf
+                        loaded_anything = True
+                except Exception as e:
+                    st.error(f"Error loading {gf.name}: {e}")
+        
+        # Check for new CSV files
+        csv_files = list(temp_dir.glob("*.csv"))
+        for cf in csv_files:
+            name = cf.stem
+            # Only load if not already in session state
+            if name not in st.session_state.dataframes:
+                try:
+                    df = pd.read_csv(cf)
+                    if df is not None and len(df) > 0:
+                        st.session_state.dataframes[name] = df
+                        loaded_anything = True
+                except Exception as e:
+                    st.error(f"Error loading {cf.name}: {e}")
+                    
+    except Exception as e:
+        st.error(f"Error checking temp files: {str(e)}")
+    
+    return loaded_anything
+
+
 # Function to load GeoJSON/CSV files into session state and clean up
 def load_and_cleanup_temp_files():
     """Load any generated files into session state and clean up temp directory."""
@@ -1125,7 +1179,21 @@ For simple 1-2 step tasks, just do them without todos.
 - **DO NOT** guess file paths. If you haven't run the code to create the file, the file does not exist.
 - **NEVER** simulate the output of a tool. If you need to know something, RUN THE TOOL.
 
-**User Temp Directory:** {st.session_state.temp_dir}
+**CRITICAL TEMP DIRECTORY RULES:**
+- The temp directory path changes during long sessions
+- ALWAYS check if the directory exists before saving
+- ALWAYS use this pattern when saving files:
+```python
+import os
+temp_dir = "{st.session_state.temp_dir}"
+# Create directory if it doesn't exist
+os.makedirs(temp_dir, exist_ok=True)
+output_path = os.path.join(temp_dir, "output.geojson")
+gdf.to_file(output_path, driver='GeoJSON')
+```
+
+**Current Temp Directory:** {st.session_state.temp_dir}
+**Session ID:** {st.session_state.user_session_id}
 
 ## REPORT GENERATION - CRITICAL INSTRUCTIONS
 When explicitly asked to generate a report, you MUST create the report directly in your final response using markdown format.
@@ -1249,8 +1317,22 @@ async def handle_user_input_async(user_input):
                     base_instruction = f"""
                     
                     SYSTEM INSTRUCTION:
-                    TODAY'S DATE: {current_datetime}
-                    CURRENT YEAR: {datetime.now().year}
+                        TODAY'S DATE: {current_datetime}
+                        CURRENT YEAR: {datetime.now().year}
+                        
+                        **CRITICAL: CURRENT TEMP DIRECTORY**
+                        Your temp directory is: {st.session_state.temp_dir}
+                        This path may have changed since your last request.
+                        ALWAYS use os.makedirs(temp_dir, exist_ok=True) before saving files.
+                        
+                        Example:
+                            ```python
+                                import os
+                                temp_dir = "{st.session_state.temp_dir}"
+                                os.makedirs(temp_dir, exist_ok=True)  # Ensure it exists!
+                                output_path = os.path.join(temp_dir, "file.geojson")
+                                gdf.to_file(output_path, driver='GeoJSON')
+                            ```
                     
                     These try to prevent answering the current request by copying previous answers.
     
@@ -1561,6 +1643,7 @@ with st.sidebar:
 
     if st.button("Map & Data", width='stretch', type="primary" if st.session_state.current_view == "map" else "secondary"):
         st.session_state.current_view = "map"
+        check_and_load_new_files()  # Load any new files before switching
         st.rerun()
     
     if st.button("Clear All Data", width='stretch'):
@@ -1577,6 +1660,31 @@ with st.sidebar:
     if st.button("Sample Queries", width='stretch', type="primary" if st.session_state.current_view == "sample" else "secondary"):
         st.session_state.current_view = "sample"
         st.rerun()
+
+    # if st.button("🧪 Test: Simulate Cleanup", width='stretch'):
+    #     """Simulate what happens when temp directory gets cleaned up after hours"""
+    #     if "temp_dir" in st.session_state and st.session_state.temp_dir:
+    #         old_dir = st.session_state.temp_dir
+    #         # Delete the directory to simulate system cleanup
+    #         if os.path.exists(old_dir):
+    #             shutil.rmtree(old_dir)
+    #             st.toast(f"🗑️ Deleted: {old_dir}", icon="⚠️")
+            
+    #         # Recreate with new timestamp (simulating what happens in real scenario)
+    #         timestamp = int(time.time())
+    #         st.session_state.temp_dir = tempfile.mkdtemp(
+    #             prefix=f"wenokn_{st.session_state.user_session_id}_{timestamp}_"
+    #         )
+    #         st.toast(f"✅ Created: {st.session_state.temp_dir}", icon="🆕")
+            
+    #         # CRITICAL: Clear the last few messages to remove old path references
+    #         # Keep only the first few messages, remove recent ones with old paths
+    #         if len(st.session_state.messages) > 2:
+    #             st.session_state.messages = st.session_state.messages[:2]
+    #             st.toast("🧹 Cleared recent messages with old paths", icon="🧹")
+            
+    #         time.sleep(1)
+    #         st.rerun()
 
 # ========== MAIN CONTENT AREA ==========
 
@@ -1698,6 +1806,9 @@ if st.session_state.current_view == "sample":
     """)
 
 elif st.session_state.current_view == "map":
+    # Check for new files when entering map view
+    if check_and_load_new_files():
+        st.rerun()  # Refresh if new data was loaded
     
     # Check if we have any data at all
     has_geodata = len(st.session_state.geodataframes) > 0
