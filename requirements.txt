@@ -9,5 +9,7 @@ streamlit-kepler-component
 folium>=0.15.0
 streamlit-folium>=0.15.0
 openpyxl
-pynhd
-pygeohydro
+pynhd==0.19.4
+pygeohydro==0.19.4
+reportlab
+plotly>=5.0.0
