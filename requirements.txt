@@ -1,3 +1,4 @@
+streamlit>=1.40.0
 deepagents-cli==0.0.12
 geopandas
 pandas
