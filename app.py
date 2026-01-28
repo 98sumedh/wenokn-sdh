@@ -2024,6 +2024,8 @@ elif st.session_state.current_view == "map":
                     st.markdown("**Attributes:**")
                     display_df = gdf.drop(columns=[col for col in gdf.columns if col.lower() in ['geometry', 'geom', 'the_geom', 'shape']], errors='ignore')
                     st.dataframe(display_df, width='stretch', height=200)
+                    if len(display_df.select_dtypes(include=['number']).columns) > 0:
+                        display_chart_builder(f"geo_{name}", display_df)
         
         # ========== DATA TABLES SECTION ==========
         if has_tabledata:
@@ -2110,7 +2112,9 @@ elif st.session_state.current_view == "map":
                         width='stretch',
                         height=min(400, len(df) * 35 + 38)  # Dynamic height based on rows
                     )
-                    
+                    if len(df.select_dtypes(include=['number']).columns) > 0:
+                        display_chart_builder(name, df)
+                        
                     # Optional: Show column types
                     # with st.expander("📋 Column Info"):
                     #     col_info = pd.DataFrame({
