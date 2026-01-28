@@ -1004,6 +1004,144 @@ def load_and_cleanup_temp_files():
     except Exception as e:
         st.error(f"Error checking temp files: {str(e)}")
 
+def display_chart_builder(name, df):
+    """Interactive chart builder for a dataframe."""
+    st.markdown("---")
+    st.markdown("#### 📈 Chart Builder")
+    
+    # Get numeric and categorical columns
+    numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    all_cols = df.columns.tolist()
+    
+    if not numeric_cols:
+        st.info("No numeric columns available for charting.")
+        return
+    
+    # Chart configuration in columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        chart_type = st.selectbox(
+            "Chart Type",
+            ["Bar Chart", "Line Chart", "Scatter Plot", "Histogram", "Box Plot", "Pie Chart"],
+            key=f"chart_type_{name}"
+        )
+    
+    with col2:
+        if chart_type in ["Bar Chart", "Line Chart", "Scatter Plot"]:
+            x_col = st.selectbox(
+                "X-axis",
+                all_cols,
+                key=f"x_col_{name}"
+            )
+        elif chart_type in ["Histogram", "Box Plot"]:
+            x_col = st.selectbox(
+                "Column",
+                numeric_cols,
+                key=f"x_col_{name}"
+            )
+        else:  # Pie chart
+            x_col = st.selectbox(
+                "Labels",
+                categorical_cols if categorical_cols else all_cols,
+                key=f"x_col_{name}"
+            )
+    
+    with col3:
+        if chart_type in ["Bar Chart", "Line Chart", "Scatter Plot"]:
+            y_col = st.selectbox(
+                "Y-axis",
+                numeric_cols,
+                key=f"y_col_{name}"
+            )
+        elif chart_type == "Pie Chart":
+            y_col = st.selectbox(
+                "Values",
+                numeric_cols,
+                key=f"y_col_{name}"
+            )
+        else:
+            y_col = None
+    
+    # Additional options
+    with st.expander("⚙️ Advanced Options"):
+        col_a, col_b = st.columns(2)
+        with col_a:
+            limit_rows = st.number_input(
+                "Limit to top N rows (0 = all)",
+                min_value=0,
+                max_value=len(df),
+                value=min(100, len(df)),
+                key=f"limit_{name}"
+            )
+        with col_b:
+            if chart_type in ["Bar Chart", "Line Chart"] and categorical_cols:
+                group_by = st.selectbox(
+                    "Group by (optional)",
+                    ["None"] + categorical_cols,
+                    key=f"group_{name}"
+                )
+            else:
+                group_by = "None"
+    
+    # Generate chart button
+    if st.button("📊 Generate Chart", key=f"generate_{name}", type="primary"):
+        try:
+            # Prepare data
+            plot_df = df.copy()
+            if limit_rows > 0:
+                plot_df = plot_df.head(limit_rows)
+            
+            # Create chart based on type
+            if chart_type == "Bar Chart":
+                if group_by != "None":
+                    fig = plot_df.groupby(group_by)[y_col].sum().reset_index()
+                    st.bar_chart(fig, x=group_by, y=y_col)
+                else:
+                    st.bar_chart(plot_df, x=x_col, y=y_col)
+                    
+            elif chart_type == "Line Chart":
+                st.line_chart(plot_df, x=x_col, y=y_col)
+                
+            elif chart_type == "Scatter Plot":
+                st.scatter_chart(plot_df, x=x_col, y=y_col)
+                
+            elif chart_type == "Histogram":
+                try:
+                    import plotly.express as px
+                    fig = px.histogram(plot_df, x=x_col, nbins=30)
+                    st.plotly_chart(fig, width='stretch')
+                except ImportError:
+                    st.warning("Plotly not available. Using basic chart.")
+                    st.bar_chart(plot_df[x_col].value_counts())
+                
+            elif chart_type == "Box Plot":
+                try:
+                    import plotly.express as px
+                    fig = px.box(plot_df, y=x_col)
+                    st.plotly_chart(fig, width='stretch')
+                except ImportError:
+                    st.warning("Plotly not available. Box plot requires plotly.")
+                
+            elif chart_type == "Pie Chart":
+                try:
+                    import plotly.express as px
+                    # Aggregate if needed
+                    pie_data = plot_df.groupby(x_col)[y_col].sum().reset_index()
+                    fig = px.pie(pie_data, names=x_col, values=y_col)
+                    st.plotly_chart(fig, width='stretch')
+                except ImportError:
+                    st.warning("Plotly not available. Pie chart requires plotly.")
+                
+            st.success("✅ Chart generated successfully!")
+            
+        except Exception as e:
+            st.error(f"❌ Error generating chart: {str(e)}")
+            with st.expander("Error Details"):
+                import traceback
+                st.code(traceback.format_exc())
+
 # Initialize agent
 def initialize_agent():
     if st.session_state.agent is None:
