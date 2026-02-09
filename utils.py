@@ -19,11 +19,11 @@ def load_FRS_facilities(state: str, naics_name: str, limit: int = 1000) -> gpd.G
     """
     Load FRS facilities for a specified state and NAICS industry.
     
-    This function queries the SAWGraph knowledge graph via Qlever SPARQL endpoint
+    This function queries the SAWGraph knowledge graph via SPARQL endpoint
     to retrieve EPA FRS facility data with geometries.
 
     Args:
-        state: State name - must be one of: "Illinois", "Maine", "Ohio"
+        state: State name (e.g., "California", "Texas", "New York")
         naics_name: NAICS industry name - must be from ALLOWED_NAICS list:
             - Waste Treatment and Disposal
             - Converted Paper Manufacturing
@@ -44,27 +44,17 @@ def load_FRS_facilities(state: str, naics_name: str, limit: int = 1000) -> gpd.G
         - facilityName: Name of the facility
         - industryCodes: Industry classifications (comma-separated if multiple)
         - geometry: Point geometry in EPSG:4326
-        - countyName: County name
-        - stateName: State name
-        - frsId: FRS identifier (if available)
-        - triId: TRI identifier (if available)
-        - rcraId: RCRA identifier (if available)
-        - airId: Air program identifier (if available)
-        - npdesId: NPDES identifier (if available)
-        - envInterestTypes: Environmental interest types (if available)
-        - facility: Facility URI
 
     Raises:
         ValueError: If state or NAICS name is not in the allowed lists
 
     Example:
-        >>> sewage = load_FRS_facilities("Maine", "Sewage Treatment")
+        >>> sewage = load_FRS_facilities("California", "Sewage Treatment")
         >>> print(f"Found {len(sewage)} facilities")
         >>> print(sewage.head())
     """
 
     # Validate inputs
-    ALLOWED_STATES = ["Illinois", "Maine", "Ohio"]
     ALLOWED_NAICS = [
         "Waste Treatment and Disposal",
         "Converted Paper Manufacturing",
@@ -80,60 +70,63 @@ def load_FRS_facilities(state: str, naics_name: str, limit: int = 1000) -> gpd.G
         "Solid Waste Landfill",
     ]
 
-    if state not in ALLOWED_STATES:
-        raise ValueError(f"Invalid state '{state}'. Allowed: {ALLOWED_STATES}")
     if naics_name not in ALLOWED_NAICS:
         raise ValueError(f"Invalid NAICS '{naics_name}'. Allowed: {ALLOWED_NAICS}")
 
-    endpoint_url = "https://frink.apps.renci.org/qlever-geo/sparql"
+    # Map all US state names to FIPS codes
+    STATE_FIPS = {
+        "Alabama": "01", "Alaska": "02", "Arizona": "04", "Arkansas": "05",
+        "California": "06", "Colorado": "08", "Connecticut": "09", "Delaware": "10",
+        "Florida": "12", "Georgia": "13", "Hawaii": "15", "Idaho": "16",
+        "Illinois": "17", "Indiana": "18", "Iowa": "19", "Kansas": "20",
+        "Kentucky": "21", "Louisiana": "22", "Maine": "23", "Maryland": "24",
+        "Massachusetts": "25", "Michigan": "26", "Minnesota": "27", "Mississippi": "28",
+        "Missouri": "29", "Montana": "30", "Nebraska": "31", "Nevada": "32",
+        "New Hampshire": "33", "New Jersey": "34", "New Mexico": "35", "New York": "36",
+        "North Carolina": "37", "North Dakota": "38", "Ohio": "39", "Oklahoma": "40",
+        "Oregon": "41", "Pennsylvania": "42", "Rhode Island": "44", "South Carolina": "45",
+        "South Dakota": "46", "Tennessee": "47", "Texas": "48", "Utah": "49",
+        "Vermont": "50", "Virginia": "51", "Washington": "53", "West Virginia": "54",
+        "Wisconsin": "55", "Wyoming": "56",
+        # Territories
+        "District of Columbia": "11", "Puerto Rico": "72", "Virgin Islands": "78",
+        "Guam": "66", "American Samoa": "60", "Northern Mariana Islands": "69"
+    }
+    
+    if state not in STATE_FIPS:
+        raise ValueError(f"Invalid state '{state}'. Must be a valid US state or territory name.")
+    
+    state_fips = STATE_FIPS[state]
+    
+    # Updated endpoint URL
+    endpoint_url = "https://frink.apps.renci.org/fiokg/sparql"
 
-    # SPARQL query validated for Qlever endpoint
+    # Updated SPARQL query with new namespace prefixes and filtering logic
     # The double braces {{ }} are f-string escapes that become single braces in SPARQL
     query = f"""
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
-PREFIX frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX frs: <http://w3id.org/fio/v1/epa-frs#>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
 SELECT DISTINCT 
     ?facilityName
     (GROUP_CONCAT(DISTINCT ?industryCode; separator=", ") AS ?industryCodes)
     ?facilityWKT
-    ?countyName
-    ?stateName
-    ?frsId
-    ?triId
-    ?rcraId
-    ?airId
-    ?npdesId
-    (GROUP_CONCAT(DISTINCT ?envInterestType; separator=", ") AS ?envInterestTypes)
-    ?facility
 WHERE {{
     ?facility a frs:FRS-Facility ;
               rdfs:label ?facilityName ;
               fio:ofIndustry/rdfs:label ?industryCode ;
-              geo:hasGeometry/geo:asWKT ?facilityWKT ;
+              geo:hasGeometry/geo:asWKT ?facilityWKT;
               kwg-ont:sfWithin ?county .
-    ?county rdfs:label ?countyName ;
-            kwg-ont:sfWithin ?state .
-    ?state rdf:type kwg-ont:AdministrativeRegion_1 ;
-           rdfs:label ?stateName .
-
-    FILTER(CONTAINS(LCASE(?stateName), "{state.lower()}"))
-    FILTER(CONTAINS(LCASE(?industryCode), "{naics_name.lower()}"))
-    FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/administrativeRegion")) .
-
-    OPTIONAL {{ ?facility frs:hasFRSId ?frsId. }}
-    OPTIONAL {{ ?facility frs:hasTRISId ?triId. }}
-    OPTIONAL {{ ?facility frs:hasRCRAINFOId ?rcraId. }}
-    OPTIONAL {{ ?facility frs:hasAIRId ?airId. }}
-    OPTIONAL {{ ?facility frs:hasNPDESId ?npdesId. }}
-    OPTIONAL {{ ?facility frs:environmentalInterestType ?envInterestType. }}
-}}
-GROUP BY ?facility ?facilityName ?facilityWKT ?countyName ?stateName ?industryCode ?frsId ?triId ?rcraId ?airId ?npdesId
+    FILTER(CONTAINS(LCASE(?industryCode), LCASE("{naics_name}"))) .
+    FILTER(STRSTARTS(STR(?county), "http://stko-kwg.geog.ucsb.edu/lod/resource/administrativeRegion.USA.{state_fips}")) .
+    FILTER(STRLEN(STR(?county)) = 73) .
+}} 
+GROUP BY ?facilityName ?facilityWKT ?industryCode
 LIMIT {limit}
 """    
     # Execute query and process results
