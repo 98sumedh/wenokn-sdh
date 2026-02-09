@@ -87,31 +87,10 @@ The function returns a GeoDataFrame with the following columns:
 | `facilityName` | Name of the facility |
 | `industryCodes` | Industry classifications (comma-separated if multiple) |
 | `geometry` | Point geometry in EPSG:4326 (WGS84) |
-| `countyName` | County where facility is located |
-| `stateName` | State where facility is located |
-| `frsId` | FRS identifier (may be null) |
-| `triId` | Toxics Release Inventory ID (may be null) |
-| `rcraId` | Resource Conservation and Recovery Act ID (may be null) |
-| `airId` | Air program identifier (may be null) |
-| `npdesId` | National Pollutant Discharge Elimination System ID (may be null) |
-| `envInterestTypes` | Environmental interest types (may be null) |
-| `facility` | Facility URI in the knowledge graph |
 
 ## Common Use Cases
 
-### 1. Find facilities in a specific area
-
-```python
-from utils import load_FRS_facilities
-
-# Get all sewage treatment facilities in Maine
-facilities = load_FRS_facilities("Maine", "Sewage Treatment")
-
-# Filter to a specific county
-york_county = facilities[facilities['countyName'] == 'York County']
-```
-
-### 2. Spatial analysis with other datasets
+### 1. Spatial analysis with other datasets
 
 ```python
 from utils import load_FRS_facilities
@@ -129,7 +108,7 @@ nearby = facilities[
 ]
 ```
 
-### 3. Export to different formats
+### 2. Export to different formats
 
 ```python
 from utils import load_FRS_facilities
@@ -146,7 +125,7 @@ facilities.to_file("ohio_chemical_facilities.shp")
 facilities.drop(columns=['geometry']).to_csv("ohio_facilities.csv", index=False)
 ```
 
-### 4. Multiple industries analysis
+### 3. Multiple industries analysis
 
 ```python
 from utils import load_FRS_facilities
