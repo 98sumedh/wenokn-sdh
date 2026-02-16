@@ -195,4 +195,4 @@ pip install requests geopandas shapely pandas
 - Empty results return empty list in `features` array
 - User-Agent header is required by NOAA policy
 - Flood alert descriptions are often very long (sometimes hundreds of lines). When reviewing multiple alerts, use pagination or similar methods.
-- To generate a report for a specific flood alert, use the flood-alert-report skill.
+- **Critical**: To generate a report for a specific flood alert, use the flood-alert-report skill.

@@ -72,9 +72,9 @@ def get_features(self_url, where, bbox=None):
     # st.code(response.url)
     # st.code(data)
     if data['features']:
-        return gpd.GeoDataFrame.from_features(data['features'])
+        return gpd.GeoDataFrame.from_features(data['features'], crs="EPSG:4326")
     else:
-        return gpd.GeoDataFrame(columns=['geometry'])
+        return gpd.GeoDataFrame(columns=['geometry'], crs="EPSG:4326")
 
 url = "https://services2.arcgis.com/FiaPA4ga0iQKduv3/ArcGIS/rest/services/Power_Plants_in_the_US/FeatureServer/0"
 where = f"PrimSource='Coal'"      # with other condition

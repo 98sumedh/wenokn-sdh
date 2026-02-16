@@ -8,17 +8,17 @@ from datetime import datetime
 from pathlib import Path
 from deepagents import create_deep_agent
 from langchain_openai import ChatOpenAI
-from langchain.agents.middleware import (
-    HostExecutionPolicy,
-    ShellToolMiddleware,
-)
 from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
 from langgraph.types import Command
 import uuid
 import tempfile
 import atexit
 
-from deepagents_cli.skills.middleware import SkillsMiddleware
+# Note: SkillsMiddleware and ShellToolMiddleware are no longer needed as custom middleware
+# - Skills are now passed via `skills` parameter to create_deep_agent
+# - File operations and execute tool are handled by FilesystemMiddleware with LocalShellBackend
+# - LocalShellBackend enables Python/shell execution (implements SandboxBackendProtocol)
+from deepagents.backends.local_shell import LocalShellBackend
 from deepagents_cli.config import settings
 
 # Import mapping libraries
@@ -59,6 +59,15 @@ if "skills_documentation" not in st.session_state:
     st.session_state.skills_documentation = {}
 if "current_view" not in st.session_state:
     st.session_state.current_view = "conversation"  # "conversation" or "map"
+# Track agent execution state to prevent keep_alive interference
+if "agent_is_running" not in st.session_state:
+    st.session_state.agent_is_running = False
+# Store last request for retry functionality
+if "last_user_request" not in st.session_state:
+    st.session_state.last_user_request = None
+# Track unexpected failures
+if "unexpected_failures" not in st.session_state:
+    st.session_state.unexpected_failures = []
 
 
 # ========== CLEANUP FUNCTIONS ==========
@@ -88,9 +97,17 @@ if "temp_dir" in st.session_state:
         )
 
 
-@st.fragment(run_every="4m")
+@st.fragment(run_every="30m")
 def keep_session_alive():
-    """Auto-rerun every 4 minutes to prevent session timeout"""
+    """Auto-rerun every 30 minutes to prevent session timeout.
+
+    Skips update if agent is currently running to prevent wiping output.
+    Increased from 4m to 30m since some requests can take 10+ minutes.
+    """
+    # Don't do anything if agent is running - this prevents wiping output
+    if st.session_state.get("agent_is_running", False):
+        return
+
     if "last_keepalive" not in st.session_state:
         st.session_state.last_keepalive = datetime.now()
     st.session_state.last_keepalive = datetime.now()
@@ -572,7 +589,7 @@ def scan_skills_documentation():
     st.session_state.skills_documentation = skills_docs
     return skills_docs
 
-# Initialize LLM
+# # Initialize LLM
 def get_llm():
 
     # return ChatOpenAI(
@@ -589,7 +606,7 @@ def get_llm():
     #         "thinking": {"type": "disabled"}
     #     }
     # )
-
+    
     # return ChatOpenAI(
     #     model="glm-4.7",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
@@ -613,14 +630,13 @@ def get_llm():
     )
 
     # return ChatOpenAI(
-    #     model="minimax-m2",
+    #     model="kimi",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
     #     api_key=os.environ.get("NRP_API_KEY"),
     #     temperature=0,
     # )
 
     
-
 # Function to display all GeoDataFrames as layers on a single map
 def display_all_layers_map():
     """Display all GeoDataFrames as layers on a single interactive Folium map."""
@@ -1004,6 +1020,7 @@ def load_and_cleanup_temp_files():
     except Exception as e:
         st.error(f"Error checking temp files: {str(e)}")
 
+
 def display_chart_builder(name, df):
     """Interactive chart builder for a dataframe."""
     st.markdown("---")
@@ -1142,47 +1159,41 @@ def display_chart_builder(name, df):
                 import traceback
                 st.code(traceback.format_exc())
 
+
 # Initialize agent
 def initialize_agent():
     if st.session_state.agent is None:
         try:
-            llm = get_llm()
-            
+            model = get_llm()
+
             # Setup directories
             assistant_id = "agent"
             current_directory = os.getcwd()
             local_skills_dir = Path(current_directory) / "skills"
-            
+
             # Scan skills documentation to know what's available
             skills_docs = scan_skills_documentation()
-            
+
             # Just list the skill names, not the full content
             skills_list = list(skills_docs.keys()) if skills_docs else []
-            
-            # Use local skills directory
+
+            # Use local skills directory - skills are passed as list of path strings
+            skills_paths = None
             if local_skills_dir.exists():
-                skills_dir = str(local_skills_dir)
-                project_skills_dir = None
-            else:
-                skills_dir = settings.ensure_user_skills_dir(assistant_id)
-                project_skills_dir = settings.get_project_skills_dir()
-            
-            # Initialize skills middleware
-            skills_middleware = SkillsMiddleware(
-                skills_dir=skills_dir,
-                assistant_id=assistant_id,
-                project_skills_dir=project_skills_dir,
+                skills_paths = [str(local_skills_dir)]
+
+            # Create backend for file operations AND Python/shell execution
+            # LocalShellBackend extends FilesystemBackend and implements SandboxBackendProtocol,
+            # which enables the 'execute' tool for running Python scripts and shell commands.
+            backend = LocalShellBackend(
+                root_dir=current_directory,
+                inherit_env=True,  # Inherit environment for Python packages
+                timeout=120.0,  # 120 second timeout for commands
             )
-            
-            # Create middleware
-            agent_middleware = [
-                skills_middleware,
-                ShellToolMiddleware(
-                    workspace_root=current_directory,
-                    execution_policy=HostExecutionPolicy(command_timeout=60.0),
-                    env=os.environ,
-                ),
-            ]
+
+            # No custom middleware needed - FilesystemMiddleware (built into create_deep_agent)
+            # handles file operations and execute tool when backend implements SandboxBackendProtocol.
+            # SkillsMiddleware is also added automatically when `skills` parameter is used.
             
             # Updated system prompt with user-specific temp directory
             system_prompt = f"""You are a data expert. You are under Streamlit Cloud. You can use the **Virtual Environment** at /home/adminuser/venv (created by uv).
@@ -1285,8 +1296,9 @@ Responses without reasoning will be considered incomplete.
 ---
 
 ## CORE DIRECTIVE
-You have NO internal knowledge of the file system or specific data. 
-You MUST use the `shell` tool to read `SKILL.md` files to know how to perform tasks.
+Think hard and solve the request step by step.
+You have NO internal knowledge of the file system or specific data.
+You MUST use the `execute` tool to read `SKILL.md` files and run Python code.
 You MUST use Python code execution to generate results.
 Never show the paths of the saved files in the response. Just say that the saved data is available via "Map & Data".
 Users cannot access any files other than CSV or GeoJSON. Do not store results in .md or .txt files for user access. You must display the results in the final response.
@@ -1297,13 +1309,13 @@ Skills directory: skills/
 Available skills: {', '.join(skills_list) if skills_list else 'None found'}
 
 ## MANDATORY PROTOCOL
-1. **Explore**: When asked for a map/data, IMMEDIATELY use `shell` to read the relevant `SKILL.md`.
+1. **Explore**: When asked for a map/data, IMMEDIATELY use `execute` to read the relevant `SKILL.md`.
    - Command: `cat skills/<skill_name>/SKILL.md`
-   - CRITICAL: Use the SHELL tool with cat command and RELATIVE paths:                                                                                           
-   -- ✅ CORRECT: shell tool → `cat skills/<skill_name>/SKILL.md`                                                                                                          
-   -- ❌ WRONG: read_file tool doesn't work with absolute paths. Please use "tail -n +N file" to get the content from Lines N
-   -- ❌ WRONG: absolute paths               
-2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs. Use inline Python execution when possible: `/home/adminuser/venv/bin/python3 -c ...". Avoid creating .py files unless necessary.
+   - CRITICAL: Use the execute tool with cat command and RELATIVE paths:
+   -- ✅ CORRECT: execute tool → `cat skills/<skill_name>/SKILL.md`
+   -- ✅ ALSO CORRECT: read_file tool for reading files
+   -- ❌ WRONG: absolute paths without proper working directory               
+2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs using "/home/adminuser/venv/bin/python3". 
 3. **Save**: You MUST save outputs to the user's temp directory: {st.session_state.temp_dir}/
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
 
@@ -1354,14 +1366,16 @@ When explicitly asked to generate a report, you MUST create the report directly 
             
             # Create the agent WITHOUT checkpointer
             st.session_state.agent = create_deep_agent(
-                llm,
+                model,  # Changed from `llm` to `model`
                 system_prompt=system_prompt,
-                middleware=agent_middleware,
+                skills=skills_paths,  # Use `skills` parameter instead of middleware
+                backend=backend,  # Required for FilesystemMiddleware to work
             )
-            
+
             # Store skills info
             st.session_state.skills_loaded = True
-            st.session_state.skills_directory = skills_dir
+            if local_skills_dir.exists():
+                st.session_state.skills_directory = str(local_skills_dir)
             
         except Exception as e:
             st.error(f"❌ Failed to initialize agent: {str(e)}")
@@ -1378,8 +1392,7 @@ TOOL_ICONS = {
     "ls": "📁",
     "glob": "📁",
     "grep": "🔍",
-    "shell": "⚡",
-    "execute": "🔧",
+    "execute": "🔧",  # Changed from "shell" to "execute"
     "web_search": "🌐",
     "http_request": "🌐",
     "task": "🤖",
@@ -1388,7 +1401,7 @@ TOOL_ICONS = {
 
 def format_tool_display(tool_name: str, args: dict) -> str:
     """Format tool call for display."""
-    if tool_name == "shell":
+    if tool_name == "execute":  # Changed from "shell" to "execute"
         command = args.get("command", "unknown")
         if len(command) > 60:
             command = command[:57] + "..."
@@ -1410,22 +1423,29 @@ def display_messages():
 
 # Handle user input with retry logic and context overflow protection
 async def handle_user_input_async(user_input):
-    # Add user message to chat
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    
-    # Display user message
-    with st.chat_message("user"):
-        st.markdown(user_input)
-    
-    # Get assistant response
-    with st.chat_message("assistant"):
-        main_container = st.container()
-        
-        # Track if we got a complete response
-        got_response = False
-        accumulated_text = ""
-        retry_count = 0
-        max_retries = 1
+    # Store last request for retry functionality
+    st.session_state.last_user_request = user_input
+
+    # Set agent running flag to prevent keep_alive interference
+    st.session_state.agent_is_running = True
+
+    try:
+        # Add user message to chat
+        st.session_state.messages.append({"role": "user", "content": user_input})
+
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(user_input)
+
+        # Get assistant response
+        with st.chat_message("assistant"):
+            main_container = st.container()
+
+            # Track if we got a complete response
+            got_response = False
+            accumulated_text = ""
+            retry_count = 0
+            max_retries = 1
         
         while not got_response and retry_count <= max_retries:
             accumulated_text = ""
@@ -1720,15 +1740,31 @@ async def handle_user_input_async(user_input):
                     
             except Exception as e:
                 # Catch any other unexpected errors
+                import traceback
                 error_message = f"❌ An unexpected error occurred: {str(e)}"
                 with main_container:
                     st.error(error_message)
                     with st.expander("🔍 Error Details"):
-                        import traceback
                         st.code(traceback.format_exc())
-                
+
                 st.session_state.messages.append({"role": "assistant", "content": error_message})
+
+                # Log unexpected failure
+                failure_info = {
+                    "time": datetime.now().isoformat(),
+                    "request": user_input[:100] if user_input else "N/A",
+                    "error": str(e)[:200]
+                }
+                st.session_state.unexpected_failures.append(failure_info)
+                # Keep only last 10 failures
+                if len(st.session_state.unexpected_failures) > 10:
+                    st.session_state.unexpected_failures.pop(0)
+
                 got_response = True  # Exit retry loop
+
+    finally:
+        # ALWAYS reset the agent running flag, even on error
+        st.session_state.agent_is_running = False
         
 
 # Synchronous wrapper
@@ -1788,6 +1824,7 @@ with st.sidebar:
         st.session_state.dataframes = {}
         st.session_state.generated_code = []
         st.session_state.messages = []
+        st.session_state.agent = None
         shutil.rmtree(st.session_state.temp_dir)
         os.makedirs(st.session_state.temp_dir)
         st.toast("All data cleared!", icon="✅")
@@ -1852,6 +1889,8 @@ if st.session_state.current_view == "sample":
     * Find all rivers that flow through Arizona with a length greater than 100 km. 
     * For each county in Ohio, find the longest river within that county's boundaries, and save these rivers as GeoJSON.
 
+    ---
+
     #### Dams, Coal Mines and Power Plants
     * Find all dams in Ross County.
     * Find the Muskingum River and all dams on it.
@@ -1862,6 +1901,8 @@ if st.session_state.current_view == "sample":
     * Find all solar power plants with a total capacity greater than 100 megawatts in Kentucky.
     * Compare the energy usage of power plants in California and Ohio.
     * Compare the power plants of "Pacific Gas & Electric Co." and "San Diego Gas & Electric Co"
+
+    ---
     
     #### Hydrologic Basins, Watersheds, and Sub-Watersheds (HUC 6, 10, 12)
     * Find the hydrologic basin that contains the Scioto River outlet and save the basin as GeoJSON.
@@ -1872,6 +1913,8 @@ if st.session_state.current_view == "sample":
     * Find all watersheds within the Kanawha Basin.
     * Find all sub-watersheds that intersect the Scioto River.
 
+    ---
+
     #### Stream Gages
     * Find the Scioto River and all stream gages located along the river. 
     * Find all gages within the Ross county.
@@ -1880,6 +1923,8 @@ if st.session_state.current_view == "sample":
       Find the upstream gage with the shortest distance in km to this dam on the Muskingum River.
     * Find the number of gauges for each state in USA. 
     * Find all gauges with the current flow greater than 5000 cfs and the current stage greater than 100 feet.
+
+    ---
 
     #### Demographics, Economics, Health, and Education via Google Data Commons
     * Show the population for all counties in the state of Ohio.
@@ -1891,6 +1936,8 @@ if st.session_state.current_view == "sample":
     * Find the percentage of adults without health insurance for Ross County and Scioto County.
     * Show the high school graduation rate for all counties adjacent to the Ross County.
 
+    ---
+
     #### Census Tracts, Census Blocks, and Assets at Risk of Flooding
     * Find all census tracts that the Scioto River flows through.
     * Find the population of all census tracts within 1000 meters from the Scioto River.
@@ -1900,6 +1947,8 @@ if st.session_state.current_view == "sample":
     * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
     * First, identify all assets in Ohio that are at risk of flooding within the next 24 hours. 
       Then, extend the result with precipitation forecast at the risk date only.
+
+    ---
 
     #### PFAS Contamination Observations and FRS Facilities
     - First, find FRS sewage treatment facilities within 100 meters of PFAS contamination observations in Maine.  
@@ -1915,6 +1964,8 @@ if st.session_state.current_view == "sample":
       Starting from the most upstream landfill facility, identify all downstream census tracts along the river.  
       Finally, retrieve the population of these census tracts.  
 
+    ---
+
     #### Aggregations
     * How many rivers flow through each county in Ohio?.
     * How many dams are in each county of Kentucky?
@@ -1928,7 +1979,9 @@ if st.session_state.current_view == "sample":
     * Find the three largest basins by area.
     * Find all counties that intersect 8 basins or more.
     * Which county has the most coal mines?
-    
+
+    ---
+
     #### Miscellaneous
     * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
     * Find all flood alerts.
@@ -1936,10 +1989,58 @@ if st.session_state.current_view == "sample":
     * Find all counties adjacent to Los Angeles to the east.
     * Find the longest river flowing through counties adjacent to LA's eastern border that does not intersect LA County.
 
+    ---
+
     #### Context Memory (resolve pronouns such as “this dam” or “these tracts”)
     * Identify the coal mine with the largest production.
     * Determine the census tract in which this coal mine is located, as well as all adjacent census tracts.
     * Retrieve the population for each of these census tracts.
+
+    ---
+
+    #### Advanced Queries
+    * **Find Kentucky census tracts where:**   
+      a) The tract intersects a river with NPDES wastewater facilities within 1000m.  
+      b) The tract intersects the downstream segment of a river starting from a coal mine within 1000m of the river.   
+      c) The tract's median personal income is below Kentucky's state median.      
+
+      **Save as separate GeoJSON files:**  
+      a) Census tracts meeting all conditions.   
+      b) Complete rivers intersecting those tracts with NPDES facilities within 1000m.
+      c) Active NPDES facilities within 1000m of those rivers.  
+      d) Complete rivers and upstream coal mines within 1000m.   
+      e) CSV with the median median income of the tracts, and Kentucky state medians for reference.  
+
+      **Delete all intermediate GeoJSON files.**
+
+    ---
+    
+    ####  Basic Test Query Set
+    ###### Schools, Hopspitals, Parks, Peaks, Landmarks, EV Charge Stations, Recreational Area, Railways, and Transportation Stops
+    
+    * List all counties intersected by the Missouri River.
+    * List all public transportation stops within a 5-mile radius of downtown San Francisco.
+    * List all counties adjacent to Cook County, Illinois.
+    * What is the population density of counties in Utah?
+    * List all critical habitats for endangered species in Wyoming.
+    * List all schools and hospitals within a 15-mile radius of New York City coordinates.
+    * List all historical landmarks within a 20-mile radius of Philadelphia, Pennsylvania.
+    * Identify all national landmarks in the state of Utah.
+    * Identify all federal parks within Montana.
+    * What are the closest national parks to Denver, Colorado?
+    * Retrieve all geographic features within a 10-mile radius of coordinates (37.7749, -122.4194).
+    * Find all lakes within 20 miles of Boulder, Colorado.
+    * Find all schools within 5 miles of Denver International Airport.
+    * ~~Find all industrial zones within 10 miles of a railway in Ohio.~~
+    * List all public recreational areas in the state of Florida.
+    * Locate all sections of the Missouri River within North Dakota.
+    * Retrieve all rivers crossing the boundary of Texas.
+    * Identify all state parks in Colorado.
+    * List all major rivers running through the state of Montana.
+    * Identify electric vehicle charging stations within 10 miles of National Park in New Mexico
+    * Identify all named peaks and their heights in Wrangell-St. Elias National Park and Preserve in Alaska
+    * ~~Identify locations of ponds that meet size and depth requirements for helicopter bladder filling in north slope of Alaska~~
+    * ~~Identify fishing restrictions at my location on the Snake River~~
     """)
 
 elif st.session_state.current_view == "map":
@@ -2114,7 +2215,7 @@ elif st.session_state.current_view == "map":
                     )
                     if len(df.select_dtypes(include=['number']).columns) > 0:
                         display_chart_builder(name, df)
-                        
+                    
                     # Optional: Show column types
                     # with st.expander("📋 Column Info"):
                     #     col_info = pd.DataFrame({
