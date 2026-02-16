@@ -2031,7 +2031,6 @@ if st.session_state.current_view == "sample":
     * Retrieve all geographic features within a 10-mile radius of coordinates (37.7749, -122.4194).
     * Find all lakes within 20 miles of Boulder, Colorado.
     * Find all schools within 5 miles of Denver International Airport.
-    * ~~Find all industrial zones within 10 miles of a railway in Ohio.~~
     * List all public recreational areas in the state of Florida.
     * Locate all sections of the Missouri River within North Dakota.
     * Retrieve all rivers crossing the boundary of Texas.
@@ -2039,8 +2038,6 @@ if st.session_state.current_view == "sample":
     * List all major rivers running through the state of Montana.
     * Identify electric vehicle charging stations within 10 miles of National Park in New Mexico
     * Identify all named peaks and their heights in Wrangell-St. Elias National Park and Preserve in Alaska
-    * ~~Identify locations of ponds that meet size and depth requirements for helicopter bladder filling in north slope of Alaska~~
-    * ~~Identify fishing restrictions at my location on the Snake River~~
     """)
 
 elif st.session_state.current_view == "map":
