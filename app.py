@@ -2016,7 +2016,7 @@ if st.session_state.current_view == "sample":
     ---
     
     ####  Basic Test Query Set
-    ###### Schools, Hospitals, Parks, Peaks, Landmarks, EV Charge Stations, Recreational Area, Railways, and Transportation Stops
+    ###### Schools, Hospitals, Parks, Peaks, Landmarks, EV Charge Stations, Recreational Area, Railways, Lakes, Critical Habitats and Transportation Stops
     
     * List all counties intersected by the Missouri River.
     * List all public transportation stops within a 5-mile radius of downtown San Francisco.
