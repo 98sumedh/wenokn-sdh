@@ -12,5 +12,9 @@ streamlit-folium>=0.15.0
 openpyxl
 pynhd==0.19.4
 pygeohydro==0.19.4
+py3dep
 reportlab
 plotly>=5.0.0
+matplotlib
+rasterio
+scikit-image
