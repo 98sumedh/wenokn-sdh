@@ -2042,7 +2042,7 @@ if st.session_state.current_view == "sample":
     ---
 
     ####  Advanced Test Query Set
-    ###### Elevation Path Analysis
+    ###### Elevation Path Analysis, Land Use and Terrain Elevation
 
     * What is the average elevation along a path defined by these GPS coordinates: [(34.0522, -118.2437), (36.7783, -119.4179)]?
     * What is the dominant land use within a 5 km buffer around Interstate 80 in California?
