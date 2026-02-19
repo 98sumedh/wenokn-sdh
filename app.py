@@ -2038,6 +2038,15 @@ if st.session_state.current_view == "sample":
     * List all major rivers running through the state of Montana.
     * Identify electric vehicle charging stations within 10 miles of National Park in New Mexico
     * Identify all named peaks and their heights in Wrangell-St. Elias National Park and Preserve in Alaska
+
+    ---
+
+    ####  Advanced Test Query Set
+    ###### Elevation Path Analysis
+
+    * What is the average elevation along a path defined by these GPS coordinates: [(34.0522, -118.2437), (36.7783, -119.4179)]?
+    * What is the dominant land use within a 5 km buffer around Interstate 80 in California?
+    * What percentage of Rocky Mountain National Park is too steep for elk movement?
     """)
 
 elif st.session_state.current_view == "map":
