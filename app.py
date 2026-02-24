@@ -1988,10 +1988,12 @@ if st.session_state.current_view == "sample":
     * Find all counties in Southern California.
     * Find all counties adjacent to Los Angeles to the east.
     * Find the longest river flowing through counties adjacent to LA's eastern border that does not intersect LA County.
-
+    * Find drinking water utilities within 5 miles from the power plant Fayette Solar.
+    * Find all drinking water utilities in Ross county.
     ---
 
-    #### Context Memory (resolve pronouns such as “this dam” or “these tracts”)
+    #### Context Memory 
+    ###### resolve pronouns such as “this dam” or “these tracts”
     * Identify the coal mine with the largest production.
     * Determine the census tract in which this coal mine is located, as well as all adjacent census tracts.
     * Retrieve the population for each of these census tracts.
