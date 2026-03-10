@@ -37,6 +37,52 @@ try:
 except ImportError:
     FOLIUM_AVAILABLE = False
 
+# ==============================================================================
+# PLATFORM DETECTION & PATH CONFIGURATION
+# ==============================================================================
+import sys
+
+def detect_platform():
+    """Detect if running on Streamlit Cloud or Hugging Face Spaces."""
+    # Hugging Face Spaces: working dir is /app
+    if os.path.exists("/app/src") or os.getcwd() == "/app":
+        return "huggingface"
+    # Streamlit Cloud: working dir is /mount/src/...
+    elif os.path.exists("/mount/src"):
+        return "streamlit"
+    else:
+        return "unknown"
+
+PLATFORM = detect_platform()
+
+# Configure paths based on platform
+if PLATFORM == "huggingface":
+    WORKING_DIR = "/app"
+    SKILLS_DIR = "src/skills"  # Relative to /app
+    PYTHON_EXECUTABLE = "python3"
+    PLATFORM_NAME = "Hugging Face Spaces"
+elif PLATFORM == "streamlit":
+    WORKING_DIR = "/mount/src/deep-wenokn/"
+    SKILLS_DIR = "skills"
+    PYTHON_EXECUTABLE = "/home/adminuser/venv/bin/python3"
+    PLATFORM_NAME = "Streamlit Cloud"
+else:
+    # Fallback - use current directory
+    WORKING_DIR = os.getcwd()
+    SKILLS_DIR = "skills"
+    PYTHON_EXECUTABLE = "python3"
+    PLATFORM_NAME = "Unknown"
+
+# Store in session state for access throughout the app
+if "platform" not in st.session_state:
+    st.session_state.platform = PLATFORM
+    st.session_state.working_dir = WORKING_DIR
+    st.session_state.skills_dir_rel = SKILLS_DIR
+    st.session_state.python_executable = PYTHON_EXECUTABLE
+    st.session_state.platform_name = PLATFORM_NAME
+
+# ==============================================================================
+
 # Set the wide layout of the web page
 st.set_page_config(layout="wide", page_title="WEN-OKN")
 
@@ -68,6 +114,9 @@ if "last_user_request" not in st.session_state:
 # Track unexpected failures
 if "unexpected_failures" not in st.session_state:
     st.session_state.unexpected_failures = []
+# Store pending user input for two-step processing (to disable buttons during agent run)
+if "pending_user_input" not in st.session_state:
+    st.session_state.pending_user_input = None
 
 
 # ========== CLEANUP FUNCTIONS ==========
@@ -613,9 +662,9 @@ def get_llm():
     #     api_key=os.environ.get("NRP_API_KEY"),
     #     temperature=0,
     #     extra_body={
-    #         "thinking": {"type": "enabled"},
-    #         "clear_thinking": False
-    #     }
+    #           "thinking": {"type": "enabled"},
+    #           "clear_thinking": False
+    #       },
     # )
 
     return ChatOpenAI(
@@ -1169,7 +1218,9 @@ def initialize_agent():
             # Setup directories
             assistant_id = "agent"
             current_directory = os.getcwd()
-            local_skills_dir = Path(current_directory) / "skills"
+            # Use platform-specific skills directory
+            skills_dir_rel = st.session_state.get("skills_dir_rel", "skills")
+            local_skills_dir = Path(current_directory) / skills_dir_rel
 
             # Scan skills documentation to know what's available
             skills_docs = scan_skills_documentation()
@@ -1194,9 +1245,15 @@ def initialize_agent():
             # No custom middleware needed - FilesystemMiddleware (built into create_deep_agent)
             # handles file operations and execute tool when backend implements SandboxBackendProtocol.
             # SkillsMiddleware is also added automatically when `skills` parameter is used.
-            
-            # Updated system prompt with user-specific temp directory
-            system_prompt = f"""You are a data expert. You are under Streamlit Cloud. You can use the **Virtual Environment** at /home/adminuser/venv (created by uv).
+
+            # Extract platform variables for system prompt
+            platform_name = st.session_state.get("platform_name", "Unknown")
+            python_exec = st.session_state.get("python_executable", "python3")
+            skills_dir_rel = st.session_state.get("skills_dir_rel", "skills")
+            working_dir = st.session_state.get("working_dir", os.getcwd())
+
+            # Updated system prompt with user-specific temp directory and platform-specific paths
+            system_prompt = f"""You are a data expert. You are running on {platform_name}. You can use Python at {python_exec}.
 
 ## CRITICAL SECURITY RULES - ABSOLUTE PRIORITY
 
@@ -1304,18 +1361,18 @@ Never show the paths of the saved files in the response. Just say that the saved
 Users cannot access any files other than CSV or GeoJSON. Do not store results in .md or .txt files for user access. You must display the results in the final response.
 
 ## YOUR SKILLS
-Working directory: /mount/src/deep-wenokn/
-Skills directory: skills/
+Working directory: {working_dir}/
+Skills directory: {skills_dir_rel}/
 Available skills: {', '.join(skills_list) if skills_list else 'None found'}
 
 ## MANDATORY PROTOCOL
 1. **Explore**: When asked for a map/data, IMMEDIATELY use `execute` to read the relevant `SKILL.md`.
-   - Command: `cat skills/<skill_name>/SKILL.md`
+   - Command: `cat {skills_dir_rel}/<skill_name>/SKILL.md`
    - CRITICAL: Use the execute tool with cat command and RELATIVE paths:
-   -- ✅ CORRECT: execute tool → `cat skills/<skill_name>/SKILL.md`
+   -- ✅ CORRECT: execute tool → `cat {skills_dir_rel}/<skill_name>/SKILL.md`
    -- ✅ ALSO CORRECT: read_file tool for reading files
-   -- ❌ WRONG: absolute paths without proper working directory               
-2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs using "/home/adminuser/venv/bin/python3". 
+   -- ❌ WRONG: absolute paths without proper working directory
+2. **Execute**: Generate and run the Python code exactly as the `SKILL.md` instructs using "{python_exec}". 
 3. **Save**: You MUST save outputs to the user's temp directory: {st.session_state.temp_dir}/
    - Example: `gdf.to_file('{st.session_state.temp_dir}/output.geojson', driver='GeoJSON')`
 
@@ -1426,8 +1483,8 @@ async def handle_user_input_async(user_input):
     # Store last request for retry functionality
     st.session_state.last_user_request = user_input
 
-    # Set agent running flag to prevent keep_alive interference
-    st.session_state.agent_is_running = True
+    # Note: agent_is_running is already set to True before this function is called
+    # (in the two-step pattern in the conversation view)
 
     try:
         # Add user message to chat
@@ -1445,12 +1502,14 @@ async def handle_user_input_async(user_input):
             got_response = False
             accumulated_text = ""
             retry_count = 0
-            max_retries = 1
-        
+            max_retries = 3   # retries for both transient errors and context overflow
+            last_error_type = None  # "context" or "transient"
+
         while not got_response and retry_count <= max_retries:
             accumulated_text = ""
             text_placeholder = None
             displayed_tool_ids = set()
+            tool_call_buffers = {}  # key: tool_id or index -> {name, id, args, args_parts}
             tool_count = 0
             stream_completed = False
             
@@ -1525,7 +1584,7 @@ async def handle_user_input_async(user_input):
                     messages_with_history[-1]["content"] += base_instruction
                 
                 stream_input = {"messages": messages_with_history}
-                
+
                 # Stream the response with error handling
                 try:
                     async for event in st.session_state.agent.astream(
@@ -1553,65 +1612,139 @@ async def handle_user_input_async(user_input):
                                         # Update the placeholder
                                         text_placeholder.markdown(accumulated_text)
                                 
-                                # Handle tool calls
-                                if hasattr(message, 'tool_calls') and message.tool_calls:
-                                    for tool_call in message.tool_calls:
-                                        tool_id = tool_call.get('id')
-                                        if tool_id and tool_id not in displayed_tool_ids:
-                                            displayed_tool_ids.add(tool_id)
-                                            tool_count += 1
-                                            
-                                            # Freeze accumulated text by writing it permanently
-                                            if accumulated_text and text_placeholder:
-                                                text_placeholder = None
-                                                accumulated_text = ""
-                                            
-                                            # Display tool call permanently
-                                            tool_name = tool_call.get('name', 'unknown')
-                                            tool_args = tool_call.get('args', {})
-                                            icon = TOOL_ICONS.get(tool_name, "🔧")
-                                            display_str = format_tool_display(tool_name, tool_args)
-                                            
-                                            with main_container:
-                                                st.info(f"{icon} {display_str}")
-                                                
-                                                with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
-                                                    if tool_name == "shell":
-                                                        command = tool_args.get("command", "")
-                                                        st.markdown("**Full Command:**")
+                                # Handle tool calls - buffer chunks until args are complete
+                                # This handles both NRP (streams args incrementally) and
+                                # Zai (delivers complete tool_calls in one message).
+                                tool_call_chunks = (
+                                    getattr(message, 'tool_call_chunks', None) or []
+                                )
+                                # Fall back to tool_calls if no streaming chunks
+                                # (e.g. Zai delivers complete calls directly)
+                                if not tool_call_chunks:
+                                    raw_calls = getattr(message, 'tool_calls', None) or []
+                                    tool_call_chunks = [
+                                        {
+                                            'id': tc.get('id'),
+                                            'name': tc.get('name'),
+                                            'args': tc.get('args', {}),
+                                            'index': i,
+                                        }
+                                        for i, tc in enumerate(raw_calls)
+                                    ]
+
+                                for chunk in tool_call_chunks:
+                                    chunk_id = chunk.get('id')
+                                    chunk_name = chunk.get('name')
+                                    chunk_args = chunk.get('args')
+                                    chunk_index = chunk.get('index')
+
+                                    # Choose buffer key: prefer index, then id
+                                    buf_key = chunk_index if chunk_index is not None else chunk_id
+                                    if buf_key is None:
+                                        buf_key = f"unknown-{len(tool_call_buffers)}"
+
+                                    buf = tool_call_buffers.setdefault(buf_key, {
+                                        'name': None, 'id': None,
+                                        'args': None, 'args_parts': [],
+                                    })
+
+                                    if chunk_name:
+                                        buf['name'] = chunk_name
+                                    if chunk_id:
+                                        buf['id'] = chunk_id
+
+                                    # Merge args: dict = complete, str = streaming chunk
+                                    if isinstance(chunk_args, dict):
+                                        buf['args'] = chunk_args
+                                        buf['args_parts'] = []
+                                    elif isinstance(chunk_args, str) and chunk_args:
+                                        parts = buf.setdefault('args_parts', [])
+                                        if not parts or chunk_args != parts[-1]:
+                                            parts.append(chunk_args)
+                                        buf['args'] = ''.join(parts)
+                                    elif chunk_args is not None:
+                                        buf['args'] = chunk_args
+
+                                    buf_name = buf.get('name')
+                                    buf_id = buf.get('id')
+                                    if not buf_name:
+                                        continue
+
+                                    # Parse args - skip until JSON is complete
+                                    parsed_args = buf.get('args')
+                                    if isinstance(parsed_args, str):
+                                        if not parsed_args:
+                                            continue
+                                        try:
+                                            parsed_args = json.loads(parsed_args)
+                                        except json.JSONDecodeError:
+                                            continue  # args still streaming
+                                    elif parsed_args is None:
+                                        continue
+
+                                    if not isinstance(parsed_args, dict):
+                                        parsed_args = {'value': parsed_args}
+
+                                    # Render only once per tool_id
+                                    display_key = buf_id if buf_id else buf_key
+                                    if display_key in displayed_tool_ids:
+                                        tool_call_buffers.pop(buf_key, None)
+                                        continue
+                                    displayed_tool_ids.add(display_key)
+                                    tool_call_buffers.pop(buf_key, None)
+                                    tool_count += 1
+
+                                    # Freeze accumulated text before showing tool call
+                                    if accumulated_text and text_placeholder:
+                                        text_placeholder = None
+                                        accumulated_text = ""
+
+                                    tool_name = buf_name
+                                    tool_args = parsed_args
+                                    tool_id = buf_id
+                                    icon = TOOL_ICONS.get(tool_name, "🔧")
+                                    display_str = format_tool_display(tool_name, tool_args)
+
+                                    with main_container:
+                                        st.info(f"{icon} {display_str}")
+
+                                        with st.expander(f"🔍 Full {tool_name} details", expanded=True if tool_name == 'write_todos' else False):
+                                            if tool_name == "shell":
+                                                command = tool_args.get("command", "")
+                                                st.markdown("**Full Command:**")
+                                                st.code(command, language="bash")
+
+                                                if command.startswith("python3 -c"):
+                                                    st.markdown("**Formatted Python Code:**")
+                                                    try:
+                                                        python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
+                                                        python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
+                                                        st.code(python_code, language="python")
+                                                    except:
                                                         st.code(command, language="bash")
-                                                        
-                                                        if command.startswith("python3 -c"):
-                                                            st.markdown("**Formatted Python Code:**")
-                                                            try:
-                                                                python_code = command.split('python3 -c "', 1)[1].rsplit('"', 1)[0]
-                                                                python_code = python_code.replace('\\n', '\n').replace('\\"', '"')
-                                                                st.code(python_code, language="python")
-                                                            except:
-                                                                st.code(command, language="bash")
-                                                    else:
-                                                        if tool_name == 'write_todos':
-                                                            todos = tool_args.get("todos", [])
-                                                            status_emoji = {
-                                                                "pending": "⏳",
-                                                                "in_progress": "🔄",
-                                                                "completed": "✅"
-                                                            }
-                                                            for todo in todos:
-                                                                status = todo.get("status")
-                                                                content = todo.get("content")
-                                                                st.markdown(f"{status_emoji[status]} {content}")
-                                                        else:
-                                                            st.json(tool_args)
-                                                        
-                                                    if tool_name == "shell" and "command" in tool_args:
-                                                        st.download_button(
-                                                            label="📥 Download Command",
-                                                            data=tool_args["command"],
-                                                            file_name=f"command_{tool_count}.sh",
-                                                            mime="text/plain",
-                                                            key=f"download_cmd_{tool_id}"
-                                                        )
+                                            else:
+                                                if tool_name == 'write_todos':
+                                                    todos = tool_args.get("todos", [])
+                                                    status_emoji = {
+                                                        "pending": "⏳",
+                                                        "in_progress": "🔄",
+                                                        "completed": "✅"
+                                                    }
+                                                    for todo in todos:
+                                                        status = todo.get("status")
+                                                        content = todo.get("content")
+                                                        st.markdown(f"{status_emoji[status]} {content}")
+                                                else:
+                                                    st.json(tool_args)
+
+                                            if tool_name == "shell" and "command" in tool_args:
+                                                st.download_button(
+                                                    label="📥 Download Command",
+                                                    data=tool_args["command"],
+                                                    file_name=f"command_{tool_count}.sh",
+                                                    mime="text/plain",
+                                                    key=f"download_cmd_{tool_id}"
+                                                )
                             
                             elif isinstance(message, ToolMessage):
                                 # Freeze any accumulated text before showing tool result
@@ -1655,12 +1788,13 @@ async def handle_user_input_async(user_input):
                     with main_container:
                         st.warning("⚠️ Stream was cancelled - likely context overflow from large tool output")
                     stream_completed = False
-                    
+
                 except Exception as stream_error:
                     error_str = str(stream_error).lower()
-                    
-                    # Check for context window errors
+
                     if any(kw in error_str for kw in ['context', 'token', 'length', 'too long', 'maximum', 'overflow']):
+                        # Context overflow — outer retry loop will retry with stricter instructions
+                        last_error_type = "context"
                         with main_container:
                             st.error(f"❌ Context overflow detected: {str(stream_error)[:200]}")
                             with st.expander("💡 What happened?"):
@@ -1673,29 +1807,14 @@ async def handle_user_input_async(user_input):
                                 """)
                         stream_completed = False
                     else:
-                        # Try direct invocation for non-context errors
-                        with main_container:
-                            st.warning("⚠️ Streaming failed, trying direct invocation...")
-                        
-                        try:
-                            result = await st.session_state.agent.ainvoke(stream_input, config=config)
-                            
-                            if isinstance(result, dict) and "messages" in result:
-                                last_message = result["messages"][-1]
-                                if hasattr(last_message, 'content') and isinstance(last_message.content, str):
-                                    accumulated_text = last_message.content
-                                    with main_container:
-                                        st.markdown(accumulated_text)
-                                    stream_completed = True
-                        except Exception as invoke_error:
-                            with main_container:
-                                st.error(f"❌ Direct invocation also failed: {str(invoke_error)[:200]}")
-                            stream_completed = False
+                        # Transient error (network blip, timeout, etc.)
+                        last_error_type = "transient"
+                        stream_completed = False
                 
                 # Check if we got a valid response
                 if stream_completed and (accumulated_text.strip() or tool_count > 0):
                     got_response = True
-                    
+
                     # Display any remaining text
                     if accumulated_text:
                         if text_placeholder:
@@ -1703,7 +1822,7 @@ async def handle_user_input_async(user_input):
                         else:
                             with main_container:
                                 st.markdown(accumulated_text)
-                    
+
                     # Save final response
                     if accumulated_text and accumulated_text.strip():
                         st.session_state.messages.append({"role": "assistant", "content": accumulated_text})
@@ -1713,26 +1832,48 @@ async def handle_user_input_async(user_input):
                         with main_container:
                             st.markdown(default_msg)
                         st.session_state.messages.append({"role": "assistant", "content": default_msg})
-                    
+
                     # Load files from temp directory and clean up
                     load_and_cleanup_temp_files()
-                
-                elif retry_count < max_retries:
-                    # Failed, but we can retry
+
+                elif stream_completed and not accumulated_text.strip() and tool_count == 0:
+                    # Stream finished but produced nothing — treat as transient, retry
+                    last_error_type = "transient"
                     retry_count += 1
-                    with main_container:
-                        st.warning(f"⚠️ Attempt {retry_count} failed due to context overflow. Retrying with stricter output limits...")
-                    await asyncio.sleep(1)  # Brief pause before retry
-                    
+                    if retry_count <= max_retries:
+                        with main_container:
+                            st.warning(f"⚠️ Received empty response, retrying... (attempt {retry_count}/{max_retries})")
+                        await asyncio.sleep(2)
+                    else:
+                        with main_container:
+                            st.error("❌ Received empty response after retries. Please try your request again.")
+                        st.session_state.messages.append({"role": "assistant", "content": "❌ No response received. Please try again."})
+                        got_response = True
+
+                elif retry_count < max_retries:
+                    # Failed — retry with appropriate message and delay
+                    retry_count += 1
+                    if last_error_type == "context":
+                        with main_container:
+                            st.warning(f"⚠️ Context overflow on attempt {retry_count}. Retrying with stricter output limits...")
+                        await asyncio.sleep(1)
+                    else:
+                        with main_container:
+                            st.warning(f"⚠️ Connection interrupted, retrying... (attempt {retry_count}/{max_retries})")
+                        await asyncio.sleep(3)
+
                 else:
                     # Final failure after all retries
-                    error_msg = "❌ Unable to complete request after retries. The operation is producing outputs too large for the context window.\n\n"
-                    error_msg += "**Suggestions:**\n"
-                    error_msg += "- Break your request into smaller, more specific steps\n"
-                    error_msg += "- Request filtered or limited results (e.g., 'top 10', 'first 100 rows')\n"
-                    error_msg += "- Clear chat history using 'Clear All Data' button\n"
-                    error_msg += "- Ask for summaries instead of full data dumps"
-                    
+                    if last_error_type == "context":
+                        error_msg = "❌ Unable to complete request after retries. The operation is producing outputs too large for the context window.\n\n"
+                        error_msg += "**Suggestions:**\n"
+                        error_msg += "- Break your request into smaller, more specific steps\n"
+                        error_msg += "- Request filtered or limited results (e.g., 'top 10', 'first 100 rows')\n"
+                        error_msg += "- Clear chat history using 'Clear All Data' button\n"
+                        error_msg += "- Ask for summaries instead of full data dumps"
+                    else:
+                        error_msg = "❌ Unable to complete request after retries due to connection issues. Please try again in a moment."
+
                     with main_container:
                         st.error(error_msg)
                     st.session_state.messages.append({"role": "assistant", "content": error_msg})
@@ -1808,18 +1949,21 @@ with st.sidebar:
         }
         </style>
     """, unsafe_allow_html=True)
-    
+
     # Navigation buttons
-    if st.button("Conversation", width='stretch', type="primary" if st.session_state.current_view == "conversation" else "secondary"):
+    # Disable all navigation buttons when agent is running to prevent interruption
+    agent_running = st.session_state.get("agent_is_running", False)
+
+    if st.button("Conversation", width='stretch', type="primary" if st.session_state.current_view == "conversation" else "secondary", disabled=agent_running):
         st.session_state.current_view = "conversation"
         st.rerun()
 
-    if st.button("Map & Data", width='stretch', type="primary" if st.session_state.current_view == "map" else "secondary"):
+    if st.button("Map & Data", width='stretch', type="primary" if st.session_state.current_view == "map" else "secondary", disabled=agent_running):
         st.session_state.current_view = "map"
         check_and_load_new_files()  # Load any new files before switching
         st.rerun()
-    
-    if st.button("Clear All Data", width='stretch'):
+
+    if st.button("Clear All Data", width='stretch', disabled=agent_running):
         st.session_state.geodataframes = {}
         st.session_state.dataframes = {}
         st.session_state.generated_code = []
@@ -1831,7 +1975,7 @@ with st.sidebar:
         time.sleep(1)
         st.rerun()
 
-    if st.button("Sample Queries", width='stretch', type="primary" if st.session_state.current_view == "sample" else "secondary"):
+    if st.button("Sample Queries", width='stretch', type="primary" if st.session_state.current_view == "sample" else "secondary", disabled=agent_running):
         st.session_state.current_view = "sample"
         st.rerun()
 
@@ -1865,15 +2009,27 @@ with st.sidebar:
 if st.session_state.current_view == "conversation":
     # Conversation View
     st.markdown("### Chat with WEN-OKN")
-    
+
     # Display existing messages
     display_messages()
-    
+
+    # Process pending input if agent is running (two-step pattern to disable buttons)
+    # This runs AFTER buttons are rendered, so agent_is_running is already True
+    if st.session_state.get("agent_is_running", False) and st.session_state.pending_user_input:
+        pending_input = st.session_state.pending_user_input
+        st.session_state.pending_user_input = None  # Clear pending input
+        handle_user_input(pending_input)
+
     # Chat input
     user_input = st.chat_input("Ask about geographic data: counties, states, rivers, power plants, watersheds...")
-    
+
     if user_input:
-        handle_user_input(user_input)
+        # Two-step pattern:
+        # 1. Store input and set flag, then rerun (buttons will be disabled on next render)
+        # 2. On next run, process the input above
+        st.session_state.pending_user_input = user_input
+        st.session_state.agent_is_running = True
+        st.rerun()
 
 if st.session_state.current_view == "sample":
     # Sample Queries View
@@ -1993,11 +2149,10 @@ if st.session_state.current_view == "sample":
     ---
 
     #### Context Memory 
-    ###### resolve pronouns such as “this dam” or “these tracts”
+    ###### Resolve pronouns such as “this dam” or “these tracts”
     * Identify the coal mine with the largest production.
     * Determine the census tract in which this coal mine is located, as well as all adjacent census tracts.
     * Retrieve the population for each of these census tracts.
-
     ---
 
     #### Advanced Queries
@@ -2018,7 +2173,7 @@ if st.session_state.current_view == "sample":
     ---
     
     ####  Basic Test Query Set
-    ###### Schools, Hospitals, Parks, Peaks, Landmarks, EV Charge Stations, Recreational Area, Railways, Lakes, Critical Habitats and Transportation Stops
+    ###### Schools, Hopspitals, Parks, Peaks, Landmarks, EV Charge Stations, Recreational Area, Railways, Lakes, Critical Habitats and Transportation Stops
     
     * List all counties intersected by the Missouri River.
     * List all public transportation stops within a 5-mile radius of downtown San Francisco.
@@ -2040,15 +2195,16 @@ if st.session_state.current_view == "sample":
     * List all major rivers running through the state of Montana.
     * Identify electric vehicle charging stations within 10 miles of National Park in New Mexico
     * Identify all named peaks and their heights in Wrangell-St. Elias National Park and Preserve in Alaska
-
     ---
 
     ####  Advanced Test Query Set
-    ###### Elevation Path Analysis, Land Use and Terrain Elevation
+    ###### Elevation Path Analysis
 
     * What is the average elevation along a path defined by these GPS coordinates: [(34.0522, -118.2437), (36.7783, -119.4179)]?
     * What is the dominant land use within a 5 km buffer around Interstate 80 in California?
+    * What is the elevation and slope breakdown of the 5km buffer around Interstate 80 in California?
     * What percentage of Rocky Mountain National Park is too steep for elk movement?
+    * Identify wildlife corridors in the Rocky Mountains.
     """)
 
 elif st.session_state.current_view == "map":
