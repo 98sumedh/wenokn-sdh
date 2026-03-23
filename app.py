@@ -689,6 +689,11 @@ def get_llm():
         }
     )
 
+    # return ChatOpenAI(model="gpt-4.1-mini", 
+    #                   temperature=0, 
+    #                   max_tokens=5000, 
+    #                   api_key=OpenAI_KEY)
+
     # return ChatOpenAI(
     #     model="kimi",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
