@@ -678,27 +678,27 @@ def get_llm():
     #       },
     # )
 
-    # return ChatOpenAI(
-    #     model="glm-4.7",
-    #     base_url="https://api.z.ai/api/coding/paas/v4",
-    #     api_key=os.environ.get("ZAI_API_KEY"),
-    #     temperature=0.5,
-    #     extra_body={
-    #         "thinking": {"type": "enabled"},
-    #         "clear_thinking": False
-    #     }
-    # )
-
-    from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-    llm = ChatOpenAI(
-        model="gpt-4.1-mini",
-        temperature=0,
-        max_tokens=5000,
-        api_key=os.environ.get("OpenAI_KEY"),
-        streaming=True,
-        callbacks=[StreamingStdOutCallbackHandler()],
+    return ChatOpenAI(
+        model="glm-4.7",
+        base_url="https://api.z.ai/api/coding/paas/v4",
+        api_key=os.environ.get("ZAI_API_KEY"),
+        temperature=0.5,
+        extra_body={
+            "thinking": {"type": "enabled"},
+            "clear_thinking": False
+        }
     )
+
+    # from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+    # llm = ChatOpenAI(
+    #     model="gpt-4.1-mini",
+    #     temperature=0,
+    #     max_tokens=5000,
+    #     api_key=os.environ.get("OpenAI_KEY"),
+    #     streaming=True,
+    #     callbacks=[StreamingStdOutCallbackHandler()],
+    # )
 
     # return ChatOpenAI(
     #     model="kimi",
