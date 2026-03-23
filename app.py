@@ -693,7 +693,7 @@ def get_llm():
             model="gpt-5.2",
             temperature=0,
             max_tokens=5000,
-            api_key=os.environ.get("OPENAI_API_KEY"),
+            api_key=os.environ.get("OpenAI_KEY"),
             streaming=True,   # just this flag is sufficient in modern langchain
         )
 
