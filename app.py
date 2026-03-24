@@ -97,6 +97,8 @@ if "conversation_history" not in st.session_state:
     st.session_state.conversation_history = []
 if "geodataframes" not in st.session_state:
     st.session_state.geodataframes = {}  # Dict: {name: gdf}
+if "wms_layers" not in st.session_state:
+    st.session_state.wms_layers = {}  # Dict: {name: {url, layers, name, opacity, bbox}}
 if "dataframes" not in st.session_state:
     st.session_state.dataframes = {}  # Dict: {name: df}
 if "generated_code" not in st.session_state:
@@ -117,6 +119,22 @@ if "unexpected_failures" not in st.session_state:
 # Store pending user input for two-step processing (to disable buttons during agent run)
 if "pending_user_input" not in st.session_state:
     st.session_state.pending_user_input = None
+
+# Recovery: if agent_is_running=True but no pending input, the WebSocket likely
+# reconnected mid-execution (new script thread started while asyncio.run() was blocking).
+# If there's an orphaned user message with no reply, re-queue it for processing.
+# Otherwise just reset the flag so buttons become usable again.
+if st.session_state.agent_is_running and not st.session_state.pending_user_input:
+    msgs = st.session_state.get("messages", [])
+    if msgs and msgs[-1]["role"] == "user":
+        # Re-queue the orphaned unanswered request
+        orphaned_input = msgs[-1]["content"]
+        st.session_state.messages.pop()  # Remove it — handle_user_input_async will re-add it
+        st.session_state.pending_user_input = orphaned_input
+        # agent_is_running stays True so the two-step pattern processes it normally
+    else:
+        st.session_state.agent_is_running = False
+    st.rerun()
 
 
 # ========== CLEANUP FUNCTIONS ==========
@@ -667,17 +685,6 @@ def get_llm():
     #       },
     # )
 
-    # return ChatOpenAI(
-    #     model="glm-4.7",
-    #     base_url="https://ellm.nrp-nautilus.io/v1",
-    #     api_key=os.environ.get("NRP_API_KEY"),
-    #     temperature=0,
-    #     extra_body={
-    #           "thinking": {"type": "enabled"},
-    #           "clear_thinking": False
-    #       },
-    # )
-
     return ChatOpenAI(
         model="glm-4.7",
         base_url="https://api.z.ai/api/coding/paas/v4",
@@ -690,15 +697,7 @@ def get_llm():
     )
 
     # return ChatOpenAI(
-    #         model="gpt-5.2",
-    #         temperature=0,
-    #         max_tokens=5000,
-    #         api_key=os.environ.get("OpenAI_KEY"),
-    #         streaming=True,   # just this flag is sufficient in modern langchain
-    #     )
-
-    # return ChatOpenAI(
-    #     model="minimax-m2",
+    #     model="kimi",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
     #     api_key=os.environ.get("NRP_API_KEY"),
     #     temperature=0,
@@ -708,7 +707,7 @@ def get_llm():
 # Function to display all GeoDataFrames as layers on a single map
 def display_all_layers_map():
     """Display all GeoDataFrames as layers on a single interactive Folium map."""
-    if not st.session_state.geodataframes:
+    if not st.session_state.geodataframes and not st.session_state.wms_layers:
         st.info("No geographic data available yet. Start a conversation to generate maps!")
         return
     
@@ -717,12 +716,16 @@ def display_all_layers_map():
         return
     
     try:
-        # Calculate overall bounds from all geodataframes
+        # Calculate overall bounds from all geodataframes and WMS layers
         all_bounds = []
         for gdf in st.session_state.geodataframes.values():
             if gdf.crs and gdf.crs.to_epsg() != 4326:
                 gdf = gdf.to_crs(epsg=4326)
             all_bounds.append(gdf.total_bounds)
+        for wms_info in st.session_state.wms_layers.values():
+            if "bbox" in wms_info:
+                s, w, n, e = wms_info["bbox"]
+                all_bounds.append([w, s, e, n])
         
         # Calculate center
         if all_bounds:
@@ -882,6 +885,19 @@ def display_all_layers_map():
             
             feature_group.add_to(m)
         
+        # Add WMS layers
+        for wms_info in st.session_state.wms_layers.values():
+            folium.raster_layers.WmsTileLayer(
+                url=wms_info["url"],
+                layers=wms_info["layers"],
+                fmt="image/png",
+                transparent=True,
+                name=wms_info["name"],
+                overlay=True,
+                control=True,
+                opacity=wms_info.get("opacity", 0.7),
+            ).add_to(m)
+
         # Add layer control with custom CSS for smaller font
         layer_control = folium.LayerControl(position='topright', collapsed=False)
         layer_control.add_to(m)
@@ -964,8 +980,9 @@ def display_all_layers_map():
         with st.expander("🎨 Map Legend", expanded=False):
             for idx, name in enumerate(st.session_state.geodataframes.keys()):
                 color = colors[idx % len(colors)]
-                # Create a small colored box for the legend
                 st.markdown(f'<span style="color:{color};">⬤</span> **{name.replace("_", " ").title()}**', unsafe_allow_html=True)
+            for wms_info in st.session_state.wms_layers.values():
+                st.markdown(f'🟦 **{wms_info["name"]}** (WMS)', unsafe_allow_html=True)
     
     except Exception as e:
         st.error(f"Error displaying map: {str(e)}")
@@ -1020,10 +1037,24 @@ def check_and_load_new_files():
                         loaded_anything = True
                 except Exception as e:
                     st.error(f"Error loading {cf.name}: {e}")
-                    
+
+        # Check for new WMS layer JSON files
+        wms_files = list(temp_dir.glob("*.wms.json"))
+        for wf in wms_files:
+            name = wf.name.replace(".wms.json", "")
+            if name not in st.session_state.wms_layers:
+                try:
+                    import json
+                    with open(wf) as f:
+                        wms_info = json.load(f)
+                    st.session_state.wms_layers[name] = wms_info
+                    loaded_anything = True
+                except Exception as e:
+                    st.error(f"Error loading {wf.name}: {e}")
+
     except Exception as e:
         st.error(f"Error checking temp files: {str(e)}")
-    
+
     return loaded_anything
 
 
@@ -1403,6 +1434,25 @@ For simple 1-2 step tasks, just do them without todos.
 - **DO NOT** say "I have saved the file" unless you have successfully executed the Python code that saves it.
 - **DO NOT** guess file paths. If you haven't run the code to create the file, the file does not exist.
 - **NEVER** simulate the output of a tool. If you need to know something, RUN THE TOOL.
+
+## ADDING WMS LAYERS TO THE MAP
+To display a WMS layer on the map, write a `.wms.json` file to the temp directory.
+The app detects these files and adds them as toggleable overlay layers.
+
+```python
+import json, os
+wms_layer = {{
+    "url": "https://sparcal.sdsc.edu/geoserver/tiger/wms",
+    "layers": "tiger:Depth_400000_5070",
+    "name": "Kanawha Flood 400k cfs",
+    "opacity": 0.7,
+    "bbox": [37.5, -82.5, 39.0, -80.5]
+}}
+temp_dir = os.environ.get("TEMP_DIR", "{st.session_state.temp_dir}")
+with open(os.path.join(temp_dir, "kanawha_flood_400k.wms.json"), "w") as f:
+    json.dump(wms_layer, f)
+print("WMS layer added to map")
+```
 
 **CRITICAL TEMP DIRECTORY RULES:**
 - The temp directory path changes during long sessions
@@ -1985,6 +2035,7 @@ with st.sidebar:
     if st.button("Clear All Data", width='stretch', disabled=agent_running):
         st.session_state.geodataframes = {}
         st.session_state.dataframes = {}
+        st.session_state.wms_layers = {}
         st.session_state.generated_code = []
         st.session_state.messages = []
         st.session_state.agent = None
@@ -2224,6 +2275,44 @@ if st.session_state.current_view == "sample":
     * What is the elevation and slope breakdown of the 5km buffer around Interstate 80 in California?
     * What percentage of Rocky Mountain National Park is too steep for elk movement?
     * Identify wildlife corridors in the Rocky Mountains.
+
+    ---
+
+    ### Kanawha River Flood Impact Analysis
+    *Powered by USACE HEC-RAS 2D model depth rasters and FEMA NSI 2022*
+
+    ###### Flood Area by Flow
+    * Show the flood depth for the Kanawha River at 350,000 cfs
+    * Show the flood depth for the Kanawha River at 200,000 cfs
+    * Show the flood depth for the Kanawha River at 1,000,000 cfs
+
+    ###### Critical Infrastructure (CIKR)
+    * Show me all schools impacted by the Kanawha River flood at 400,000 cfs
+    * Show me all hospitals impacted by the Kanawha River flood at 200,000 cfs
+    * Show me the flood impact on schools and hospitals along the Kanawha River at 400,000 cfs
+    * Show me all critical infrastructure impacted by the Kanawha River flood at 300,000 cfs
+    * Show me all electric substations impacted by the Kanawha River flood at 500,000 cfs
+
+    ###### FEMA National Structure Inventory (NSI 2022)
+    * What is the estimated economic damage and population at risk from the Kanawha River flood at 300,000 cfs?
+    * Find all flooded commercial buildings along the Kanawha River with structure value over $1 million at 300,000 cfs
+    * Which industrial facilities along the Kanawha River have total exposure over $5 million at 300,000 cfs?
+    * Find all impacted high-technology buildings along the Kanawha River at 400,000 cfs
+    * How many nursing home residents are at risk from the Kanawha River flood at 400,000 cfs?
+    * How many students are in flooded buildings along the Kanawha River at 200,000 cfs?
+    * Find all flooded buildings along the Kanawha River with more than 50 employees at 300,000 cfs
+    * How many elderly people (over 65) are at risk from the Kanawha River flood at 300,000 cfs?
+    * How many flooded buildings along the Kanawha River have basements at 300,000 cfs?
+    * Find flooded buildings along the Kanawha River built before 1970 at 400,000 cfs
+    * How many multi-story buildings are flooded along the Kanawha River at 300,000 cfs?
+    * Find residential buildings with over 10 units severely flooded along the Kanawha River at 400,000 cfs
+
+    ###### Geographic Impact by Reach
+    * Show the flood impact by reach along the Kanawha River at 300,000 cfs
+    * Which reach has the most impacted critical infrastructure along the Kanawha River at 400,000 cfs?
+    * How many facilities are flooded in reach5 of the Kanawha River at 200,000 cfs?
+    * Compare flood impacts between reach5 and reach7 of the Kanawha River at 300,000 cfs
+    * Which areas along the Kanawha River should be prioritized for emergency response at 400,000 cfs?
     """)
 
 elif st.session_state.current_view == "map":
@@ -2232,9 +2321,9 @@ elif st.session_state.current_view == "map":
         st.rerun()  # Refresh if new data was loaded
     
     # Check if we have any data at all
-    has_geodata = len(st.session_state.geodataframes) > 0
+    has_geodata = len(st.session_state.geodataframes) > 0 or len(st.session_state.wms_layers) > 0
     has_tabledata = len(st.session_state.dataframes) > 0
-    
+
     if not has_geodata and not has_tabledata:
         st.info("No data yet. Start a conversation to generate maps and data tables!")
     else:
