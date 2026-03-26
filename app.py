@@ -685,16 +685,16 @@ def get_llm():
     #       },
     # )
 
-    # return ChatOpenAI(
-    #     model="glm-4.7",
-    #     base_url="https://api.z.ai/api/coding/paas/v4",
-    #     api_key=os.environ.get("ZAI_API_KEY"),
-    #     temperature=0.5,
-    #     extra_body={
-    #         "thinking": {"type": "enabled"},
-    #         "clear_thinking": False
-    #     }
-    # )
+    return ChatOpenAI(
+        model="glm-4.7",
+        base_url="https://api.z.ai/api/coding/paas/v4",
+        api_key=os.environ.get("ZAI_API_KEY"),
+        temperature=0.5,
+        extra_body={
+            "thinking": {"type": "enabled"},
+            "clear_thinking": False
+        }
+    )
 
     # return ChatOpenAI(                                                                                                                                                  
     #         model="gpt-5.2",                                                                                                                                            
@@ -704,12 +704,12 @@ def get_llm():
     #         streaming=True,   # just this flag is sufficient in modern langchain                                                                                        
     #     )  
     
-    return ChatOpenAI(
-        model="minimax-m2",
-        base_url="https://ellm.nrp-nautilus.io/v1",
-        api_key=os.environ.get("NRP_API_KEY"),
-        temperature=0,
-    )
+    # return ChatOpenAI(
+    #     model="minimax-m2",
+    #     base_url="https://ellm.nrp-nautilus.io/v1",
+    #     api_key=os.environ.get("NRP_API_KEY"),
+    #     temperature=0,
+    # )
 
     
 # Function to display all GeoDataFrames as layers on a single map
