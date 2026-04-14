@@ -2321,6 +2321,9 @@ if st.session_state.current_view == "sample":
     * How many facilities are flooded in reach5 of the Kanawha River at 200,000 cfs?
     * Compare flood impacts between reach5 and reach7 of the Kanawha River at 300,000 cfs
     * Which areas along the Kanawha River should be prioritized for emergency response at 400,000 cfs?
+
+    ###### Cascading Flood Impacts 
+    * Show me the cascading flood impacts at 400,000 cfs on the Kanawha River
     """)
 
 elif st.session_state.current_view == "map":
