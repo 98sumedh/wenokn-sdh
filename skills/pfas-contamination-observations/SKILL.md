@@ -59,14 +59,14 @@ WHERE {
           coso:measurementUnit ?unit .
 
    VALUES (?substanceVal ?limitVal ?unitVal) {
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFOS_A> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFOA_A> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFNA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFHXA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFBS_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFTEA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFOS> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
-    (<http://sawgraph.spatialai.org/v1/me-egad#parameter.PFOA> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFOS_A> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFOA_A> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFNA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFHXA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFBS_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFTEA_A> 10 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFOS> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
+    (<http://w3id.org/sawgraph/v1/me-egad-data#parameter.PFOA> 4 <http://qudt.org/vocab/unit/NanoGM-PER-L>)
   }
 
   FILTER(?substance = ?substanceVal && ?unit = ?unitVal && ?result_value > ?limitVal)
@@ -86,7 +86,7 @@ GROUP BY ?wkt
 
     # Optionally add medium
     def get_medium(unit):
-        if unit == "http://sawgraph.spatialai.org/v1/me-egad#unit.NG-G":
+        if unit == "http://w3id.org/sawgraph/v1/me-egad-data#unit.NG-G":
             return "soil/tissue"
         elif unit == "http://qudt.org/vocab/unitNanoGM-PER-L":
             return "water"
