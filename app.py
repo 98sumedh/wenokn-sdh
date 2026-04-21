@@ -2282,7 +2282,6 @@ if st.session_state.current_view == "sample":
     * What is the dominant land use within a 5 km buffer around Interstate 80 in California?
     * What is the elevation and slope breakdown of the 5km buffer around Interstate 80 in California?
     * What percentage of Rocky Mountain National Park is too steep for elk movement?
-    * Identify wildlife corridors in the Rocky Mountains.
 
     ---
 
@@ -2326,6 +2325,8 @@ if st.session_state.current_view == "sample":
     * Show me the cascading flood impacts at 400,000 cfs on the Kanawha River
     """)
 
+    #     * Identify wildlife corridors in the Rocky Mountains.
+                                       
 elif st.session_state.current_view == "map":
     # Check for new files when entering map view
     if check_and_load_new_files():
