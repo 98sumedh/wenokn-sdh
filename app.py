@@ -697,7 +697,7 @@ def get_llm():
     # )
 
     return ChatOpenAI(                                                                                                                                                  
-            model="gpt-5.2",                                                                                                                                            
+            model="gpt-5.4",                                                                                                                                            
             temperature=0,                                                                                                                                              
             max_tokens=5000,                                                                                                                                            
             api_key=os.environ.get("OpenAI_KEY"),                                                                                                                       
