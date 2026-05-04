@@ -119,6 +119,19 @@ if "unexpected_failures" not in st.session_state:
 # Store pending user input for two-step processing (to disable buttons during agent run)
 if "pending_user_input" not in st.session_state:
     st.session_state.pending_user_input = None
+# Track whether the ?query= URL param has already been submitted this session
+if "url_query_consumed" not in st.session_state:
+    st.session_state.url_query_consumed = False
+
+# If a ?query= param is present and not yet consumed, inject it as pending input
+if not st.session_state.url_query_consumed:
+    _url_query = st.query_params.get("query")
+    if _url_query:
+        st.session_state.url_query_consumed = True
+        st.session_state.current_view = "conversation"
+        st.session_state.pending_user_input = _url_query
+        st.session_state.agent_is_running = True
+        st.rerun()
 
 # Recovery: if agent_is_running=True but no pending input, the WebSocket likely
 # reconnected mid-execution (new script thread started while asyncio.run() was blocking).
@@ -660,7 +673,7 @@ def scan_skills_documentation():
 def get_llm():
 
     # return ChatOpenAI(
-    #     model="mimo-v2-pro",
+    #     model="mimo-v2-flash",
     #     base_url="https://api.xiaomimimo.com/v1",
     #     api_key=st.secrets["XIAOMI_API_KEY"],
     #     temperature=0,
@@ -685,32 +698,31 @@ def get_llm():
     #       },
     # )
 
-    return ChatOpenAI(
-        model="glm-4.7",
-        base_url="https://api.z.ai/api/coding/paas/v4",
-        api_key=os.environ.get("ZAI_API_KEY"),
-        temperature=0.5,
-        extra_body={
-            "thinking": {"type": "enabled"},
-            "clear_thinking": False
-        }
-    )
-
-    # return ChatOpenAI(                                                                                                                                                  
-    #         model="gpt-5.4",                                                                                                                                            
-    #         temperature=0,                                                                                                                                              
-    #         max_tokens=5000,                                                                                                                                            
-    #         api_key=os.environ.get("OpenAI_KEY"),                                                                                                                       
-    #         streaming=True,   # just this flag is sufficient in modern langchain                                                                                        
-    #     )  
-    
     # return ChatOpenAI(
-    #     model="minimax-m2",
+    #     model="glm-4.7",
+    #     base_url="https://api.z.ai/api/coding/paas/v4",
+    #     api_key=os.environ.get("ZAI_API_KEY"),
+    #     temperature=0.5,
+    #     extra_body={
+    #         "thinking": {"type": "enabled"},
+    #         "clear_thinking": False
+    #     }
+    # )
+
+    # return ChatOpenAI(
+    #     model="kimi",
     #     base_url="https://ellm.nrp-nautilus.io/v1",
     #     api_key=os.environ.get("NRP_API_KEY"),
     #     temperature=0,
     # )
 
+    return ChatOpenAI(                                                                                                                                                  
+            model="gpt-5.2",                                                                                                                                            
+            temperature=0,                                                                                                                                              
+            max_tokens=5000,                                                                                                                                            
+            api_key=os.environ.get("OpenAI_KEY"),                                                                                                                       
+            streaming=True,   # just this flag is sufficient in modern langchain                                                                                        
+        )  
     
 # Function to display all GeoDataFrames as layers on a single map
 def display_all_layers_map():
@@ -2179,7 +2191,7 @@ if st.session_state.current_view == "sample":
     * Retrieve all power plants at risk of flooding in Ohio at 2 PM on July 1, 2025 with tract level FIPS codes.
     * Retrieve all buildings at risk of flooding in Ohio from 6 PM 2025-07-18 to 6 AM 2025-07-19.
     * Retrieve all buildings at risk of flooding within the watersheds that intersect the Scioto River at 8 PM on July 1, 2025.
-    * First, identify all assets in Ohio that are at risk of flooding within the next 24 hours. 
+    * First, identify all assets in Ohio that are at risk of flooding within the next 24 hours.
       Then, extend the result with precipitation forecast at the risk date only.
 
     ---
@@ -2271,7 +2283,7 @@ if st.session_state.current_view == "sample":
     * Retrieve all rivers crossing the boundary of Texas.
     * Identify all state parks in Colorado.
     * List all major rivers running through the state of Montana.
-    * Identify electric vehicle charging stations within 10 miles of National Park in New Mexico
+    * Identify electric vehicle charging stations within the Ross County
     * Identify all named peaks and their heights in Wrangell-St. Elias National Park and Preserve in Alaska
     ---
 
@@ -2282,6 +2294,7 @@ if st.session_state.current_view == "sample":
     * What is the dominant land use within a 5 km buffer around Interstate 80 in California?
     * What is the elevation and slope breakdown of the 5km buffer around Interstate 80 in California?
     * What percentage of Rocky Mountain National Park is too steep for elk movement?
+    * Identify wildlife corridors in the Rocky Mountains.
 
     ---
 
@@ -2325,8 +2338,6 @@ if st.session_state.current_view == "sample":
     * Show me the cascading flood impacts at 400,000 cfs on the Kanawha River
     """)
 
-    #     * Identify wildlife corridors in the Rocky Mountains.
-                                       
 elif st.session_state.current_view == "map":
     # Check for new files when entering map view
     if check_and_load_new_files():
