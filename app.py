@@ -1147,7 +1147,7 @@ def display_chart_builder(name, df):
     
     # Get numeric and categorical columns
     numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    categorical_cols = df.select_dtypes(include=['object', 'str', 'category']).columns.tolist() 
     all_cols = df.columns.tolist()
     
     if not numeric_cols:
