@@ -687,16 +687,16 @@ def get_llm():
     #     }
     # )
     
-    return ChatOpenAI(
-        model="glm-5",
-        base_url="https://ellm.nrp-nautilus.io/v1",
-        api_key=os.environ.get("NRP_API_KEY"),
-        temperature=0,
-        extra_body={
-              "thinking": {"type": "enabled"},
-              "clear_thinking": False
-          },
-    )
+    # return ChatOpenAI(
+    #     model="glm-5",
+    #     base_url="https://ellm.nrp-nautilus.io/v1",
+    #     api_key=os.environ.get("NRP_API_KEY"),
+    #     temperature=0,
+    #     extra_body={
+    #           "thinking": {"type": "enabled"},
+    #           "clear_thinking": False
+    #       },
+    # )
 
     # return ChatOpenAI(
     #     model="glm-4.7",
@@ -716,13 +716,13 @@ def get_llm():
     #     temperature=0,
     # )
 
-    # return ChatOpenAI(                                                                                                                                                  
-    #         model="gpt-5.2",                                                                                                                                            
-    #         temperature=0,                                                                                                                                              
-    #         max_tokens=5000,                                                                                                                                            
-    #         api_key=os.environ.get("OpenAI_KEY"),                                                                                                                       
-    #         streaming=True,   # just this flag is sufficient in modern langchain                                                                                        
-    #     )  
+    return ChatOpenAI(                                                                                                                                                  
+            model="gpt-5.2",                                                                                                                                            
+            temperature=0,                                                                                                                                              
+            max_tokens=5000,                                                                                                                                            
+            api_key=os.environ.get("OpenAI_KEY"),                                                                                                                       
+            streaming=True,   # just this flag is sufficient in modern langchain                                                                                        
+        )  
     
 # Function to display all GeoDataFrames as layers on a single map
 def display_all_layers_map():
