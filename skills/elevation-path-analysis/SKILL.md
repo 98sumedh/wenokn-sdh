@@ -40,25 +40,42 @@ pip install py3dep geopandas shapely matplotlib numpy pandas --break-system-pack
 - Minimum of 2 coordinate points to define a path
 - Coordinates must be within areas covered by USGS 3DEP (primarily United States)
 
-### Important API Note
+### Important API Notes
 
 **The `py3dep.elevation_bycoords()` function does NOT accept a `resolution` parameter.**
 It uses the default resolution from the 3DEP service. Do not attempt to specify resolution.
+
+**`py3dep.elevation_bycoords()` expects `(x, y) = (lon, lat)` tuples when `crs=EPSG:4326`.**
+This skill's user-facing convention is `(lat, lon)` (matching GPS reports), so you MUST swap before
+calling py3dep. If you forget, py3dep silently returns the `-999999.0` NoData sentinel for every
+point (because it queried locations outside USGS 3DEP coverage).
 
 ## How to Use
 
 ### Step 1: Understand the Coordinate Format
 
-GPS coordinates must be provided as `(latitude, longitude)` tuples:
+GPS coordinates are accepted from the user in `(latitude, longitude)` order — matching how GPS
+positions are normally reported. **Before any call to `py3dep`, you must swap them to
+`(longitude, latitude)` order**, because py3dep treats coordinates as `(x, y)` and `EPSG:4326`
+uses `x = lon, y = lat`.
+
 ```python
-# Correct format
+import py3dep
+
+# User-facing input: (lat, lon)
 coordinates = [
-    (34.0522, -118.2437),  # Los Angeles (lat, lon)
-    (36.7783, -119.4179)   # Fresno (lat, lon)
+    (34.0522, -118.2437),   # Los Angeles (lat, lon)
+    (36.7783, -119.4179),   # Fresno      (lat, lon)
 ]
 
-# INCORRECT - Do not use (longitude, latitude)
-wrong_coords = [(-118.2437, 34.0522)]  # This will fail!
+# Required swap before calling py3dep
+xy_coords = [(lon, lat) for lat, lon in coordinates]
+
+elevations = py3dep.elevation_bycoords(xy_coords, crs=4326)
+# elevations == [87.04, 94.32]  ← real meters
+
+# If you forget the swap, py3dep returns -999999.0 for every point
+# (it queried coordinates outside USGS 3DEP coverage).
 ```
 
 ### Step 2: Choose Your Approach
@@ -340,12 +357,27 @@ pip install py3dep geopandas shapely matplotlib numpy pandas --break-system-pack
 - Verify coordinates are within USGS 3DEP coverage area (primarily US)
 - Reduce sample count if path is very long
 
-**Coordinate Format Errors:**
+**All elevations come back as `-999999.0`:**
+This is USGS 3DEP's NoData sentinel — it means py3dep queried points outside US 3DEP coverage.
+Almost always the cause is forgetting the `(lat, lon)` → `(lon, lat)` swap before calling
+`py3dep.elevation_bycoords()`. The user-facing convention in this skill is `(lat, lon)`, but
+py3dep treats tuples as `(x, y) = (lon, lat)` when `crs=EPSG:4326`.
+
+```python
+# WRONG — passes (lat, lon) directly to py3dep, returns -999999.0
+py3dep.elevation_bycoords([(34.0522, -118.2437)], crs=4326)
+
+# RIGHT — swap to (lon, lat) first
+py3dep.elevation_bycoords([(-118.2437, 34.0522)], crs=4326)  # → 87.04 m
 ```
-Error: Coordinates must be (latitude, longitude), not (longitude, latitude)
-Correct: (34.0522, -118.2437)
-Wrong: (-118.2437, 34.0522)
+
+**Coordinate Format Errors (user-facing input):**
 ```
+User-facing convention: (latitude, longitude)
+Correct user input: (34.0522, -118.2437)
+Wrong user input:   (-118.2437, 34.0522)
+```
+Remember to swap to `(lon, lat)` internally before calling py3dep — see the section above.
 
 **Memory Issues with Large Paths:**
 - Reduce `num_samples` (try 50 instead of 200)
