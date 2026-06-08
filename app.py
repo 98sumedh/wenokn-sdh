@@ -2336,6 +2336,15 @@ if st.session_state.current_view == "sample":
 
     ###### Cascading Flood Impacts 
     * Show me the cascading flood impacts at 400,000 cfs on the Kanawha River
+
+    ---
+
+    ### Po Basin Wells in Italy
+    * Where in northern Italy is the water table shallowest? 
+    * How many wells are within 50 km of Milan, and which ones fluctuate the most?
+    * Compare average water table depth between Lombardy and Piedmont+Emilia.
+    * Which major cities in the Po basin have the best groundwater observation coverage? Return the wells and label the top three cities by well density within a 20 km radius.
+
     """)
 
 elif st.session_state.current_view == "map":
