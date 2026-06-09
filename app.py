@@ -2344,6 +2344,18 @@ if st.session_state.current_view == "sample":
     * How many wells are within 50 km of Milan, and which ones fluctuate the most?
     * Compare average water table depth between Lombardy and Piedmont+Emilia.
     * Which major cities in the Po basin have the best groundwater observation coverage? Return the wells and label the top three cities by well density within a 20 km radius.
+    * What is the data point of the deepest well, and what data source did that come from?
+    * What's the mean water table depth in Lombardy, and what file did that come from?
+    * Give me a complete profile of well BO03-01 — what aquifer does it sample, how is it constructed, and where is it located?
+    * In Emilia-Romagna, how does the water table depth vary across the different aquifers, and is it related to how deep the wells themselves are?
+    * What's the deepest well in Italy Emilia-Romagna?
+    * Compare median well depth across the 9 Emilia-Romagna provinces.
+    * For wells that have both metadata and WTD measurements, what's the typical screen depth in Bologna?
+    * Show me the water table history for well 00100410001 over the entire record.
+    * How has the average groundwater depth in Piemonte changed over the past decade?
+    * What's the seasonal pattern of water table depth in Piemonte? Is there a typical dry season?
+    * For the Piemonte well with the most variable water table over time, what's its time-averaged depth and how does its full history look?
+    * When did Piemonte experience its driest period since 2012?
 
     """)
 
