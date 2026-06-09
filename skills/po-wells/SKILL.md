@@ -268,6 +268,32 @@ print(f"Geographic bounds (W/S/E/N): {gdf.total_bounds.tolist()}")
 # WTD 0.38 – 54.54 m; bounds ~[7.31, 44.15, 12.24, 46.06].
 ```
 
+## Provenance — name the source file when reporting
+
+Every reported value should be traceable to a source CSV. Use the **bare
+filenames as they appear in the original repository**
+(`github.com/rlsandovalp/Well_data_Po`) — do not include the local
+`skills/po-wells/data/` prefix in citations.
+
+The data flow is uniform across all 238 wells, so the same column always
+comes from the same file regardless of how the data is filtered, joined,
+or aggregated:
+
+| What you report | File to cite |
+|-----------------|--------------|
+| A WTD value (single well, filter result, or aggregate such as mean / min / max) | `Steady_State_Leonardo.csv` |
+| A STD value (single well, filter result, or aggregate) | `Standard_Deviation_Leonardo.csv` |
+| A `region` tag (`Lombardy` / `Piedmont+Emilia`) | derived from membership in `WTD_obs_lom_Leonardo.csv` |
+| A geometry / coordinate | reprojected from the `X_54012`, `Y_54012` columns in `Steady_State_Leonardo.csv` |
+
+Reporting rules:
+
+- **Single-well questions** (e.g. *"which well is deepest, and where does that value come from?"*): name the file backing each cited quantity. *"The deepest well is `<well_id>` at `<wtd_m>` m; the WTD value is from `Steady_State_Leonardo.csv`."*
+- **Aggregate questions** (e.g. *"average WTD in Lombardy"*): cite the file of the underlying column. *"Mean WTD across the 101 Lombardy wells, computed from `wtd_m` values in `Steady_State_Leonardo.csv`."*
+- **Derived quantities** (e.g. a depth-to-fluctuation ratio): name the source files of each contributing column. *"Ratio of `wtd_m` (from `Steady_State_Leonardo.csv`) to `std_m` (from `Standard_Deviation_Leonardo.csv`)."*
+
+Always include this provenance line in the final response whenever the user asks where a value came from, asks about reproducibility, or asks about data sources — even if the underlying question is otherwise about content.
+
 ## Reporting tips
 
 - Always state the **region** in the answer (`Piedmont+Emilia`, `Lombardy`,
