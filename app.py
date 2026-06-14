@@ -2357,6 +2357,43 @@ if st.session_state.current_view == "sample":
     * For the Piemonte well with the most variable water table over time, what's its time-averaged depth and how does its full history look?
     * When did Piemonte experience its driest period since 2012?
 
+    ###### Emilia-Romagna Well Registry
+    * How many wells of each station type (Pozzo, Piezometro, Sorgente) are in Emilia-Romagna, and how are they spread across the 9 provinces?
+    * Find all springs (Sorgente) in the registry and map them.
+    * Which Emilia-Romagna municipality has the most monitoring wells?
+    * Find every well screened deeper than 100 meters and report its aquifer and municipality.
+    * Across Emilia-Romagna, do wells at higher ground elevation tend to be drilled deeper?
+    * Find wells with more than one filter screen in Modena province and list their screen intervals.
+    * Which province has the highest average ground elevation at its well heads?
+    * Using the historical Anagrafica files, find wells present in 2012 that no longer appear in the 2020 inventory.
+
+    ###### Po Basin Wells (water-table summaries)
+    * Map all 238 Po basin wells colored by region.
+    * Find the 10 most stable wells (smallest standard deviation) in the whole basin.
+    * What fraction of Lombardy wells have a shallow water table (under 5 m)?
+    * Find all wells within 30 km of Turin and summarize their water-table depth.
+    * Identify wells that are both deep and stable: water table over 20 m but standard deviation under 1 m.
+    * Find the well with the highest fluctuation-to-depth ratio (std ÷ wtd) and say where it is.
+    * Compare the geographic bounding box of Lombardy wells versus Piedmont+Emilia wells.
+
+    ###### Piemonte Water-Table Time Series
+    * Are there any artesian observations (negative water-table depth) in the Piemonte record, and which wells show them?
+    * For well 00100410001, compare its wettest year to its driest year on record.
+    * Rank all Piemonte wells by their total water-table range (max minus min) over the full record.
+    * Which Piemonte wells have the longest continuous records, and which start late or end early?
+    * Show the year-by-year basin-wide average water-table depth and highlight which years were drier than the 2012-2023 average.
+
+    ###### Cross-Skill (combining well datasets)
+    * Take the 10 deepest Emilia-Romagna registry wells and look up their time-averaged water-table depth from po-wells.
+    * For the wells that appear in both the registry and po-wells, compare each well's construction depth to its measured water-table depth.
+    * Pick the most volatile Piemonte well from the time series, then find its location and region from po-wells and cite the source file for each value.
+    * Map the Emilia-Romagna registry wells and overlay the Po basin wells, distinguishing the wells that appear in both.
+
+    ###### Advanced / Multi-Step
+    * First, find the most volatile well in the Po basin from the time-averaged standard deviations. Then pull its full Piemonte time series, identify the single deepest observation and its date, and report which source file that reading came from.
+    * For Emilia-Romagna, group wells by aquifer and compute the median well depth and (joining po-wells where available) median water-table depth per aquifer. Save a CSV of the table and a GeoJSON of the wells, citing the source file for each value.
+    * Find the three Emilia-Romagna provinces with the deepest wells on average; then, for those provinces, list any wells that also have water-table measurements and rank them by how much their water table fluctuates.
+
     """)
 
 elif st.session_state.current_view == "map":
