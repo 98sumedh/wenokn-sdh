@@ -2,6 +2,7 @@ streamlit>=1.40.0
 deepagents-cli==0.0.21
 geopandas
 pandas
+pyarrow
 numpy
 requests
 sparql-dataframe

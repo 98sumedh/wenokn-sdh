@@ -2394,6 +2394,23 @@ if st.session_state.current_view == "sample":
     * For Emilia-Romagna, group wells by aquifer and compute the median well depth and (joining po-wells where available) median water-table depth per aquifer. Save a CSV of the table and a GeoJSON of the wells, citing the source file for each value.
     * Find the three Emilia-Romagna provinces with the deepest wells on average; then, for those provinces, list any wells that also have water-table measurements and rank them by how much their water table fluctuates.
 
+    ### Transboundary Groundwater Wells (Baltic / Eastern Europe & US–Mexico Rio Grande)
+    These cover Ukraine, Poland, Lithuania, Latvia, Estonia, the United States and Mexico.
+
+    ###### Monitoring Points (location, depth, aquifer)
+    * Find all the monitoring wells.
+    * Where are the deepest wells, and how deep do they go?
+    * Show every well that taps a karst aquifer.
+    * How many wells are within 50 km of El Paso / Ciudad Juárez?
+    * List the confined wells in Latvia with their depth and lithology.
+
+    ###### Water-Level Time Series (change over time)
+    * Find the groundwater-level history for one Latvian well.
+    * When did Latvia have its deepest basin-wide water table since 2000?
+    * What's the seasonal cycle of the water table for a Polish well — wettest vs driest months?
+    * How has the average depth to water in Estonia changed year over year?
+    * Find the most variable wells (largest water-level swings), with their depth and aquifer type.
+
     """)
 
 elif st.session_state.current_view == "map":
