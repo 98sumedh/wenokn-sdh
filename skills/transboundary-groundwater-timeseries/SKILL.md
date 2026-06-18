@@ -8,8 +8,10 @@ description: >-
   / the water table changed over time — trends, seasonal cycles, wettest /
   driest months, year-over-year change, "when did X happen", deepest /
   highest water level since a given year, single-well history, or which
-  wells swing the most. This is the time-axis companion to
-  `transboundary-monitoring-points` (join on well_ID for depth / aquifer /
+  wells swing the most — for any of those seven countries (trigger on their
+  names or "transboundary"). Do NOT use for Italian time series (Piemonte / Po
+  basin) — use `po-wells-timeseries` for those. This is the time-axis companion
+  to `transboundary-monitoring-points` (join on well_ID for depth / aquifer /
   location). Loads a bundled parquet — no network at runtime.
 ---
 

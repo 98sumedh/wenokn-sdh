@@ -2,13 +2,15 @@
 name: po-wells-timeseries
 description: >-
   Retrieve the per-well water-table-depth time series for 109 Piemonte
-  groundwater monitoring wells as a pandas DataFrame, covering January
-  2012 through August 2023 at 8-hour sampling cadence. Use whenever the
-  user asks about how water tables changed over time — trends, seasonal
-  cycles, drought / wet events, single-well histories, "when did X
-  happen", "compare year Y to year Z", multi-year aggregates, or any
-  question that mentions a specific date or time range in the Piemonte
-  region. Loads a single bundled parquet file (no network at runtime)
+  groundwater monitoring wells (Piemonte / Piedmont, northern ITALY) as a
+  pandas DataFrame, covering January 2012 through August 2023 at 8-hour
+  sampling cadence. Use ONLY for the Italian Piemonte wells when the user asks
+  how water tables changed over time there — trends, seasonal cycles, drought /
+  wet events, single-well histories, "when did X happen", "compare year Y to
+  year Z", multi-year aggregates, or a specific date / time range in Piemonte.
+  Do NOT use for time series in Ukraine, Poland, Lithuania, Latvia, Estonia,
+  the United States or Mexico — use `transboundary-groundwater-timeseries` for
+  those. Loads a single bundled parquet file (no network at runtime)
   built from the per-well CSVs in github.com/rlsandovalp/Well_data_Po,
   with per-row provenance preserved.
 ---

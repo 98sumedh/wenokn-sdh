@@ -1,11 +1,14 @@
 ---
 name: po-wells
 description: >-
-  Retrieve Po River basin groundwater wells (northern Italy) as a GeoPandas
-  GeoDataFrame in EPSG:4326. Use whenever the user asks about wells, water
-  table depth (WTD), groundwater levels, well stability/fluctuation, where
-  wells are located, or the Po / Lombardy / Piedmont / Emilia-Romagna well
-  datasets. Loads the bundled CSVs, joins mean and standard deviation
+  Retrieve Po River basin groundwater wells in northern ITALY as a GeoPandas
+  GeoDataFrame in EPSG:4326. Use ONLY for Italian wells — the Po basin and the
+  Lombardy / Piedmont / Emilia-Romagna regions — when the user asks where those
+  wells are, their water table depth (WTD), groundwater levels, or well
+  stability / fluctuation. Do NOT use this skill for wells in Ukraine, Poland,
+  Lithuania, Latvia, Estonia, the United States or Mexico — those are served by
+  `transboundary-monitoring-points` / `transboundary-groundwater-timeseries`.
+  Loads the bundled CSVs, joins mean and standard deviation
   measurements, tags each well with its region, reprojects coordinates from
   ESRI:54012 to EPSG:4326, and returns one row per well with Point geometry
   — ready to filter, map, or save as GeoJSON.

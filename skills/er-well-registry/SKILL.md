@@ -2,12 +2,14 @@
 name: er-well-registry
 description: >-
   Retrieve the Emilia-Romagna groundwater well registry (Anagrafica) as a
-  GeoPandas GeoDataFrame in EPSG:4326. Use whenever the user asks about
-  well metadata in Emilia-Romagna — well depth, ground elevation, filter
-  intervals, aquifer / groundwater body, station type, municipality, or
-  province — for example "how deep is well X", "which wells are in
-  Bologna", "wells screened in the confined aquifer", "deepest wells in
-  Emilia-Romagna", or "how was the well drilled". Loads the latest
+  GeoPandas GeoDataFrame in EPSG:4326. Use ONLY for wells in Emilia-Romagna
+  (northern ITALY) when the user asks about well metadata there — well depth,
+  ground elevation, filter intervals, aquifer / groundwater body, station type,
+  municipality, or province — for example "how deep is well X", "which wells
+  are in Bologna", "wells screened in the confined aquifer", "deepest wells in
+  Emilia-Romagna", or "how was the well drilled". Do NOT use for wells in
+  Ukraine, Poland, Lithuania, Latvia, Estonia, the United States or Mexico —
+  use the `transboundary-*` skills for those. Loads the latest
   bundled Anagrafica file (2020), reprojects UTM-ETRS89 coordinates to
   EPSG:4326, and returns one row per well with Point geometry — ready to
   filter, map, save as GeoJSON, or spatially join with other skills'

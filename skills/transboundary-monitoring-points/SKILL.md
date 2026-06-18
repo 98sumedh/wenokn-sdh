@@ -7,7 +7,10 @@ description: >-
   well is confined or karst, well lithology, ground altitude, or counts /
   locations of monitoring points across Ukraine, Poland, Lithuania, Latvia,
   Estonia, the United States or Mexico — including the Rio Grande / El Paso /
-  Ciudad Juarez / Mesilla–Conejos-Medanos border area. This is the static
+  Ciudad Juarez / Mesilla–Conejos-Medanos border area. Trigger on any of those
+  country / region names or the word "transboundary". Do NOT use this skill for
+  Italian wells (the Po basin, Lombardy, Piedmont / Piemonte, Emilia-Romagna) —
+  those are served by `po-wells` and `er-well-registry`. This is the static
   per-well inventory; for water-level observations over time use the
   companion skill `transboundary-groundwater-timeseries`. Loads a bundled
   parquet, builds Point geometry from WGS84 coordinates, and returns one row
