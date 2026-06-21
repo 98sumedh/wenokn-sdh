@@ -2408,6 +2408,12 @@ if st.session_state.current_view == "sample":
     * What explains the water-table changes in Poland — rainfall, evaporation, or total water storage?
     * Which region's water table is declining fastest over time?
 
+    ###### Anomalies & Data-Quality Checks
+    * Are there any anomalies or impossible values in the groundwater well data?
+    * Find karst wells that fall outside the usual karst areas.
+    * Are there confined aquifers that are unusually variable (contradicting expectations)?
+    * Check whether any well's water table sits below the bottom of the well.
+
     """)
 
 elif st.session_state.current_view == "map":
