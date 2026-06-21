@@ -44,6 +44,19 @@ United States (Rio Grande) · Mexico (Rio Grande). The "five transboundary
 areas" Ilya refers to are the Baltic/Eastern-European group: **UA, PL, LT,
 LV, EE**; US + MX are the separate Rio Grande pair.
 
+## Scope of "which region…" (superlative) questions — read this
+
+When the user asks a superlative — *which region is deepest / shallowest /
+most variable / driest / declining fastest* — **default to ALL EIGHT regions**,
+which means the answer is usually driven by the Rio Grande pair:
+**Mexico has by far the deepest water table (~70 m) and the United States the
+most variable (σ ≈ 2.65 m)**. Do NOT silently restrict to the five Baltic
+areas. Only narrow the scope if the user explicitly says "transboundary
+areas", "the five areas", "Eastern Europe", or names specific countries — and
+when you do narrow it, say so. It is good practice to give the all-regions
+answer first, then optionally the within-Baltic sub-answer (deepest there is
+Estonia ~11 m; most variable there is Lithuania).
+
 ## Honest limitations (state these in answers)
 
 - **Climate/GRACE covers the transboundary wells only.** Italy and Mexico are
@@ -194,6 +207,23 @@ Findings: the Rio-Grande wells are **deepening fastest** — Mexico **+0.22 m/yr
 and the US **+0.22 m/yr** (sustained depletion) — while Poland and Ukraine
 deepen slowly (~+0.02 m/yr) and the Baltic areas are roughly flat or slightly
 rising. Positive = water table getting deeper over time.
+
+### Q5 — Which region is deepest / most variable? (ALL regions — see scope note)
+
+```python
+s = regional_summary()
+print("Deepest water table:", s["dtw_median_m"].idxmax(), round(s["dtw_median_m"].max(),1), "m")
+print("Most variable:", s["variability_median_m"].idxmax(), round(s["variability_median_m"].max(),2), "m")
+# Optional Baltic-only sub-answer:
+baltic = s.loc[["Ukraine","Poland","Lithuania","Latvia","Estonia"]]
+print("Deepest among the five transboundary areas:", baltic["dtw_median_m"].idxmax())
+print("Most variable among the five:", baltic["variability_median_m"].idxmax())
+```
+Findings (all eight regions): deepest is **Mexico (~70 m)**, most variable is
+the **United States (σ ≈ 2.65 m)** — both Rio Grande, reflecting arid
+desert alluvium under heavy irrigation pumping. Within the five Baltic/Eastern-
+European areas only, the deepest is **Estonia (~11 m)** and the most variable
+is **Lithuania**. Always state which scope you used.
 
 ## Provenance
 
