@@ -2400,6 +2400,14 @@ if st.session_state.current_view == "sample":
     * How has the average depth to water in Estonia changed year over year?
     * Find the most variable wells (largest water-level swings), with their depth and aquifer type.
 
+    ###### Cross-Region Comparison & Drivers (why regions differ)
+    * Compare groundwater between Italy and the Eastern-European transboundary areas.
+    * How do the five transboundary areas (Ukraine, Poland, Lithuania, Latvia, Estonia) differ in water-table depth and aquifer type?
+    * Which region has the deepest and most variable water table, and why?
+    * Why is Mexico's water table so much deeper than Ukraine's?
+    * What explains the water-table changes in Poland — rainfall, evaporation, or total water storage?
+    * Which region's water table is declining fastest over time?
+
     """)
 
 elif st.session_state.current_view == "map":
