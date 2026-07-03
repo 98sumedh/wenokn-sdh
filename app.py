@@ -2414,6 +2414,14 @@ if st.session_state.current_view == "sample":
     * Are there confined aquifers that are unusually variable (contradicting expectations)?
     * Check whether any well's water table sits below the bottom of the well.
 
+    ### Jordan Health Geography
+    * Find all the hospitals in Amman.
+    * How many health facilities are there in each governorate in Jordan?
+    * Show every health facility in Irbid.
+    * What is the 2024 population of each governorate in Jordan?
+    * Which district in Jordan has the largest population?
+    * Map the governorates of Jordan.
+
     """)
 
 elif st.session_state.current_view == "map":
