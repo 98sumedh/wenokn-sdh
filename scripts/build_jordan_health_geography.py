@@ -69,7 +69,8 @@ def build_boundaries_and_population():
 
     dist = gpd.read_file(os.path.join(SRC, "data",
                          "adm_boundaries/Jordan_districts_simplified20m.gpkg")).to_crs(4326)
-    dist = dist.rename(columns={"name_en":"district","Population 2024":"population_2024"})
+    dist = dist.rename(columns={"name_en":"district","name_ar":"district_ar",
+                                "Population 2024":"population_2024"})
     # Assign each district's governorate by spatial join to the governorate polygons
     # (authoritative; the name_en_2 text field has nulls/spelling drift).
     pts = dist[["district","geometry"]].copy()
@@ -78,30 +79,46 @@ def build_boundaries_and_population():
     j = j.drop_duplicates("district").set_index("district")["governorate"]
     dist["governorate"] = dist["district"].map(j)
     dist.loc[dist.governorate.isna(), "governorate"] = canon(dist["name_en_2"])  # fallback
-    dist = dist[["district","governorate","population_2024","geometry"]]
+    dist = dist[["district","district_ar","governorate","population_2024","geometry"]]
+
+    # Subdistricts (finer admin level; keep original English + Arabic names + parent district).
+    sub = gpd.read_file(os.path.join(SRC, "data",
+                        "adm_boundaries/Jordan_subdistricts_simplified20m.gpkg")).to_crs(4326)
+    sub["population_2024"] = pd.to_numeric(
+        sub["Population 2024"].astype(str).str.replace(",", "", regex=False).replace({"": None}),
+        errors="coerce").astype("Int64")
+    sub["governorate"] = canon(sub["Governorate"])
+    sub = sub.rename(columns={"name_en":"subdistrict",
+                              "Sub-District Name in Arabic":"subdistrict_ar",
+                              "District":"district"})
+    sub = sub[["subdistrict","subdistrict_ar","district","governorate","population_2024","geometry"]]
 
     pop_gov = (dist.groupby("governorate", as_index=False)["population_2024"].sum()
                    .sort_values("population_2024", ascending=False))
     pop_dist = dist[["district","governorate","population_2024"]].sort_values(
         "population_2024", ascending=False)
-    return gov, dist, pop_gov, pop_dist
+    pop_sub = sub[["subdistrict","district","governorate","population_2024"]].sort_values(
+        "population_2024", ascending=False)
+    return gov, dist, sub, pop_gov, pop_dist, pop_sub
 
 if __name__ == "__main__":
     if not os.path.isdir(os.path.join(SRC, "data")):
         raise SystemExit(f"Source not found: {SRC}. Set JORDAN_SRC to the jordan-hsa-optimization repo.")
     os.makedirs(OUT, exist_ok=True)
     fac = build_facilities()
-    gov, dist, pop_gov, pop_dist = build_boundaries_and_population()
+    gov, dist, sub, pop_gov, pop_dist, pop_sub = build_boundaries_and_population()
 
     fac.to_parquet(f"{OUT}/jordan_health_facilities.parquet", index=False)
     gov.to_file(f"{OUT}/jordan_governorates.geojson", driver="GeoJSON")
     dist.to_file(f"{OUT}/jordan_districts.geojson", driver="GeoJSON")
+    sub.to_file(f"{OUT}/jordan_subdistricts.geojson", driver="GeoJSON")
     pop_gov.to_csv(f"{OUT}/population_by_governorate.csv", index=False)
     pop_dist.to_csv(f"{OUT}/population_by_district.csv", index=False)
+    pop_sub.to_csv(f"{OUT}/population_by_subdistrict.csv", index=False)
 
     print("facilities:", fac.shape, "| INF:", int(fac.in_infectious.sum()), "NCD:", int(fac.in_ncd.sum()))
-    print("governorates:", len(gov), "| districts:", len(dist))
-    print("total 2024 population:", int(pop_gov.population_2024.sum()))
-    print(pop_gov.to_string(index=False))
-    print("facilities by type:\n", fac.facility_type.value_counts().to_string())
+    print("governorates:", len(gov), "| districts:", len(dist), "| subdistricts:", len(sub))
+    print("total 2024 population (gov):", int(pop_gov.population_2024.sum()),
+          "| (subdistricts):", int(pop_sub.population_2024.dropna().sum()))
+    print("largest subdistrict:", pop_sub.iloc[0].to_dict())
     print("WROTE ->", OUT)

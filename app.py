@@ -2407,6 +2407,8 @@ if st.session_state.current_view == "sample":
     * Why is Mexico's water table so much deeper than Ukraine's?
     * What explains the water-table changes in Poland — rainfall, evaporation, or total water storage?
     * Which region's water table is declining fastest over time?
+    * In Lithuania, find how the unconfined groundwater depth distribution changes spatially.
+    * Compare the groundwater fluctuation magnitude in the LT-LV karst region to the rest of these countries.
 
     ###### Anomalies & Data-Quality Checks
     * Are there any anomalies or impossible values in the groundwater well data?
@@ -2420,6 +2422,8 @@ if st.session_state.current_view == "sample":
     * Show every health facility in Irbid.
     * What is the 2024 population of each governorate in Jordan?
     * Which district in Jordan has the largest population?
+    * Find the largest subdistrict in Jordan.
+    * How many subdistricts are in each governorate in Jordan?
     * Map the governorates of Jordan.
 
     """)
