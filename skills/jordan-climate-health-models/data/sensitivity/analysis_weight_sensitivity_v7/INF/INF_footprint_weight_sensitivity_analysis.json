@@ -1,0 +1,117 @@
+{
+  "base_weights": {
+    "population_coverage": 1.0,
+    "climatic_diversity": 0.5,
+    "facility_volume": 0.4,
+    "spatial_overlap": -0.6,
+    "travel_distance": 0.0
+  },
+  "perturbation_levels": [
+    0.8,
+    0.9,
+    1.0,
+    1.1,
+    1.2
+  ],
+  "baseline_characteristics": {
+    "n_facilities": 19,
+    "mean_hsa_population": 46274.287331718435,
+    "total_population": 832937.1719709318,
+    "pop_std": 74716.29460810013,
+    "pop_cv": 1.6146395529010402,
+    "pop_gini": 0.7068604016076667,
+    "mean_allocation_prob": 0.34648574033642054,
+    "mean_area_km2": 129.23909843366482,
+    "total_area_km2": 2455.5428702396316
+  },
+  "sensitivity_metrics": {
+    "n_facilities": {
+      "population_coverage": {
+        "mean_elasticity": 0.1973684210526316,
+        "max_elasticity": 0.5263157894736843
+      },
+      "climatic_diversity": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "facility_volume": {
+        "mean_elasticity": -0.19736842105263147,
+        "max_elasticity": 0.5263157894736837
+      },
+      "spatial_overlap": {
+        "mean_elasticity": -0.19736842105263147,
+        "max_elasticity": 0.5263157894736837
+      },
+      "travel_distance": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      }
+    },
+    "mean_hsa_population": {
+      "population_coverage": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "climatic_diversity": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "facility_volume": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "spatial_overlap": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "travel_distance": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      }
+    },
+    "pop_gini": {
+      "population_coverage": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "climatic_diversity": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "facility_volume": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "spatial_overlap": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "travel_distance": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      }
+    },
+    "temp_diversity": {
+      "population_coverage": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "climatic_diversity": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "facility_volume": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "spatial_overlap": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      },
+      "travel_distance": {
+        "mean_elasticity": 0.0,
+        "max_elasticity": 0.0
+      }
+    }
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "current_parameters": {
+    "alpha": 0.75,
+    "beta": 1.5
+  },
+  "parameter_ranges": {
+    "alpha": [
+      0.5,
+      0.75,
+      1.0,
+      1.25
+    ],
+    "beta": [
+      1.0,
+      1.5,
+      2.0,
+      2.5
+    ]
+  },
+  "baseline_performance": {
+    "r2": 0.7262993355698247,
+    "mae": 4.743551345977433
+  },
+  "sensitivity_metrics": [
+    {
+      "alpha": 0.5,
+      "beta": 1.0,
+      "concentration": 0.25189016,
+      "gini": 0.9550531914893617,
+      "max_share": 0.4698,
+      "n_facilities_used": 74
+    },
+    {
+      "alpha": 0.5,
+      "beta": 1.5,
+      "concentration": 0.16188096,
+      "gini": 0.9417127659574468,
+      "max_share": 0.345,
+      "n_facilities_used": 81
+    },
+    {
+      "alpha": 0.5,
+      "beta": 2.0,
+      "concentration": 0.11522736,
+      "gini": 0.9346042553191489,
+      "max_share": 0.2178,
+      "n_facilities_used": 83
+    },
+    {
+      "alpha": 0.5,
+      "beta": 2.5,
+      "concentration": 0.11407528,
+      "gini": 0.931468085106383,
+      "max_share": 0.26,
+      "n_facilities_used": 87
+    },
+    {
+      "alpha": 0.75,
+      "beta": 1.0,
+      "concentration": 0.34102304,
+      "gini": 0.9673553191489361,
+      "max_share": 0.558,
+      "n_facilities_used": 68
+    },
+    {
+      "alpha": 0.75,
+      "beta": 1.5,
+      "concentration": 0.25189016,
+      "gini": 0.9550531914893617,
+      "max_share": 0.4698,
+      "n_facilities_used": 74
+    },
+    {
+      "alpha": 0.75,
+      "beta": 2.0,
+      "concentration": 0.19022736,
+      "gini": 0.9456446808510638,
+      "max_share": 0.3918,
+      "n_facilities_used": 79
+    },
+    {
+      "alpha": 0.75,
+      "beta": 2.5,
+      "concentration": 0.14206216,
+      "gini": 0.9387468085106383,
+      "max_share": 0.304,
+      "n_facilities_used": 82
+    },
+    {
+      "alpha": 1.0,
+      "beta": 1.0,
+      "concentration": 0.40549256,
+      "gini": 0.975368085106383,
+      "max_share": 0.6134,
+      "n_facilities_used": 61
+    },
+    {
+      "alpha": 1.0,
+      "beta": 1.5,
+      "concentration": 0.31495592,
+      "gini": 0.9635085106382979,
+      "max_share": 0.5344,
+      "n_facilities_used": 70
+    },
+    {
+      "alpha": 1.0,
+      "beta": 2.0,
+      "concentration": 0.25189016,
+      "gini": 0.9550531914893617,
+      "max_share": 0.4698,
+      "n_facilities_used": 74
+    },
+    {
+      "alpha": 1.0,
+      "beta": 2.5,
+      "concentration": 0.20214568,
+      "gini": 0.9470702127659575,
+      "max_share": 0.409,
+      "n_facilities_used": 78
+    },
+    {
+      "alpha": 1.25,
+      "beta": 1.0,
+      "concentration": 0.45416216,
+      "gini": 0.9803808510638298,
+      "max_share": 0.653,
+      "n_facilities_used": 51
+    },
+    {
+      "alpha": 1.25,
+      "beta": 1.5,
+      "concentration": 0.36469424,
+      "gini": 0.9705936170212766,
+      "max_share": 0.5786,
+      "n_facilities_used": 66
+    },
+    {
+      "alpha": 1.25,
+      "beta": 2.0,
+      "concentration": 0.30082304,
+      "gini": 0.9615893617021276,
+      "max_share": 0.5212,
+      "n_facilities_used": 71
+    },
+    {
+      "alpha": 1.25,
+      "beta": 2.5,
+      "concentration": 0.25189016,
+      "gini": 0.9550531914893617,
+      "max_share": 0.4698,
+      "n_facilities_used": 74
+    }
+  ],
+  "robustness_metrics": [
+    {
+      "noise_level": 0.0,
+      "mean_r2": 0.7262993355698244,
+      "std_r2": 3.3306690738754696e-16,
+      "mean_mae": 4.743551345977434,
+      "std_mae": 8.881784197001252e-16
+    },
+    {
+      "noise_level": 0.05,
+      "mean_r2": 0.7264385747228679,
+      "std_r2": 0.0003487872941533016,
+      "mean_mae": 4.7515221379371075,
+      "std_mae": 0.006721932981981511
+    },
+    {
+      "noise_level": 0.1,
+      "mean_r2": 0.7265421419138611,
+      "std_r2": 0.0006281651676356643,
+      "mean_mae": 4.774028976231878,
+      "std_mae": 0.018839831300688233
+    },
+    {
+      "noise_level": 0.2,
+      "mean_r2": 0.7256433329968304,
+      "std_r2": 0.0011442346065723176,
+      "mean_mae": 4.887638958302459,
+      "std_mae": 0.05594656605314471
+    }
+  ]
+}

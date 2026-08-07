@@ -1,0 +1,42 @@
+{
+  "by_connectivity": {
+    "high_connectivity": {
+      "n_train": 1192,
+      "n_test": 199,
+      "ar_only": {
+        "train_r2": 0.6267745722259308,
+        "test_r2": 0.5228734605353454
+      },
+      "climate_only": {
+        "train_r2": null,
+        "test_r2": null
+      },
+      "ar_plus_climate": {
+        "train_r2": 0.6267745722259308,
+        "test_r2": 0.5228734605353454
+      },
+      "climate_contribution": 0.0,
+      "top_climate_features": []
+    },
+    "low_connectivity": {
+      "n_train": 2583,
+      "n_test": 431,
+      "ar_only": {
+        "train_r2": 0.7719742046717759,
+        "test_r2": 0.8016410085714969
+      },
+      "climate_only": {
+        "train_r2": null,
+        "test_r2": null
+      },
+      "ar_plus_climate": {
+        "train_r2": 0.7719742046717759,
+        "test_r2": 0.8016410085714969
+      },
+      "climate_contribution": 0.0,
+      "top_climate_features": []
+    }
+  },
+  "overall": {},
+  "interaction_analysis": {}
+}

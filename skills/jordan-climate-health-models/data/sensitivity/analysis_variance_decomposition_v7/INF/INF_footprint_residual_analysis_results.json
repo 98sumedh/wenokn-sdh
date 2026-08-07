@@ -1,0 +1,11 @@
+{
+  "ar_only_r2": 0.7268546922537766,
+  "climate_on_residuals_r2": -0.0018963993034510906,
+  "correlation": 0.027779740496683046,
+  "correlation_pvalue": 0.7036010959864132,
+  "f_statistic": 0.0,
+  "f_pvalue": 1.0,
+  "n_observations": 190,
+  "n_climate_features": 8,
+  "conclusion": "Climate does not add significant variance"
+}

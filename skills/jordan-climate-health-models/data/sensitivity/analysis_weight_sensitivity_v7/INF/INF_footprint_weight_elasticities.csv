@@ -1,0 +1,21 @@
+Outcome,Weight,Mean Elasticity,Max Abs Elasticity
+N Facilities,Population Coverage,0.1973684210526316,0.5263157894736843
+N Facilities,Facility Volume,-0.19736842105263147,0.5263157894736837
+N Facilities,Spatial Overlap,-0.19736842105263147,0.5263157894736837
+Pop Gini,Climatic Diversity,0.0,0.0
+Temp Diversity,Spatial Overlap,0.0,0.0
+Temp Diversity,Facility Volume,0.0,0.0
+Temp Diversity,Climatic Diversity,0.0,0.0
+Temp Diversity,Population Coverage,0.0,0.0
+Pop Gini,Travel Distance,0.0,0.0
+Pop Gini,Spatial Overlap,0.0,0.0
+Pop Gini,Facility Volume,0.0,0.0
+Pop Gini,Population Coverage,0.0,0.0
+N Facilities,Climatic Diversity,0.0,0.0
+Mean Hsa Population,Travel Distance,0.0,0.0
+Mean Hsa Population,Spatial Overlap,0.0,0.0
+Mean Hsa Population,Facility Volume,0.0,0.0
+Mean Hsa Population,Climatic Diversity,0.0,0.0
+Mean Hsa Population,Population Coverage,0.0,0.0
+N Facilities,Travel Distance,0.0,0.0
+Temp Diversity,Travel Distance,0.0,0.0
