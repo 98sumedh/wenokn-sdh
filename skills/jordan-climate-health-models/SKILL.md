@@ -1,21 +1,18 @@
 ---
 name: jordan-climate-health-models
 description: >-
-  Jordan climate-health MODELING and FORECASTING results: how well different
-  models predict disease incidence across Health Service Areas (HSAs), which
-  climate and temporal drivers matter, and which populations/areas are weakly
-  connected to care. Use whenever the user asks, FOR JORDAN, about model
-  performance or forecasting skill ("which model best predicts diarrheal
-  disease", "does climate improve the forecast", "best model by feature set"),
-  climate-health drivers ("how much does climate contribute", "which features
-  are most important"), disease incidence models, sensitivity/robustness of the
-  results, or WHERE targeted health interventions would help vs. be wasted
-  ("which HSAs need intervention to offset climate", "where are interventions
-  useless"). Reads bundled model-comparison tables, sensitivity analyses, and
-  written result summaries from the SYNMODINF v7 pipeline run. This skill is
-  Jordan-only and covers MODEL RESULTS; for facility locations, governorate/
-  district boundaries, and population use jordan-health-geography instead. It
-  does NOT cover the groundwater, surface-water, or US energy datasets.
+  Jordan climate-health MODELING and FORECASTING results: how well models
+  predict disease incidence across Health Service Areas (HSAs), which climate
+  and temporal drivers matter, and which areas are weakly connected to care.
+  Use for Jordan questions about model performance or forecasting skill ("which
+  model best predicts diarrheal disease", "does climate improve the forecast"),
+  climate-health drivers ("how much does climate contribute", "top features"),
+  sensitivity/robustness of the results, or WHERE targeted health interventions
+  would help vs. be wasted ("which HSAs need intervention to offset climate",
+  "where are interventions useless"). Reads bundled model-comparison tables,
+  sensitivity analyses, and written summaries from the SYNMODINF v7 run.
+  Jordan-only, MODEL RESULTS only; for facility locations, boundaries, and
+  population use jordan-health-geography. Not groundwater, rivers, or US data.
 ---
 
 # Jordan Climate-Health Models & Forecasting Skill
@@ -68,14 +65,22 @@ numbers. This is faster and more reliable than re-deriving from raw tables.
 
 ### Query type 1 — "Which model best forecasts disease X?"
 
-The comparison lives in `modeling/results_comprehensive_v7/`:
+**Authoritative source for "the best model" — always use this first.** For the
+single best model overall, read
+`modeling/results_comprehensive_v7/INF_footprint_model_summary.json` and report
+its `best_overall` (model + feature set + `test_r2`/`test_rmse`). Do **not** pick
+a different winner from the `results_improved_v7/` or `results_ml_v7/` files or by
+switching the ranking metric — those exist for deeper comparison, and mixing them
+gives inconsistent "best model" answers. Rank by **test R²** unless the user asks
+for another metric. (Current headline: XGBoost on `ar_climate_temporal`.)
 
-- `INF_footprint_model_summary.json` — the headline: `best_overall` (model +
-  feature set), its `test_r2` / `test_rmse`, and `best_per_feature_set`.
+Supporting files, for when the user wants to compare beyond the single winner:
+
 - `INF_footprint_model_comparison_pivot.csv` — full matrix, **rows = feature sets,
-  columns = models**, cells = test R². Use this to compare any model/feature-set.
+  columns = models**, cells = test R². Use to compare any model/feature-set.
 - `results_ml_v7/INF_footprint_model_comparison_summary.csv` — richer metrics
   (RMSE, MAE, R², MAPE, Poisson deviance) for the ML models.
+- `results_improved_v7/` — tuned variants; report only if asked to compare tuning.
 
 ```python
 import json, pandas as pd, os
