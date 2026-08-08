@@ -69,35 +69,95 @@ These run on `transboundary-monitoring-points` + `-groundwater-timeseries` +
 ## 5. Jordan climate-health models ✅ (new skill, curated outputs bundled)
 
 Run on `jordan-climate-health-models`. **All answers must carry the
-synthetic-data caveat.**
+synthetic-data caveat.** Expanded for Ilya's demo (~Aug 21); grouped by theme,
+each grounded in a bundled file with the finding it should surface. All results
+are for the **INF (infectious/diarrheal)** network, footprint mode, v7.
 
-12. **[I]** Which model provides the best forecasting skill for the infectious
-    (diarrheal) disease target?
-    → `results_comprehensive_v7/INF_footprint_model_summary.json` →
-    `best_overall`; expect it compared against the naive baseline.
-13. **[I]** Which health service areas would need targeted interventions to
-    offset climate influence, and where would interventions be useless?
-    → exclusion/connectivity analysis; expect well-connected-with-climate-signal
-    (intervene) vs. weak-allocation/diluted-signal (useless), mapped to HSAs.
-14. **[D]** How much does adding climate features improve the forecast, per model?
-    → `INF_footprint_climate_contribution_analysis.csv`; expect per-model answer
-    (some gain, some lose).
-15. **[D]** Which features are most important in the ML models?
+### 5a · Model selection & forecasting skill
+
+12. **[I]** Which model provides the best forecasting skill for the diarrheal
+    disease target?
+    → `results_comprehensive_v7/INF_footprint_model_summary.json`. Expect
+    **XGBoost on the `ar_climate_temporal` feature set (test R² ≈ 0.78)**, beating
+    the last-week baseline (R² ≈ 0.69).
+13. **[D]** How much better is the best model than just predicting last week's
+    cases?
+    → same file, `improvement_over_baseline` (≈ 0.086 R²). Tests that the agent
+    anchors "skill" to the naive baseline, not the raw R².
+14. **[D]** Compare the models on the AR-plus-climate feature set — which wins and
+    by how much?
+    → `INF_footprint_model_comparison_pivot.csv` (rows = feature sets, cols =
+    models). Expect a like-for-like comparison row.
+15. **[D]** Do the tuned/"improved" models beat the comprehensive ones?
+    → `results_improved_v7/` vs `results_comprehensive_v7/`. Cross-set comparison.
+
+### 5b · Do climate signals actually help? (the honest-negative story)
+
+16. **[D]** How much does adding climate features improve the forecast, per model?
+    → `INF_footprint_climate_contribution_analysis.csv`. Expect **model-dependent:
+    XGBoost gains, but ridge/RF/GBM lose** — climate is not uniformly helpful.
+17. **[D]** In a variance decomposition, how much of disease variance does climate
+    explain on its own versus the autoregressive signal?
+    → `textresults/INF_footprint_supplement_table_variance_decomposition.md`.
+    Expect **AR alone ≈ 73%, climate alone ≈ 0%** — a clean "past cases dominate"
+    result worth showing.
+18. **[D]** Do extreme-weather indicators predict disease better than climate
+    means?
+    → `textresults/INF_footprint_extreme_event_summary.md`. Expect **extremes
+    marginally edge means, but both add ~0 over AR+seasonal.**
+19. **[D]** Are climate–disease relationships stronger in well-connected HSAs than
+    poorly-connected ones?
+    → `textresults/INF_footprint_climate_connectivity_report.md`. Expect the
+    **counter-intuitive result** (low-connectivity group shows higher R²) — good
+    discussion point about allocation uncertainty.
+
+### 5c · Spatial design (why HSAs at all)
+
+20. **[D]** Does modeling at the HSA level beat governorate- or country-level?
+    → `textresults/INF_footprint_spatial_unit_summary.md`. Expect **HSA R² ≈ 0.75
+    while governorate/country collapse to negative R²** — the headline argument
+    for HSAs.
+21. **[D]** Are HSAs climatically coherent units, or is there large climate
+    variation within them?
+    → `textresults/INF_footprint_heterogeneity_report.md`. Expect the temperature
+    **ICC ≈ 0.61** (most variance is between HSAs, so they're reasonably coherent).
+
+### 5d · Allocation, intervention targeting & robustness
+
+22. **[I]** Which health service areas would need targeted interventions to offset
+    climate influence, and where would interventions be useless?
+    → exclusion/connectivity analysis
+    (`textresults/INF_footprint_exclusion_analysis_report.md`,
+    `sensitivity/analysis_exclusion_v7/`). Expect: intervene where allocation is
+    confident and a climate signal exists; useless where allocation is very weak
+    and the signal is diluted (61.6% of population is weak/very-weak). Map hotspots
+    to HSAs.
+23. **[D]** Which features does the ML model rely on most?
     → `results_ml_v7/INF_footprint_feature_importance_rankings.csv`.
-16. **[D]** How robust are the results to the gravity-model / allocation-weight
-    choices?
-    → `sensitivity/analysis_gravity_sensitivity_v7`, `analysis_weight_sensitivity_v7`.
+24. **[D]** How sensitive is patient allocation to the gravity-model parameters
+    (population weight α and distance decay β)?
+    → `sensitivity/analysis_gravity_sensitivity_v7/`. Expect a table showing higher
+    β spreads patients across more facilities / lowers concentration.
+25. **[D]** If we perturb the allocation weights ±20%, does the HSA solution change?
+    → `sensitivity/analysis_weight_sensitivity_v7/`. Expect **near-invariance**
+    (mean allocation prob ~0.35 across perturbations) — a robustness selling point.
+
+### 5e · Known gap (surface for the demo)
+
+26. **[D]** Show the same analysis for the non-communicable (NCD) disease network.
+    → **Not answerable** — only INF outputs are bundled. Expect the agent to say
+    the NCD run isn't available. Flags whether we need to bundle NCD before the demo.
 
 ## 6. Routing traps (should NOT cross datasets) ✅
 
 Included to catch the failure mode fixed in `2abe0b0`.
 
-17. **[D]** Rivers near El Paso. → USA `rivers`/`stream-gauges`, NOT
+27. **[D]** Rivers near El Paso. → USA `rivers`/`stream-gauges`, NOT
     `transboundary-rivers`.
-18. **[D]** Wells in Lombardy. → Italian Po skills, NOT the transboundary skills.
-19. **[D]** Hospitals in Amman. → `jordan-health-geography`, NOT
+28. **[D]** Wells in Lombardy. → Italian Po skills, NOT the transboundary skills.
+29. **[D]** Hospitals in Amman. → `jordan-health-geography`, NOT
     `jordan-climate-health-models`.
-20. **[D]** Which model best predicts disease in Amman? →
+30. **[D]** Which model best predicts disease in Amman? →
     `jordan-climate-health-models`, NOT the geography skill.
 
 ---
