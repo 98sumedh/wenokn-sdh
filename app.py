@@ -2426,6 +2426,15 @@ if st.session_state.current_view == "sample":
     * How many subdistricts are in each governorate in Jordan?
     * Map the governorates of Jordan.
 
+    ### Jordan Climate-Health Models (results use synthetic SYNMODINF data)
+    * Which model provides the best forecasting skill for diarrheal disease in Jordan?
+    * How much does adding climate features improve the disease forecast, per model?
+    * How much of disease variance does climate explain on its own versus the autoregressive signal?
+    * Do extreme-weather indicators predict disease better than climate means?
+    * Does modeling disease at the HSA level beat governorate- or country-level?
+    * Which health service areas would need targeted interventions to offset climate influence, and where would interventions be useless?
+    * How sensitive is patient allocation to the gravity-model parameters alpha and beta?
+
     """)
 
 elif st.session_state.current_view == "map":
