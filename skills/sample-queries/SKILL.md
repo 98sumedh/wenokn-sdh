@@ -102,6 +102,28 @@ Show exactly the queries given in the examples. It can help users to understand 
 * Find all counties that intersect 8 basins or more.
 * Which county has the most coal mines?
 
+#### Jordan Health Geography
+* Find all hospitals in Amman.
+* Find the number of health facilities in each governorate of Jordan.
+* Show the population of each district in Jordan.
+* Find the largest subdistrict in Jordan by population.
+
+#### Jordan Climate-Health Models (results are on synthetic SYNMODINF data)
+* Which model provides the best forecasting skill for diarrheal disease in Jordan?
+* How much does adding climate features improve the disease forecast, per model?
+* How much of disease variance does climate explain on its own versus the autoregressive signal?
+* Does modeling disease at the HSA level beat governorate- or country-level?
+* Which health service areas would need targeted interventions to offset climate influence, and where would interventions be useless?
+* How sensitive is patient allocation to the gravity-model parameters alpha and beta?
+
+#### Transboundary Groundwater (Ukraine, Poland, Lithuania, Latvia, Estonia)
+* In Lithuania, how does unconfined groundwater depth vary spatially?
+* Compare the groundwater fluctuation magnitude in the LT-LV karst region to the rest of the transboundary countries.
+* Which transboundary region has the deepest water table on average?
+* Explain why the PL-UA border area differs from the LT-LV area in groundwater dynamics.
+* Show wells in the PL-UA border area tapping a karst aquifer.
+* Are there wells where the water table sits below the borehole bottom?
+
 #### Miscellaneous
 * Find NPDES wastewater facilities within 100 meters of the Scioto River. 
 * Find all counties in Southern California.
