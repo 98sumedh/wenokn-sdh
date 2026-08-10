@@ -37,7 +37,7 @@ river name. One row per river segment.
 
 ```python
 import geopandas as gpd, os
-rivers = gpd.read_parquet("data/transboundary_rivers.parquet")
+rivers = gpd.read_parquet("skills/transboundary-rivers/data/transboundary_rivers.parquet")  # path from repo root
 
 # Rivers in one region, ready to map:
 lt_lv = rivers[rivers.region == "LT-LV"]

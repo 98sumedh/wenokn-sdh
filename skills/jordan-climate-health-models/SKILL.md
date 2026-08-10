@@ -57,6 +57,20 @@ data/
   INF_footprint_hsas_v7.geojson      the 19 HSA boundaries, for mapping answers
 ```
 
+## Data location — IMPORTANT
+
+All files for this skill live under **`skills/jordan-climate-health-models/data/`**,
+resolved **from the repository root** (the agent's working directory). Every path
+in this document is written relative to that folder, so **prepend the base**:
+
+```python
+BASE = "skills/jordan-climate-health-models/data"   # from the repo root
+```
+
+Do **not** use a bare `data/...` path — there is no top-level `data/` directory,
+and it will raise FileNotFoundError. Always build paths as
+`os.path.join(BASE, ...)` (e.g. `f"{BASE}/modeling/results_comprehensive_v7/..."`).
+
 ## How to answer — read the summary, then query the table
 
 Every stage wrote a human-readable markdown summary in `textresults/`. **Read the
@@ -84,7 +98,8 @@ Supporting files, for when the user wants to compare beyond the single winner:
 
 ```python
 import json, pandas as pd, os
-base = "data/modeling/results_comprehensive_v7"
+BASE = "skills/jordan-climate-health-models/data"   # from the repo root
+base = os.path.join(BASE, "modeling/results_comprehensive_v7")
 s = json.load(open(os.path.join(base, "INF_footprint_model_summary.json")))
 bo = s["best_overall"]
 print(f"Best: {bo['model']} on '{bo['feature_set']}' "
