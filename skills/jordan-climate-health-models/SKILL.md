@@ -43,6 +43,7 @@ data/
     results_improved_v7/             tuned models
     results_parsimonious_v7/         minimal-feature models
     results_anomalies_v7/            anomaly-feature-set models
+    daily_models_v7/                 DLNM daily models: distributed-lag climate-disease effects
   sensitivity/                       9 robustness analyses (each in its own dir)
     analysis_climate_exclusion_v7/   effect of removing climate features
     analysis_exclusion_v7/           excluded / poorly-connected population
@@ -119,6 +120,18 @@ gives, per model, `ar_only_r2` vs `ar_climate_r2` and the absolute/relative gain
 The signal is model-dependent — some models gain from climate, others lose — so
 report per model, and cross-check with
 `sensitivity/analysis_climate_exclusion_v7/` which re-tests by removing climate.
+
+### Query type 2b — "Daily / lagged climate effects (DLNM)"
+
+For *daily* distributed-lag effects (how climate on a given day affects disease
+over the following days), use `modeling/daily_models_v7/`:
+
+- `trackA_screening.csv` — which daily climate variables matter (main effect
+  `F_main`/`p_main` and interaction `F_int`/`p_int`). Lower p = stronger signal;
+  e.g. dewpoint, max/mean temperature, and surface soil moisture screen in.
+- `trackB_horizon_results.csv` — forecast R² by horizon (1–28 days) across
+  Seasonal / AR+Seasonal / +Climate specs, with `ΔR² (climate)` — the daily
+  analogue of the weekly climate-contribution story.
 
 ### Query type 3 — "Where would targeted intervention help vs. be useless?"
 
