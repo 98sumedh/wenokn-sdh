@@ -2434,6 +2434,10 @@ if st.session_state.current_view == "sample":
     * Does modeling disease at the HSA level beat governorate- or country-level?
     * Which health service areas would need targeted interventions to offset climate influence, and where would interventions be useless?
     * How sensitive is patient allocation to the gravity-model parameters alpha and beta?
+    * Which daily climate variables most strongly predict diarrheal disease in Jordan?
+    * At what forecast horizon does climate add the most predictive value for daily disease?
+    * Is soil moisture or temperature the stronger daily driver of disease in Jordan?
+    * Does adding climate improve the daily disease forecast, and at which lead times?
 
     """)
 
