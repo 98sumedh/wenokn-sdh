@@ -1,0 +1,157 @@
+# LT-LV karst specific-well groundwater-level imputation
+# Relative paths are resolved from the working directory used to run the script.
+
+input:
+  # May also be supplied with --input.
+  path: skills/lt-lv-karst-well-imputation/data/processed_daily_groundwater.parquet
+
+columns:
+  id: well_no
+  date: date
+  target: gw_level_m_asl
+  precipitation: precipitation_mm_eobs
+  temperature: temperature_C_eobs
+  actual_evapotranspiration: actual_evapotranspiration_mm_gleam
+  groundwater_storage: gws_mm_tavg_gldas
+
+domain:
+  # The notebook-specific monitoring network.
+  wells:
+    - LT_35994
+    - LT_35995
+    - LT_35996
+    - LV_12225
+    - LV_22606
+    - LV_22610
+    - LT_220
+
+  date_start: 2003-01-01
+  date_end: 2023-12-31
+  frequency: D
+
+  # Required for calendar-day lags. Missing dates are inserted, but dynamic
+  # predictor values are not interpolated automatically.
+  regularize_daily_grid: true
+
+  # error is safest. first and mean are available for explicitly reviewed data.
+  duplicate_strategy: error
+
+  # Domain-specific exclusions must be reviewed whenever the source dataset changes.
+  known_bad_intervals:
+    - well_no: LT_35996
+      start: 2022-06-01
+      end: null
+      reason: known_corruption
+
+  # An LT_220 correction can be activated only after confirming the affected side
+  # and date because the source notebook comment and commented code were inconsistent.
+  # - well_no: LT_220
+  #   start: 2014-01-01
+  #   end: null
+  #   reason: suspected_sensor_regime_change
+
+cleaning:
+  spike_detection:
+    enabled: true
+
+    # isolated_spike removes only a point that differs sharply from both neighbors.
+    # adjacent_jump reproduces the notebook's broader rule and can remove neighbors.
+    mode: isolated_spike
+
+    # quantile reproduces the notebook's dynamic threshold, but separately per well.
+    # mad is a robust alternative for noisier records.
+    threshold_method: quantile
+    quantile: 0.9995
+    mad_z: 8.0
+    minimum_jump_m: 0.0
+
+  # The notebook inserted an average historical 31 December value to extend a
+  # series. This is disabled because it is not an observation. The new pipeline
+  # can reconstruct trailing periods without creating such an anchor.
+  legacy_dec31_anchor:
+    enabled: false
+    date: 2023-12-31
+    use_for_training: false
+
+features:
+  predictor_columns:
+    - precipitation_mm_eobs
+    - temperature_C_eobs
+    - actual_evapotranspiration_mm_gleam
+    - gws_mm_tavg_gldas
+
+  lag_days: [30, 60, 90, 180, 270, 360]
+  rolling_days: [60, 90]
+  rolling_sum_columns:
+    - precipitation_mm_eobs
+    - actual_evapotranspiration_mm_gleam
+  rolling_min_periods: 1
+  include_auxiliary_features: true
+
+  # These reproduce the manually selected notebook feature sets.
+  feature_sets:
+    with_seasonal:
+      - precipitation_mm_eobs_rollsum_90d
+      - temperature_C_eobs_lag_30d
+      - temperature_C_eobs_lag_90d
+      - temperature_C_eobs_lag_180d
+      - temperature_C_eobs_lag_270d
+      - temperature_C_eobs_lag_360d
+      - gws_mm_tavg_gldas_lag_90d
+      - gws_mm_tavg_gldas_lag_180d
+      - gws_mm_tavg_gldas_lag_270d
+      - gws_mm_tavg_gldas_lag_360d
+      - gws_mm_tavg_gldas
+      - seasonal_phase
+      - precip_monthly_avg
+
+    no_seasonal:
+      - precipitation_mm_eobs_rollsum_90d
+      - temperature_C_eobs_lag_30d
+      - temperature_C_eobs_lag_90d
+      - temperature_C_eobs_lag_180d
+      - temperature_C_eobs_lag_270d
+      - temperature_C_eobs_lag_360d
+      - gws_mm_tavg_gldas_lag_90d
+      - gws_mm_tavg_gldas_lag_180d
+      - gws_mm_tavg_gldas_lag_270d
+      - gws_mm_tavg_gldas_lag_360d
+      - gws_mm_tavg_gldas
+
+model:
+  random_state: 42
+  minimum_observed_values: 365
+  minimum_feature_ratio: 0.5
+
+  # Outer blocks are not used for feature-set or hyperparameter selection.
+  outer_evaluation_fraction: 0.20
+
+  # Repeated inner blocks imitate missing intervals during model selection.
+  inner_cv_fraction: 0.20
+  inner_cv_repeats: 5
+  minimum_mask_days: 7
+  maximum_mask_days: 60
+  maximum_mask_attempts: 3000
+
+  parameter_grid:
+    n_estimators: [100, 200]
+    max_depth: [null, 20]
+    min_samples_split: [2]
+    min_samples_leaf: [1, 2]
+    max_features: [1.0]
+
+  n_jobs: -1
+  save_models: true
+  calculate_prediction_uncertainty: true
+
+diagnostics:
+  calculate_vif: true
+  calculate_shap: true
+  maximum_shap_samples_per_well: 1000
+  maximum_shap_features: 20
+  create_figures: true
+  figure_dpi: 300
+
+output:
+  write_csv: true
+  write_parquet: true
