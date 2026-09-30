@@ -59,6 +59,13 @@ QUERIES = [
     (26, "Show the same Jordan analysis for the non-communicable (NCD) disease network.", None),  # expected: unavailable
     (29, "Hospitals in Amman.", "jordan-health-geography"),
     (30, "Which model best predicts disease in Amman?", "jordan-climate-health-models"),
+    # ---- LT-LV Karst Well Imputation Skill Tests ----
+    (31, "In the Lithuania-Latvia border region, impute missing daily groundwater levels for the 7 karst wells using Extra Trees.", "lt-lv-karst-well-imputation"),
+    (32, "What is the SHAP feature importance for the Baltic karst groundwater imputation model?", "lt-lv-karst-well-imputation"),
+    
+    # ---- Edge Cases / Anti-Hallucination Scenarios (Prof. Zaslavsky's Requirement) ----
+    (33, "Provide daily groundwater predictions for well ID WELL-99999 in the LT-LV karst network.", None),  # Expected: Refusal / Not Found
+    (34, "Calculate daily water table levels for the LT-LV karst wells for date range 2050-01-01 to 2050-12-31.", None), # Expected: Out of bounds / Refusal
 ]
 
 ALL_SKILL_NAMES = [p.name for p in (REPO / "skills").iterdir() if p.is_dir()]
