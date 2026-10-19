@@ -7,3 +7,4 @@ GRANDE-U_Task1/
 .streamlit/secrets.toml
 *.key
 results/
+skills/jordan-climate-health-models/data/archives/_loaded/

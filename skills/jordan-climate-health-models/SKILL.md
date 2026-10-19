@@ -160,3 +160,16 @@ hotspots by joining to `INF_footprint_hsas_v7.geojson`.
   `jordan-health-geography`. Groundwater / rivers / US energy → their own skills.
 - The **19 HSAs** here are the same footprint-v7 boundaries the geography skill
   maps; you can join model results to them by HSA id.
+
+## Archive loader (verification only)
+
+The Jordan results also ship as one archive. **Do not answer questions from it yet**
+— answers still come from the files described above. Run this only when asked to
+load or check the archive. Run it from the repository root:
+
+```python
+import sys; sys.path.insert(0, ".")
+from scripts.zip_loader import load_archive
+bundle = load_archive("skills/jordan-climate-health-models/data/archives")
+print(bundle.describe())
+```
