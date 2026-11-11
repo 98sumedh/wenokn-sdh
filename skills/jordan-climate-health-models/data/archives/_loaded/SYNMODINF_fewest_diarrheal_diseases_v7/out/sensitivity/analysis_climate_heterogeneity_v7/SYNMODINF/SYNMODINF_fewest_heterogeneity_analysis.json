@@ -1,0 +1,41 @@
+{
+  "n_hsas": 17,
+  "n_pixels_analyzed": 460298,
+  "between_hsa_stats": {
+    "temp_between_std": 1.0924347801609346,
+    "temp_between_range": 3.9136558434605746,
+    "elev_between_std": 313.9778760546501,
+    "elev_between_range": 1246.2258996731557,
+    "n_hsas": 17
+  },
+  "variance_decomposition": {
+    "temperature": {
+      "within_variance": 0.5003009687057584,
+      "between_variance": 1.1934137489052696,
+      "total_variance": 1.6937147176110279,
+      "within_std": 0.7073195661833188,
+      "between_std": 1.0924347801609346,
+      "icc": 0.704613201087708,
+      "pct_within": 29.53867989122921,
+      "pct_between": 70.46132010877079
+    },
+    "elevation": {
+      "within_variance": 17249.606541501173,
+      "between_variance": 98582.10665178922,
+      "total_variance": 115831.71319329039,
+      "within_std": 131.33775748618967,
+      "between_std": 313.9778760546501,
+      "icc": 0.8510804505436568,
+      "pct_within": 14.891954945634323,
+      "pct_between": 85.10804505436568
+    }
+  },
+  "weighting_comparison": {
+    "temp_mean_abs_difference": 0.0579678764060084,
+    "temp_max_abs_difference": 0.9402986623176908,
+    "temp_correlation": 0.9930618597222417,
+    "elev_mean_abs_difference": 9.193157431400202,
+    "elev_max_abs_difference": 167.69404248594276,
+    "elev_correlation": 0.9914231183270376
+  }
+}

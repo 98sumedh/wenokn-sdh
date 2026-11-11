@@ -1,0 +1,5 @@
+Spatial Unit,ElasticNet,RandomForest,Ridge
+Country-level,-0.1137,-0.1519,-0.128
+Governorate,-0.1751,-0.175,-0.2
+HSA (FOOTPRINT),0.6359,0.5797,0.635
+Per-HSA (Panel),0.6359,0.5797,0.635

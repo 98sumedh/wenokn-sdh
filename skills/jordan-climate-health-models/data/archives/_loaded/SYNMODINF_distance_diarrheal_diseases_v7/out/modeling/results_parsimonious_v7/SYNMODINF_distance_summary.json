@@ -1,0 +1,16 @@
+{
+  "best_model": "elasticnet",
+  "test_r2": 0.6029371513138218,
+  "test_rmse": 7.5772502835361495,
+  "n_features": 6,
+  "features": [
+    "ar_lag1",
+    "ar_lag2",
+    "sin_week",
+    "cos_week",
+    "Td_d-10_C",
+    "E_d-14_mm_per_day"
+  ],
+  "baseline_r2": 0.6001215849313459,
+  "improvement_over_baseline": 0.0028155663824758204
+}

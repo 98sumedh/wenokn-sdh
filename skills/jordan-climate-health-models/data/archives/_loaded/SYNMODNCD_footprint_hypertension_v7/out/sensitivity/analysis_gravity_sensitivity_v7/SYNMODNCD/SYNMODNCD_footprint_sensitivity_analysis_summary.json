@@ -1,0 +1,184 @@
+{
+  "current_parameters": {
+    "alpha": 0.75,
+    "beta": 1.5
+  },
+  "parameter_ranges": {
+    "alpha": [
+      0.5,
+      0.75,
+      1.0,
+      1.25
+    ],
+    "beta": [
+      1.0,
+      1.5,
+      2.0,
+      2.5
+    ]
+  },
+  "baseline_performance": {
+    "r2": 0.6359238619198496,
+    "mae": 19.736040686027227
+  },
+  "sensitivity_metrics": [
+    {
+      "alpha": 0.5,
+      "beta": 1.0,
+      "concentration": 0.01009089422694245,
+      "gini": 0.4902529534184417,
+      "max_share": 0.028816233038824215,
+      "n_facilities_used": 176
+    },
+    {
+      "alpha": 0.5,
+      "beta": 1.5,
+      "concentration": 0.009838973224109053,
+      "gini": 0.48989990254506993,
+      "max_share": 0.025837243542370807,
+      "n_facilities_used": 181
+    },
+    {
+      "alpha": 0.5,
+      "beta": 2.0,
+      "concentration": 0.009277006801557547,
+      "gini": 0.47226262843546807,
+      "max_share": 0.02243720112149791,
+      "n_facilities_used": 183
+    },
+    {
+      "alpha": 0.5,
+      "beta": 2.5,
+      "concentration": 0.008920151606937396,
+      "gini": 0.4556144154439609,
+      "max_share": 0.02108022421419772,
+      "n_facilities_used": 185
+    },
+    {
+      "alpha": 0.75,
+      "beta": 1.0,
+      "concentration": 0.014047018851946895,
+      "gini": 0.5915833652801552,
+      "max_share": 0.045634841898893976,
+      "n_facilities_used": 154
+    },
+    {
+      "alpha": 0.75,
+      "beta": 1.5,
+      "concentration": 0.012915157395234024,
+      "gini": 0.5729068517888547,
+      "max_share": 0.04005305469720514,
+      "n_facilities_used": 176
+    },
+    {
+      "alpha": 0.75,
+      "beta": 2.0,
+      "concentration": 0.011483306452114048,
+      "gini": 0.5402317149633286,
+      "max_share": 0.032235349825033746,
+      "n_facilities_used": 181
+    },
+    {
+      "alpha": 0.75,
+      "beta": 2.5,
+      "concentration": 0.010481195355523583,
+      "gini": 0.5106117159225475,
+      "max_share": 0.02677291875466022,
+      "n_facilities_used": 182
+    },
+    {
+      "alpha": 1.0,
+      "beta": 1.0,
+      "concentration": 0.019966033873200204,
+      "gini": 0.6761571298484431,
+      "max_share": 0.06799293946176478,
+      "n_facilities_used": 115
+    },
+    {
+      "alpha": 1.0,
+      "beta": 1.5,
+      "concentration": 0.017551548212950668,
+      "gini": 0.6480184642980366,
+      "max_share": 0.05914264640911118,
+      "n_facilities_used": 162
+    },
+    {
+      "alpha": 1.0,
+      "beta": 2.0,
+      "concentration": 0.01484952905686582,
+      "gini": 0.6068815077806283,
+      "max_share": 0.04763382208540233,
+      "n_facilities_used": 176
+    },
+    {
+      "alpha": 1.0,
+      "beta": 2.5,
+      "concentration": 0.012856011136950413,
+      "gini": 0.5683797763056406,
+      "max_share": 0.036738249402068886,
+      "n_facilities_used": 180
+    },
+    {
+      "alpha": 1.25,
+      "beta": 1.0,
+      "concentration": 0.028445119538938437,
+      "gini": 0.7444644663107788,
+      "max_share": 0.0961096366131098,
+      "n_facilities_used": 74
+    },
+    {
+      "alpha": 1.25,
+      "beta": 1.5,
+      "concentration": 0.024242795393118622,
+      "gini": 0.7130739817965971,
+      "max_share": 0.08347745033480343,
+      "n_facilities_used": 147
+    },
+    {
+      "alpha": 1.25,
+      "beta": 2.0,
+      "concentration": 0.01976915522772422,
+      "gini": 0.669006027802423,
+      "max_share": 0.06771993953738727,
+      "n_facilities_used": 168
+    },
+    {
+      "alpha": 1.25,
+      "beta": 2.5,
+      "concentration": 0.016331120256930415,
+      "gini": 0.6252196762197368,
+      "max_share": 0.05265923592464763,
+      "n_facilities_used": 176
+    }
+  ],
+  "robustness_metrics": [
+    {
+      "noise_level": 0.0,
+      "mean_r2": 0.6359238619198495,
+      "std_r2": 1.1102230246251565e-16,
+      "mean_mae": 19.73604068602723,
+      "std_mae": 3.552713678800501e-15
+    },
+    {
+      "noise_level": 0.05,
+      "mean_r2": 0.635695682544243,
+      "std_r2": 0.0007140179206671515,
+      "mean_mae": 20.012926603480583,
+      "std_mae": 0.1447294792140377
+    },
+    {
+      "noise_level": 0.1,
+      "mean_r2": 0.6351218411592562,
+      "std_r2": 0.0014129418865763787,
+      "mean_mae": 20.497722517062392,
+      "std_mae": 0.2664554822677091
+    },
+    {
+      "noise_level": 0.2,
+      "mean_r2": 0.6322872306125765,
+      "std_r2": 0.0029563146040005716,
+      "mean_mae": 22.140609468569373,
+      "std_mae": 0.6610236747593355
+    }
+  ]
+}

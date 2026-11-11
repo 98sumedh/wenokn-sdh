@@ -1,0 +1,5 @@
+Spatial Unit,ElasticNet,RandomForest,Ridge
+Country-level,-0.2485,-1.2435,-0.1535
+Governorate,0.0376,0.011,0.0389
+HSA (GOVERNORATE_TAU_COVERAGE),0.7088,0.6937,0.7084
+Per-HSA (Panel),0.7088,0.6937,0.7084

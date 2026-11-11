@@ -1,0 +1,60 @@
+{
+  "best_overall": {
+    "feature_set": "ar_climate_temporal_hsa",
+    "model": "xgboost",
+    "test_r2": 0.6753342563417103,
+    "test_rmse": 56.71181911362273,
+    "improvement_over_baseline": 0.10886999184985569
+  },
+  "baseline_last_week_r2": 0.5664642644918546,
+  "best_per_feature_set": [
+    {
+      "feature_set": "ar_climate",
+      "model": "gradient_boosting",
+      "r2": 0.6562939263539656,
+      "rmse": 58.351086590340294
+    },
+    {
+      "feature_set": "ar_climate_temporal",
+      "model": "xgboost",
+      "r2": 0.6514709419139902,
+      "rmse": 58.75906015617186
+    },
+    {
+      "feature_set": "ar_climate_temporal_hsa",
+      "model": "xgboost",
+      "r2": 0.6753342563417103,
+      "rmse": 56.71181911362273
+    },
+    {
+      "feature_set": "ar_only",
+      "model": "lasso",
+      "r2": 0.6529987689031562,
+      "rmse": 58.63012933096163
+    },
+    {
+      "feature_set": "ar_temporal",
+      "model": "lasso",
+      "r2": 0.6529802623647232,
+      "rmse": 58.63169276385163
+    },
+    {
+      "feature_set": "baseline",
+      "model": "last_week",
+      "r2": 0.5664642644918546,
+      "rmse": 65.53416874217046
+    },
+    {
+      "feature_set": "climate_only",
+      "model": "random_forest",
+      "r2": 0.5595265348044576,
+      "rmse": 66.05644843439399
+    },
+    {
+      "feature_set": "climate_temporal",
+      "model": "gradient_boosting",
+      "r2": 0.5434719553136689,
+      "rmse": 67.24950239461013
+    }
+  ]
+}

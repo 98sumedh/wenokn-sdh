@@ -1,0 +1,104 @@
+{
+  "total_pixels": 7530641,
+  "total_population": 10179256.050375486,
+  "probability_distribution": {
+    "mean": 0.18121959745241903,
+    "median": 0.1197947020308134,
+    "std": 0.1822509846100596,
+    "p10": 0.0239338429549826,
+    "p25": 0.0450747701758661,
+    "p75": 0.2564037685286718,
+    "p90": 0.5002952221402218
+  },
+  "distance_distribution": {
+    "mean": 41.01811137515244,
+    "median": 35.707907756500134,
+    "std": 30.22519529117618,
+    "p10": 5.018232530247013,
+    "p25": 12.92901367766811,
+    "p75": 66.88024064084173,
+    "p90": 86.96637903820739
+  },
+  "by_probability_class": {
+    "strong": {
+      "pixel_count": 815188,
+      "population": 729506.2390442316,
+      "population_pct": 7.166596806623428,
+      "mean_distance_km": 82.08479246775237,
+      "mean_probability": 0.5841969093652496
+    },
+    "moderate": {
+      "pixel_count": 1732086,
+      "population": 2752847.9956269534,
+      "population_pct": 27.04370517848805,
+      "mean_distance_km": 37.59717957399982,
+      "mean_probability": 0.28724713985620265
+    },
+    "weak": {
+      "pixel_count": 1524397,
+      "population": 3286160.429055032,
+      "population_pct": 32.282913533094735,
+      "mean_distance_km": 37.92992661696347,
+      "mean_probability": 0.1511513939678931
+    },
+    "very_weak": {
+      "pixel_count": 3458970,
+      "population": 3410741.386649268,
+      "population_pct": 33.50678448179379,
+      "mean_distance_km": 34.413804900694984,
+      "mean_probability": 0.04640628263084048
+    }
+  },
+  "by_distance_class": {
+    "urban": {
+      "pixel_count": 750088,
+      "population": 7898197.704351803,
+      "population_pct": 77.5911094608968,
+      "mean_distance_km": 2.815191869574562,
+      "mean_probability": 0.24266928345006558
+    },
+    "peri_urban": {
+      "pixel_count": 1355742,
+      "population": 1872058.5410809703,
+      "population_pct": 18.390917094691954,
+      "mean_distance_km": 9.54082239686814,
+      "mean_probability": 0.1211179830199159
+    },
+    "rural": {
+      "pixel_count": 1259808,
+      "population": 272179.52602634113,
+      "population_pct": 2.6738646191761837,
+      "mean_distance_km": 22.1375279000892,
+      "mean_probability": 0.12041066770226592
+    },
+    "remote": {
+      "pixel_count": 1326520,
+      "population": 85077.32917659945,
+      "population_pct": 0.8357912283134009,
+      "mean_distance_km": 39.70389153615731,
+      "mean_probability": 0.11119450212937282
+    },
+    "very_remote": {
+      "pixel_count": 2838483,
+      "population": 51742.949739771764,
+      "population_pct": 0.5083175969216641,
+      "mean_distance_km": 75.14193146055487,
+      "mean_probability": 0.2534014201027418
+    }
+  },
+  "thresholds_used": {
+    "probability": {
+      "strongly_connected": 0.5,
+      "moderately_connected": 0.2,
+      "weakly_connected": 0.1,
+      "very_weakly_connected": 0.05
+    },
+    "distance_km": {
+      "urban": 5,
+      "peri_urban": 15,
+      "rural": 30,
+      "remote": 50,
+      "very_remote": 100
+    }
+  }
+}

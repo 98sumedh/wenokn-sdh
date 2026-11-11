@@ -1,0 +1,8 @@
+Model Specification,N Features,Train R²,Test R²,Overfit Gap
+Climate only,8,0.0082,-0.0083,0.0164
+Autoregressive only,2,0.7584,0.6185,0.1399
+Seasonal only,4,0.0050,-0.0105,0.0155
+AR + Seasonal,6,0.7585,0.6179,0.1405
+Climate + Seasonal,12,0.0154,0.0026,0.0128
+AR + Climate,10,0.7590,0.6090,0.1501
+AR + Climate + Seasonal,14,0.7597,0.6098,0.1500

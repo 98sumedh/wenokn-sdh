@@ -1,0 +1,18 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+princehashemprimarycenter,Prince Hashem Primary Center,227300.8004202255,0.10712029799994678,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,237896.37615085047,0.1304685251344489,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,197920.51495942436,0.1603020258359123,lower_certainty
+princessrayahospital,Princess Raya Hospital,1006597.3928116953,0.17799906638012578,lower_certainty
+alhussainnewsalthospital,Al Hussain New Salt Hospital,896075.3233248969,0.19173719710283094,lower_certainty
+alzarqahospital,AL-Zarqa Hospital,1228381.389465044,0.19297263666699938,lower_certainty
+jarashhospital,Jarash Hospital,556387.2632018916,0.19698584827053897,lower_certainty
+almafraqgynecologyandpediatricshospital,Al-Mafraq Gynecology and Pediatrics Hospital,389134.4888466019,0.2001731077572881,lower_certainty
+alramthahospital,AL-Ramtha Hospital,525293.9593564776,0.21472566472203103,higher_certainty
+alnadeemhospital,AL-Nadeem Hospital,395654.15914616734,0.24962732890492398,higher_certainty
+tafilahgovernmentalhospital,Tafilah Governmental Hospital,151521.0416311773,0.26627103783037126,higher_certainty
+alkarakhospital,Al-Karak Hospital,404907.59979886544,0.26703974795247837,higher_certainty
+khazzanprimarycenter,Khazzan Primary Center,201360.28514614629,0.366696286397586,higher_certainty
+maanhospital,Maan Hospital,68298.37174888482,0.39496234434588284,higher_certainty
+queenraniahospital,Queen Rania Hospital,97937.35937053383,0.44374386427602525,higher_certainty
+albasheerhospital,Al-Basheer Hospital,,,higher_certainty
+drjamelaltotanjihospital,Dr. Jamel Al-Totanji Hospital,,,higher_certainty

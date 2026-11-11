@@ -1,0 +1,21 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+alimanhospital,Al-Iman Hospital,304890.5508413847,0.11838466565690703,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,291882.07054823294,0.14972179172135652,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,204872.37185158074,0.1498526411439547,lower_certainty
+princessrayahospital,Princess Raya Hospital,861058.8663143291,0.15500842714594415,lower_certainty
+princehusseinhospital,Prince Hussein Hospital,606491.1357569968,0.18176329670998553,lower_certainty
+alzarqahospital,AL-Zarqa Hospital,1211254.9408088776,0.19181892634903142,lower_certainty
+jarashhospital,Jarash Hospital,449964.2085747571,0.2037361836433823,lower_certainty
+alramthahospital,AL-Ramtha Hospital,663880.6289616874,0.2137220783305563,lower_certainty
+marsaprimarycenter,Marsa Primary Center,215414.44985412768,0.21877728114239836,lower_certainty
+almafraqhospital,AL-Mafraq Hospital,334605.7489838004,0.22220407277272713,lower_certainty
+bsairacomprehensivecenter,Bsaira Comprehensive Center,151521.0416311773,0.26617467281389523,higher_certainty
+aqabacomprehensivecenter,Aqaba Comprehensive Center,201397.08800917977,0.3092490869050706,higher_certainty
+maanhospital,Maan Hospital,68298.37174888482,0.39170178858113447,higher_certainty
+queenraniahospital,Queen Rania Hospital,97900.55650750034,0.44041641196124864,higher_certainty
+albasheerhospital,Al-Basheer Hospital,,,higher_certainty
+umqsairalmogabalencomprehensivecenter,Um Qsair Al-Mogabalen Comprehensive Center,,,higher_certainty
+drjamelaltotanjihospital,Dr. Jamel Al-Totanji Hospital,,,higher_certainty
+arishprimarycenter,Arish Primary Center,,,higher_certainty
+alkarakhospital,Al-Karak Hospital,,,higher_certainty
+faqqoucomprehensivecenter,Faqqou Comprehensive Center,,,higher_certainty

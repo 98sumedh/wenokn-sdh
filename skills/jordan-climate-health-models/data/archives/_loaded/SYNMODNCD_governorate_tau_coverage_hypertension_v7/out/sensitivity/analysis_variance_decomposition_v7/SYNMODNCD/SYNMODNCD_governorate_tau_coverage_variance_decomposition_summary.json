@@ -1,0 +1,31 @@
+{
+  "individual_contributions": {
+    "climate_only": -0.001651754974549835,
+    "ar_only": 0.6466841087460301,
+    "seasonal_only": -0.008929037702763987
+  },
+  "combined_contributions": {
+    "ar_seasonal": 0.6461680975333929,
+    "climate_seasonal": 0.0039813719652253,
+    "ar_climate": 0.6393018114204263,
+    "full_model": 0.6396838825549637
+  },
+  "incremental_contributions": {
+    "climate_over_ar": -0.007382297325603804,
+    "climate_over_ar_seasonal": -0.006484214978429215,
+    "ar_over_climate": 0.6409535663949761,
+    "ar_over_climate_seasonal": 0.6357025105897384,
+    "seasonal_over_ar": -0.000516011212637224,
+    "seasonal_over_climate": 0.005633126939775135
+  },
+  "shared_variance": {
+    "ar_climate_overlap": 0.005730542351053969,
+    "ar_seasonal_overlap": -0.008413026490126763,
+    "climate_seasonal_overlap": -0.014562164642539122
+  },
+  "interpretation": {
+    "ar_dominance_ratio": 1.0109432586656815,
+    "climate_unique_contribution": -0.006484214978429215,
+    "seasonal_absorbed_by_ar": true
+  }
+}

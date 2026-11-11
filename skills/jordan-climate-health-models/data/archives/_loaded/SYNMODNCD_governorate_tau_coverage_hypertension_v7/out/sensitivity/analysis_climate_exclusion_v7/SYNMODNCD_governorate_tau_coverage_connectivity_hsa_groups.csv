@@ -1,0 +1,45 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+badiyahalshamalicomprehensivecenter,Badiyah Al-Shamali Comprehensive Center,139178.02256692853,0.11760267717927929,lower_certainty
+princessrayahospital,Princess Raya Hospital,403669.7028926315,0.13041239344882663,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,120569.55856108665,0.13103873646131217,lower_certainty
+alzubaydiahprimarycenter,Al-Zubaydiah Primary Center,34829.321200709746,0.1378081658430711,lower_certainty
+qatranehcomprehansivecenter,Qatraneh Comprehansive Center,21725.431959034864,0.14199105259320002,lower_certainty
+almansouracomprehensivecenter,Al-Mansoura Comprehensive Center,67783.04297288998,0.142134485510967,lower_certainty
+ramaprimarycenter,Rama Primary Center,64090.556213423595,0.1670183880190291,lower_certainty
+alramthahospital,AL-Ramtha Hospital,258744.43128185743,0.18324909606133089,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,125990.62344592344,0.19328372787448986,lower_certainty
+alshunehhospital,AL-Shuneh Hospital,40094.51469813288,0.1959816732731389,lower_certainty
+princessbasmahospital,Princess Basma Hospital,946828.1743920217,0.2008817456284599,lower_certainty
+balilehprimarycenter,Balileh Primary Center,109587.33423003422,0.20114098164896843,lower_certainty
+wadialkarakprimarycenter,Wadi Al-Karak Primary Center,28183.904291966704,0.20987347702193976,lower_certainty
+alsalaihyprimarycenter,Al-Salaihy Primary Center,102542.01054532162,0.21252535359335892,lower_certainty
+jarashhospital,Jarash Hospital,283074.5891635431,0.21592720542784108,lower_certainty
+lebcomprehensivecenter,Leb Comprehensive Center,42870.50845814018,0.22321232895215407,lower_certainty
+balaamacomprehensivecenter,Balaama Comprehensive Center,95781.15699012857,0.23877437588124442,lower_certainty
+bsairacomprehensivecenter,Bsaira Comprehensive Center,71075.38347111252,0.24044586512452304,lower_certainty
+alnadeemhospital,AL-Nadeem Hospital,255235.13573961705,0.2456727956802526,lower_certainty
+almafraqhospital,AL-Mafraq Hospital,148541.39113941803,0.2573764496460873,lower_certainty
+jdaidehprimarycenter,Jdaideh Primary Center,13464.508005898588,0.25855943271616433,lower_certainty
+princesssalmahospital,Princess Salma Hospital,33450.41440497071,0.2721537454025586,lower_certainty
+manshiyetbnihasancomprehensivecenter,Manshiyet Bni Hasan Comprehensive Center,38847.07510826332,0.2746462496870477,higher_certainty
+tafilehcompreahnsivecenter,Tafileh Compreahnsive Center,80445.65816006476,0.288906600361036,higher_certainty
+khazzanprimarycenter,Khazzan Primary Center,109714.66512364347,0.3031713808690773,higher_certainty
+aqabacomprehensivecenter,Aqaba Comprehensive Center,91682.4228855363,0.31652216566403246,higher_certainty
+smakiyyehprimarycenter,Smakiyyeh Primary Center,18177.19684494355,0.3442212390965801,higher_certainty
+queenraniahospital,Queen Rania Hospital,35737.578703331405,0.3529846047531492,higher_certainty
+maanhospital,Maan Hospital,68298.37174888482,0.39170178858113447,higher_certainty
+petracomprehensivecenter,Petra Comprehensive Center,62162.97780416894,0.49068107433178904,higher_certainty
+princefaisalbinalhusseinhospital,Prince Faisal Bin Al-Hussein Hospital,,,higher_certainty
+albasheerhospital,Al-Basheer Hospital,,,higher_certainty
+ainalbashacomprehensivecenter,Ain Al-Basha Comprehensive Center,,,higher_certainty
+alhussainnewsalthospital,Al Hussain New Salt Hospital,,,higher_certainty
+alimanhospital,Al-Iman Hospital,,,higher_certainty
+princehashemprimarycenter,Prince Hashem Primary Center,,,higher_certainty
+alkarakhospital,Al-Karak Hospital,,,higher_certainty
+southmazarcomprehensivecenter,South Mazar Comprehensive Center,,,higher_certainty
+moaabprimarycenter,Moaab Primary Center,,,higher_certainty
+kuthrabaprimarycenter,Kuthraba Primary Center,,,higher_certainty
+thatrasprimarycenter,That Ras Primary Center,,,higher_certainty
+mhyyprimarycenter,Mhyy Primary Center,,,higher_certainty
+faqqoucomprehensivecenter,Faqqou Comprehensive Center,,,higher_certainty
+sarfaprimarycenter,Sarfa Primary Center,,,higher_certainty

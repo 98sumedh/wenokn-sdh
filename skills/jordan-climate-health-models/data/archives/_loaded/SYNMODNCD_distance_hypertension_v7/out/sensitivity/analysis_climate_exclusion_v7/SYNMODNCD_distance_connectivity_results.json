@@ -1,0 +1,91 @@
+{
+  "analysis_date": "2026-11-04",
+  "source_run": "/Users/sumedh/Desktop/SDSC/jordan-hsa-optimization/out_SYNMODNCD_distance_v7",
+  "source_sha256": {
+    "pixels": "b9bf0b1c94f9f89b7849e9abb7e135a04be50b8dd195e1dd81b2e72f0f5fa652",
+    "assignments": "9c07bdb987b53971b5b55eb1b559ae342c9d876de19485b0a15f51759184ea41",
+    "hsa_geojson": "7a7be59a87f57b56940edf08ef0b4f9b878569885ac3f87da2f23751358070eb",
+    "facility_locations": "2b0fd78b2b158e70d4b220369b01a256b0aa7a81f6819ddbca9af16e249697e8",
+    "feature_selection": "9369166f3ed18221bced1646e9f5ce54e814342bd50d09a3eba50d390ff7552e",
+    "train": "7c8ba18d6fbeeb8456e6b64b2fd773dd96f8fbfcd19ad5bbf5f850b8e65cae68",
+    "val": "57151b093a6cb474dbbd14a9154086d0e6b855ab7e054681b08c2ae6dc63cbcd",
+    "test": "c6b97aaa5de86e2f2bfa9b9bae5d0006a4b120ed45abe1f0311783623a91ded0"
+  },
+  "grouping": "Final HSA mean probability of each pixel's top-choice facility, weighted by that pixel's population; overlap facilities carried proportionally to containing HSAs under the production gravity formula; median split. This is a top-choice proxy, not the full fractional-allocation denominator, urban/rural status, or physical connectivity.",
+  "median_mean_allocation_probability": 0.20449982086069718,
+  "model": "Ridge(alpha=1), training-only StandardScaler; existing time-disjoint comprehensive-model splits",
+  "outcome": "hypertension_count_adjusted",
+  "baseline_features": [
+    "ar_lag1",
+    "ar_lag2",
+    "ar_lag3",
+    "ar_lag4",
+    "week_of_year",
+    "month",
+    "quarter"
+  ],
+  "climate_features": [
+    "T_mean_week_C",
+    "P_total_week"
+  ],
+  "sensitivity_weather_features": [
+    "wind_speed_d-10_ms",
+    "hours_above_30C_d-14",
+    "hours_above_30C_d-1",
+    "E_d-3_mm_per_day",
+    "water_deficit_mm_week",
+    "hours_above_30C_week",
+    "SM4_week",
+    "E_d-10_mm_per_day",
+    "E_d-5_mm_per_day",
+    "hours_above_30C_d-3",
+    "E_d-7_mm_per_day",
+    "hours_above_30C_d-7",
+    "extreme_heat",
+    "E_d-14_mm_per_day",
+    "DTR_d-3_C",
+    "hours_above_30C_d-10",
+    "hours_above_30C_d-5",
+    "wind_speed_d-2_ms",
+    "P_sum_lag_w-2",
+    "temp_precip_interaction"
+  ],
+  "date_ranges": {
+    "train": [
+      "2022-07-25",
+      "2023-09-11"
+    ],
+    "val": [
+      "2023-09-18",
+      "2023-11-20"
+    ],
+    "test": [
+      "2023-11-27",
+      "2024-01-29"
+    ]
+  },
+  "rows": [
+    {
+      "group": "higher_certainty",
+      "n_hsas": 12,
+      "n_train": 720,
+      "n_test": 120,
+      "ar_seasonal_test_r2": 0.600758082106039,
+      "ar_seasonal_climate_test_r2": 0.577703129271489,
+      "climate_delta_r2": -0.023054952834549947,
+      "sensitivity_20_weather_test_r2": 0.5810420918869234,
+      "sensitivity_20_weather_delta_r2": -0.01971599021911563
+    },
+    {
+      "group": "lower_certainty",
+      "n_hsas": 11,
+      "n_train": 660,
+      "n_test": 110,
+      "ar_seasonal_test_r2": 0.5845964613293928,
+      "ar_seasonal_climate_test_r2": 0.5879699504674516,
+      "climate_delta_r2": 0.003373489138058794,
+      "sensitivity_20_weather_test_r2": 0.5586861578058998,
+      "sensitivity_20_weather_delta_r2": -0.025910303523492995
+    }
+  ]
+}

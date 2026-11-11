@@ -1,0 +1,16 @@
+{
+  "best_model": "random_forest",
+  "test_r2": 0.6455407682930121,
+  "test_rmse": 9.353512924356748,
+  "n_features": 6,
+  "features": [
+    "ar_lag1",
+    "ar_lag2",
+    "sin_week",
+    "cos_week",
+    "Td_d-10_C",
+    "T_mean_d-14_C"
+  ],
+  "baseline_r2": 0.6227350007072241,
+  "improvement_over_baseline": 0.022805767585788006
+}

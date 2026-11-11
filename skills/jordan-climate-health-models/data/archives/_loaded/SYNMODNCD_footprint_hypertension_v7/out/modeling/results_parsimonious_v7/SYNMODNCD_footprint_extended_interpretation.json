@@ -1,0 +1,8 @@
+{
+  "ar_only_r2": 0.6131918247954872,
+  "ar_seasonal_r2": 0.5788960049240903,
+  "full_model_r2": 0.5445012768934516,
+  "seasonal_contribution": -0.03429581987139685,
+  "climate_contribution": -0.007565302625046066,
+  "interpretation": "climate_absorbed_by_seasonality"
+}

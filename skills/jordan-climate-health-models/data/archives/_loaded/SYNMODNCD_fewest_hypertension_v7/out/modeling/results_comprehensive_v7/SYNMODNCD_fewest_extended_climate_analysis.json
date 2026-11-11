@@ -1,0 +1,62 @@
+{
+  "ridge": {
+    "baselines": {
+      "mean_baseline": -0.01407926591565345,
+      "seasonal_mean": -0.027205434877928925,
+      "last_week": 0.5386757683966774
+    },
+    "model_results": {
+      "climate_only": -0.023244250779543174,
+      "ar_only": 0.6324352231084336,
+      "ar_temporal": 0.6308640916035638,
+      "ar_climate": 0.619372874927586,
+      "ar_climate_temporal": 0.6108857669940175
+    },
+    "contributions": {
+      "climate_vs_mean": -0.009164984863889725,
+      "climate_vs_seasonal": 0.0039611840983857505,
+      "ar_climate_vs_ar": -0.013062348180847616,
+      "ar_clim_temp_vs_ar_temp": -0.019978324609546294
+    }
+  },
+  "elasticnet": {
+    "baselines": {
+      "mean_baseline": -0.01407926591565345,
+      "seasonal_mean": -0.027205434877928925,
+      "last_week": 0.5386757683966774
+    },
+    "model_results": {
+      "climate_only": -0.005915601596804487,
+      "ar_only": 0.632018816372823,
+      "ar_temporal": 0.6323326876195362,
+      "ar_climate": 0.626010181814929,
+      "ar_climate_temporal": 0.6248952238896195
+    },
+    "contributions": {
+      "climate_vs_mean": 0.008163664318848962,
+      "climate_vs_seasonal": 0.021289833281124437,
+      "ar_climate_vs_ar": -0.0060086345578940215,
+      "ar_clim_temp_vs_ar_temp": -0.007437463729916716
+    }
+  },
+  "random_forest": {
+    "baselines": {
+      "mean_baseline": -0.01407926591565345,
+      "seasonal_mean": -0.027205434877928925,
+      "last_week": 0.5386757683966774
+    },
+    "model_results": {
+      "climate_only": 0.42833589069020095,
+      "ar_only": 0.5829099335640093,
+      "ar_temporal": 0.5875947027530102,
+      "ar_climate": 0.5725524502470486,
+      "ar_climate_temporal": 0.5701030714135644
+    },
+    "contributions": {
+      "climate_vs_mean": 0.4424151566058544,
+      "climate_vs_seasonal": 0.4555413255681299,
+      "ar_climate_vs_ar": -0.010357483316960736,
+      "ar_clim_temp_vs_ar_temp": -0.017491631339445757
+    }
+  }
+}

@@ -16,9 +16,22 @@ Python use (from the repository root, which is the agent's working directory):
     b.glob("model_results", "*_model_summary.json")   # -> [Path, ...]
     b.manifest["meta"]["synthetic"]          # -> True
 
-Command line (a quick check that an archive loads correctly):
+One archive per pipeline run (network x hsa_mode x boundary_version x disease).
+To load every archive in a folder, keyed by run:
+
+    from scripts.zip_loader import load_archives
+    runs = load_archives("skills/jordan-climate-health-models/data/archives")
+    for run_key, b in runs.items():          # run_key e.g. "SYNMODNCD_distance_hypertension_v7"
+        print(run_key, b.identity())
+
+load_archives skips a broken archive with a warning (so one bad zip does not take
+down the rest); pass strict=True to raise instead. Two archives that describe the
+same run (same network, hsa_mode, boundary_version, disease_slug) are an error.
+
+Command line (a quick check that archives load correctly; strict):
 
     python scripts/zip_loader.py skills/jordan-climate-health-models/data/archives
+    python scripts/zip_loader.py <folder> --key SYNMODNCD_distance   # just one
 
 Extraction goes to <zip folder>/_loaded/<zip name>/ (falls back to the system temp
 folder if that is not writable) and is reused while the zip is unchanged.
@@ -43,6 +56,7 @@ SECTIONS = ("model", "HEFTE")                       # sections the spec defines
 METADATA_KEYS = {"network", "hsa_mode", "boundary_version", "disease_focus_input",
                  "disease_group", "disease_slug"}
 REQUIRED_METADATA = ("network", "hsa_mode", "boundary_version", "disease_slug")
+IDENTITY_KEYS = REQUIRED_METADATA                   # what makes one run distinct
 MAX_MEMBERS = 5000
 MAX_TOTAL_BYTES = 1024 ** 3                         # 1 GiB uncompressed
 
@@ -108,9 +122,22 @@ class Bundle:
         it = d.rglob(pattern) if recursive else d.glob(pattern)
         return sorted(p for p in it if p.is_file())
 
+    # -- run identity
+    def identity(self) -> dict:
+        """The run this archive holds: network, hsa_mode, boundary_version, disease_slug.
+        Taken from the manifest sections (validated to agree at load time)."""
+        sec = self.manifest[self.sections()[0]]
+        return {k: sec[k] for k in IDENTITY_KEYS}
+
+    @property
+    def run_key(self) -> str:
+        i = self.identity()
+        return f"{i['network']}_{i['hsa_mode']}_{i['disease_slug']}_{i['boundary_version']}"
+
     def describe(self) -> str:
         meta = self.manifest.get("meta", {})
-        lines = [f"bundle     : {meta.get('bundle_key', '(no bundle_key)')}",
+        lines = [f"run        : {self.run_key}",
+                 f"bundle     : {meta.get('bundle_key', '(no bundle_key)')}",
                  f"synthetic  : {meta.get('synthetic', '(not stated)')}",
                  f"n_hsas     : {meta.get('n_hsas', '(not stated)')}",
                  f"sections   : {', '.join(self.sections())}",
@@ -183,6 +210,17 @@ def _read_and_validate(zf: zipfile.ZipFile) -> dict:
         missing = [k for k in REQUIRED_METADATA if k not in manifest[s]]
         if missing:
             raise ArchiveError(f"manifest section {s!r} is missing keys: {missing}")
+        bad = [k for k in REQUIRED_METADATA
+               if not isinstance(manifest[s][k], str) or not manifest[s][k].strip()]
+        if bad:
+            raise ArchiveError(f"manifest section {s!r} has empty or non-text values for: {bad}")
+    # When both sections are present they must describe the same run.
+    if len(present) > 1:
+        a, b = (manifest[s] for s in present[:2])
+        diff = [k for k in IDENTITY_KEYS if a[k] != b[k]]
+        if diff:
+            raise ArchiveError("manifest sections disagree about the run: " + ", ".join(
+                f"{k}: {present[0]}={a[k]!r} vs {present[1]}={b[k]!r}" for k in diff))
     return manifest
 
 
@@ -283,19 +321,69 @@ def load_archive(source, dest=None, key: str | None = None) -> Bundle:
     return bundle
 
 
+def load_archives(folder, dest=None, strict: bool = False) -> dict[str, Bundle]:
+    """Load every .zip in a folder; return {run_key: Bundle}, sorted by run_key.
+
+    folder : folder holding one archive per run
+    dest   : optional base folder; each archive extracts to <dest>/<zip stem>/
+    strict : False (agent use) -> skip a broken archive with a warning on stderr;
+             True (packaging check) -> raise ArchiveError listing every problem.
+    Two archives describing the same run are always an error for that run: with
+    strict=False the first (by file name) is kept and the duplicate is skipped.
+    """
+    folder = Path(folder)
+    if not folder.is_dir():
+        raise ArchiveError(f"archive folder not found: {folder}")
+    zips = sorted(p for p in folder.glob("*.zip") if p.is_file())
+    if not zips:
+        raise ArchiveError(f"no .zip archives in {folder}")
+
+    runs: dict[str, Bundle] = {}
+    problems: list[str] = []
+    for zp in zips:
+        try:
+            b = load_archive(zp, dest=(Path(dest) / zp.stem) if dest else None)
+        except ArchiveError as e:
+            problems.append(f"{zp.name}: {e}")
+            continue
+        if b.run_key in runs:
+            problems.append(f"{zp.name}: describes the same run ({b.run_key}) as "
+                            f"{runs[b.run_key].zip_path.name}; skipped")
+            continue
+        runs[b.run_key] = b
+
+    if problems:
+        if strict:
+            raise ArchiveError(f"{len(problems)} of {len(zips)} archive(s) failed:\n  "
+                               + "\n  ".join(problems))
+        for p in problems:
+            print(f"WARNING: skipped archive {p}", file=sys.stderr)
+    if not runs:
+        raise ArchiveError(f"no archive in {folder} could be loaded")
+    return dict(sorted(runs.items()))
+
+
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Load a results archive and show what the manifest resolves to.")
-    ap.add_argument("source", help="a .zip file, or a folder containing one")
+    ap = argparse.ArgumentParser(description="Load results archives and show what each manifest resolves to.")
+    ap.add_argument("source", help="a .zip file, or a folder of archives (one per run)")
     ap.add_argument("--dest", default=None, help="extraction folder")
-    ap.add_argument("--key", default=None, help="pick the archive whose name contains this")
+    ap.add_argument("--key", default=None, help="check only the archive whose name contains this")
     args = ap.parse_args(argv)
+    src = Path(args.source)
     try:
-        bundle = load_archive(args.source, dest=args.dest, key=args.key)
+        if src.is_file() or args.key:
+            bundles = [load_archive(src, dest=args.dest, key=args.key)]
+        else:
+            bundles = list(load_archives(src, dest=args.dest, strict=True).values())
     except ArchiveError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 1
-    print(bundle.describe())
-    print("OK: archive loaded and every manifest path resolves.")
+    for b in bundles:
+        print(b.describe())
+        print()
+    print(f"OK: {len(bundles)} archive(s) loaded; every manifest path resolves.")
+    for b in bundles:
+        print(f"  {b.run_key:50s} <- {b.zip_path.name}")
     return 0
 
 

@@ -1,0 +1,17 @@
+# Table S_X: Variance Decomposition Across Model Specifications
+
+    Model Specification  N Features Train R² Test R² Overfit Gap
+           Climate only           8   0.0147 -0.0017      0.0164
+    Autoregressive only           2   0.7849  0.6467      0.1383
+          Seasonal only           4   0.0041 -0.0089      0.0130
+          AR + Seasonal           6   0.7850  0.6462      0.1388
+     Climate + Seasonal          12   0.0163  0.0040      0.0124
+           AR + Climate          10   0.7855  0.6393      0.1462
+AR + Climate + Seasonal          14   0.7858  0.6397      0.1461
+
+## Key Findings
+
+- AR-only model explains 64.7% of variance
+- Climate-only model explains -0.2% of variance
+- Climate adds -0.6% beyond AR + Seasonal
+- AR-Climate overlap: 0.6%

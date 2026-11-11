@@ -1,0 +1,52 @@
+{
+  "seasonal": {
+    "variable": "sin_week",
+    "improvement": 0.00012766876122460857,
+    "r2": 0.6192029278928204
+  },
+  "precip_daily": {
+    "variable": "P_d-1",
+    "improvement": 0.001507668369845394,
+    "r2": 0.6205829275014412
+  },
+  "temp_mean": {
+    "variable": "T_mean_d-14_C",
+    "improvement": 0.0006548924837244119,
+    "r2": 0.6197301516153202
+  },
+  "temp_max": {
+    "variable": "T_max_d-14_C",
+    "improvement": 0.0006885075730027612,
+    "r2": 0.6197637667045985
+  },
+  "humidity": {
+    "variable": "Td_d-7_C",
+    "improvement": 0.0006692116668576276,
+    "r2": 0.6197444707984534
+  },
+  "heat_stress": {
+    "variable": "hours_above_30C_d-14",
+    "improvement": 0.0005600338345643774,
+    "r2": 0.6196352929661602
+  },
+  "heat_stress_extreme": {
+    "variable": "hours_above_35C_d-10",
+    "improvement": 0.00011812734756166954,
+    "r2": 0.6191933864791574
+  },
+  "soil_moisture": {
+    "variable": "SM1_d-2",
+    "improvement": 0.000607640086451422,
+    "r2": 0.6196828992180472
+  },
+  "water_balance": {
+    "variable": "water_deficit_mm_week",
+    "improvement": 2.526751494702495e-06,
+    "r2": 0.6190777858830905
+  },
+  "evaporation": {
+    "variable": "E_d-2_mm_per_day",
+    "improvement": 0.00013884689712284626,
+    "r2": 0.6192141060287186
+  }
+}

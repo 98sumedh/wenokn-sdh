@@ -1,0 +1,50 @@
+# Notebook Results: HSA_FINAL
+
+- Generated: 2026-10-18T16:15:24
+- Network: SYNMODINF
+
+## Important Output Files
+
+- `out/SYNMODINF_governorate_fewest_map_v7.png`
+- `out/SYNMODINF_governorate_tau_coverage_map_v7.png`
+- `out/SYNMODINF_distance_map_v7.png`
+- `out/SYNMODINF_footprint_map_v7.png`
+- `out/SYNMODINF_fewest_map_v7.png`
+- `out/SYNMODINF_governorate_fewest_hsas_v7.geojson`
+- `out/SYNMODINF_governorate_fewest_residual_overlap_v7.csv`
+- `out/SYNMODINF_governorate_fewest_coverage_repair_v7.csv`
+- `out/SYNMODINF_governorate_fewest_final_overlap_removal_v7.csv`
+- `out/SYNMODINF_governorate_fewest_major_orphan_anchor_audit_v7.csv`
+- `out/SYNMODINF_governorate_fewest_anchor_upgrade_audit_v7.csv`
+- `out/SYNMODINF_governorate_tau_coverage_hsas_v7.geojson`
+- `out/SYNMODINF_governorate_tau_coverage_residual_overlap_v7.csv`
+- `out/SYNMODINF_governorate_tau_coverage_coverage_repair_v7.csv`
+- `out/SYNMODINF_governorate_tau_coverage_final_overlap_removal_v7.csv`
+- `out/SYNMODINF_governorate_tau_coverage_major_orphan_anchor_audit_v7.csv`
+- `out/SYNMODINF_governorate_tau_coverage_anchor_upgrade_audit_v7.csv`
+- `out/SYNMODINF_distance_hsas_v7.geojson`
+- `out/SYNMODINF_distance_residual_overlap_v7.csv`
+- `out/SYNMODINF_distance_coverage_repair_v7.csv`
+- `out/SYNMODINF_distance_final_overlap_removal_v7.csv`
+- `out/SYNMODINF_distance_major_orphan_anchor_audit_v7.csv`
+- `out/SYNMODINF_distance_anchor_upgrade_audit_v7.csv`
+- `out/SYNMODINF_footprint_hsas_v7.geojson`
+- `out/SYNMODINF_footprint_residual_overlap_v7.csv`
+- `out/SYNMODINF_footprint_coverage_repair_v7.csv`
+- `out/SYNMODINF_footprint_final_overlap_removal_v7.csv`
+- `out/SYNMODINF_footprint_major_orphan_anchor_audit_v7.csv`
+- `out/SYNMODINF_footprint_anchor_upgrade_audit_v7.csv`
+- `out/SYNMODINF_fewest_hsas_v7.geojson`
+- `out/SYNMODINF_fewest_residual_overlap_v7.csv`
+- `out/SYNMODINF_fewest_coverage_repair_v7.csv`
+- `out/SYNMODINF_fewest_final_overlap_removal_v7.csv`
+- `out/SYNMODINF_fewest_major_orphan_anchor_audit_v7.csv`
+- `out/SYNMODINF_fewest_anchor_upgrade_audit_v7.csv`
+- `out/SYNMODINF_footprint_patient_data_discrepancies.txt`
+- `out/SYNMODINF_footprint_diagnosis_counts_pivot.csv`
+- `out/SYNMODINF_footprint_diagnosis_counts_by_group.csv`
+- `out/SYNMODINF_footprint_diagnosis_counts_total.csv`
+- `out/INF_footprint_patient_data_discrepancies.txt`
+- `out/INF_footprint_diagnosis_counts_pivot.csv`
+- `out/INF_footprint_diagnosis_counts_by_group.csv`
+- `out/INF_footprint_diagnosis_counts_total.csv`

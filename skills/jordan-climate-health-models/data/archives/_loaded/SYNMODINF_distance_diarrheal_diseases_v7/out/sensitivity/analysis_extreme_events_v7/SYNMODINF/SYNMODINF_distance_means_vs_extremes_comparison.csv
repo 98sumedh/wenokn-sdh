@@ -1,0 +1,5 @@
+specification,n_features,features_used,train_r2,test_r2,test_mae,overfit_gap,contribution_over_baseline
+A_AR_Seasonal_Only,4,"ar_lag1, ar_lag2, sin_annual, cos_annual",0.6937697924889961,0.6048469866010517,4.207258823864711,0.08892280588794432,0.0
+B_AR_Seasonal_Means,14,"ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",0.6957209122254133,0.6031935862109659,4.221545914972411,0.09252732601444746,-0.0016534003900858796
+C_AR_Seasonal_Extremes,26,"ar_lag1, ar_lag2, sin_annual, cos_annual, heat_moisture_stress...",0.6974697391880891,0.6051556954384663,4.205008575878156,0.09231404374962282,0.0003087088374145175
+D_AR_Seasonal_Both,36,"ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",0.698843749046137,0.5994150434566947,4.258226749548292,0.09942870558944228,-0.005431943144357021

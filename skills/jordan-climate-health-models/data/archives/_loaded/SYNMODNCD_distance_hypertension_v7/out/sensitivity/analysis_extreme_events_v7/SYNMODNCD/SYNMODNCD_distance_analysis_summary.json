@@ -1,0 +1,48 @@
+{
+  "network": "SYNMODNCD",
+  "target": "hypertension_count_adjusted",
+  "n_climate_means": 10,
+  "n_extreme_indicators": 22,
+  "model_comparison": [
+    {
+      "specification": "A_AR_Seasonal_Only",
+      "n_features": 4,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual",
+      "train_r2": 0.7442697786584127,
+      "test_r2": 0.6109685376272654,
+      "test_mae": 16.644808349738042,
+      "overfit_gap": 0.13330124103114727,
+      "contribution_over_baseline": 0.0
+    },
+    {
+      "specification": "B_AR_Seasonal_Means",
+      "n_features": 14,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",
+      "train_r2": 0.7468914621468967,
+      "test_r2": 0.5940410181222078,
+      "test_mae": 18.090520425151258,
+      "overfit_gap": 0.15285044402468895,
+      "contribution_over_baseline": -0.016927519505057664
+    },
+    {
+      "specification": "C_AR_Seasonal_Extremes",
+      "n_features": 26,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, heat_moisture_stress...",
+      "train_r2": 0.7478670062335755,
+      "test_r2": 0.616582239313703,
+      "test_mae": 17.875098894102113,
+      "overfit_gap": 0.13128476691987245,
+      "contribution_over_baseline": 0.0056137016864376
+    },
+    {
+      "specification": "D_AR_Seasonal_Both",
+      "n_features": 36,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",
+      "train_r2": 0.7498118072939668,
+      "test_r2": 0.6057700744549304,
+      "test_mae": 18.842621671065928,
+      "overfit_gap": 0.14404173283903643,
+      "contribution_over_baseline": -0.005198463172335077
+    }
+  ]
+}

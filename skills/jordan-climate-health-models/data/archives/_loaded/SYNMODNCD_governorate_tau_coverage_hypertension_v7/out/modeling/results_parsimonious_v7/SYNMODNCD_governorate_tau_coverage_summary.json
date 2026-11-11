@@ -1,0 +1,14 @@
+{
+  "best_model": "lasso",
+  "test_r2": 0.6473755029606785,
+  "test_rmse": 32.12832501072544,
+  "n_features": 4,
+  "features": [
+    "ar_lag1",
+    "ar_lag2",
+    "sin_week",
+    "cos_week"
+  ],
+  "baseline_r2": 0.6470950489151355,
+  "improvement_over_baseline": 0.00028045404554299935
+}

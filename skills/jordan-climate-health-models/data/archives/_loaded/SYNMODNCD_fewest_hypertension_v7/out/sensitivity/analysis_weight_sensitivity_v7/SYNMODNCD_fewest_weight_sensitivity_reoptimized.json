@@ -1,0 +1,29 @@
+{
+  "method": "full re-optimization per perturbation",
+  "network": "SYNMODNCD",
+  "hsa_mode": "fewest",
+  "boundary_version": "v7",
+  "tau_coverage": 0.9,
+  "base_profile": {
+    "coverage": 15.0,
+    "coverage_progress": 0.0,
+    "overlap": 0.1,
+    "patient_volume": 0.0,
+    "climate": 0.0,
+    "distance": 0.0
+  },
+  "zero_weight_terms": [
+    "coverage_progress",
+    "patient_volume",
+    "climate",
+    "distance"
+  ],
+  "levels": [
+    0.8,
+    0.9,
+    1.1,
+    1.2
+  ],
+  "n_delineations_run": 21,
+  "population_raster": "/Users/sumedh/Desktop/SDSC/jordan-hsa-optimization/data/jor_ppp_2020_UNadj.tif"
+}

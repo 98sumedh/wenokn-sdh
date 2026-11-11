@@ -1,0 +1,15 @@
+{
+  "best_model": "gradient_boosting",
+  "test_r2": 0.8222264448858458,
+  "test_rmse": 8.615346594121705,
+  "n_features": 5,
+  "features": [
+    "ar_lag1",
+    "ar_lag2",
+    "sin_week",
+    "cos_week",
+    "Td_d-10_C"
+  ],
+  "baseline_r2": 0.7309109861033483,
+  "improvement_over_baseline": 0.09131545878249758
+}

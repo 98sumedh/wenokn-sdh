@@ -1,0 +1,46 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+alzubaydiahprimarycenter,Al-Zubaydiah Primary Center,90641.56142781873,0.09208652839008924,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,211606.0046200459,0.13255516873821002,lower_certainty
+princessrayahospital,Princess Raya Hospital,409904.30849487585,0.13646391374587752,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,122021.34342879057,0.1383007894361049,lower_certainty
+qatranehcomprehansivecenter,Qatraneh Comprehansive Center,21725.431959034868,0.14307138841091482,lower_certainty
+almansouracomprehensivecenter,Al-Mansoura Comprehensive Center,71500.99210002425,0.15174868618837234,lower_certainty
+mhyyprimarycenter,Mhyy Primary Center,18573.544819299495,0.17140950860132498,lower_certainty
+alhussainnewsalthospital,Al Hussain New Salt Hospital,389755.6838998054,0.1715702514800403,lower_certainty
+arishprimarycenter,Arish Primary Center,182757.91763245946,0.17738120867285484,lower_certainty
+alshunehhospital,AL-Shuneh Hospital,104185.07091155648,0.18193593704584562,lower_certainty
+alramthahospital,AL-Ramtha Hospital,223421.956737775,0.18310137631218154,lower_certainty
+albasheerhospital,Al-Basheer Hospital,3643582.7550318004,0.1866238053965368,lower_certainty
+alzarqahospital,AL-Zarqa Hospital,1184818.6333631417,0.18929768467470176,lower_certainty
+kuthrabaprimarycenter,Kuthraba Primary Center,40054.30379253343,0.20672376030034653,lower_certainty
+balilehprimarycenter,Balileh Primary Center,117346.1059343298,0.20760507735288547,lower_certainty
+ainalbashacomprehensivecenter,Ain Al-Basha Comprehensive Center,262859.4313115357,0.210570831463364,lower_certainty
+alsalaihyprimarycenter,Al-Salaihy Primary Center,135288.44930787056,0.2123631564105681,lower_certainty
+jarashhospital,Jarash Hospital,263183.3732355456,0.21248265139755654,lower_certainty
+jadaaprimarycenter,Jadaa Primary Center,15629.841440956012,0.21414784141316315,lower_certainty
+princessrahmahospital,Princess Rahma Hospital,974464.2584661557,0.21547520734276537,lower_certainty
+balaamacomprehensivecenter,Balaama Comprehensive Center,39280.78863379526,0.2384275054935638,lower_certainty
+bsairacomprehensivecenter,Bsaira Comprehensive Center,71075.05165560664,0.24044586512452293,lower_certainty
+shehabyyehprimarycenter,Shehabyyeh Primary Center,29054.666952709125,0.24591248984769784,higher_certainty
+rehabcomprehensivecenter,Rehab Comprehensive Center,28052.252064554992,0.24770362777443514,higher_certainty
+lebcomprehensivecenter,Leb Comprehensive Center,34807.13709271178,0.25601536534616937,higher_certainty
+princesssalmahospital,Princess Salma Hospital,27504.08597819507,0.25732869753918464,higher_certainty
+almafraqgynecologyandpediatricshospital,Al-Mafraq Gynecology and Pediatrics Hospital,129470.7680046392,0.2606451531127573,higher_certainty
+aderprimarycenter,Ader Primary Center,41514.020522752275,0.269004454288526,higher_certainty
+alnadeemhospital,AL-Nadeem Hospital,218071.79177664852,0.27436102300078113,higher_certainty
+smakiyyehprimarycenter,Smakiyyeh Primary Center,8650.097999552538,0.27713653480044337,higher_certainty
+manshiyetbnihasancomprehensivecenter,Manshiyet Bni Hasan Comprehensive Center,30188.126615769484,0.28610647305829345,higher_certainty
+tafilahgovernmentalhospital,Tafilah Governmental Hospital,80445.98997557066,0.28908790520487354,higher_certainty
+alkarakhospital,Al-Karak Hospital,81943.61849310242,0.28910810319386737,higher_certainty
+southmazarcomprehensivecenter,South Mazar Comprehensive Center,63505.13570442359,0.30594992157352163,higher_certainty
+queenraniahospital,Queen Rania Hospital,35778.85709605601,0.3603092330175194,higher_certainty
+khazzanprimarycenter,Khazzan Primary Center,201360.28514614629,0.366696286397586,higher_certainty
+maanhospital,Maan Hospital,68298.37174888482,0.39496234434588284,higher_certainty
+petracomprehensivecenter,Petra Comprehensive Center,62158.50227447782,0.4917694060672072,higher_certainty
+alimanhospital,Al-Iman Hospital,,,higher_certainty
+princehashemprimarycenter,Prince Hashem Primary Center,,,higher_certainty
+moaabprimarycenter,Moaab Primary Center,,,higher_certainty
+thatrasprimarycenter,That Ras Primary Center,,,higher_certainty
+faqqoucomprehensivecenter,Faqqou Comprehensive Center,,,higher_certainty
+qaserprimarycenter,Qaser Primary Center,,,higher_certainty
+sarfaprimarycenter,Sarfa Primary Center,,,higher_certainty

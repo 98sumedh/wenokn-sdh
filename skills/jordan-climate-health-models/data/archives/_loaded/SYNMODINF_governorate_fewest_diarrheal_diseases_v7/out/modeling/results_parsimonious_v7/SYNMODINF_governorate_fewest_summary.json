@@ -1,0 +1,16 @@
+{
+  "best_model": "ridge",
+  "test_r2": 0.6328526065449208,
+  "test_rmse": 8.970361025938635,
+  "n_features": 6,
+  "features": [
+    "ar_lag1",
+    "ar_lag2",
+    "sin_week",
+    "cos_week",
+    "Td_d-10_C",
+    "E_d-14_mm_per_day"
+  ],
+  "baseline_r2": 0.6293978623761447,
+  "improvement_over_baseline": 0.003454744168776114
+}

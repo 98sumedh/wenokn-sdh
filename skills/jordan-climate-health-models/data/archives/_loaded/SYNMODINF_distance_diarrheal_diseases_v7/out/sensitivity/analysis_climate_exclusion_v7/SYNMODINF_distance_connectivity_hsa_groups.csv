@@ -1,0 +1,23 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+princehashemprimarycenter,Prince Hashem Primary Center,288330.0641297596,0.1106293913594371,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,237896.37615085047,0.1304685251344489,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,147142.56353220934,0.14656644706318436,lower_certainty
+princessrayahospital,Princess Raya Hospital,461080.1829802483,0.14678421572589617,lower_certainty
+jizehcompreahnsivecenter,Jizeh Compreahnsive Center,40227.27706874213,0.15510598111379803,lower_certainty
+alhussainnewsalthospital,Al Hussain New Salt Hospital,402770.63597782515,0.17177046315944933,lower_certainty
+drjamelaltotanjihospital,Dr. Jamel Al-Totanji Hospital,292043.644981355,0.17778809131426176,lower_certainty
+alshunehhospital,AL-Shuneh Hospital,127404.7503592989,0.18215778231709542,lower_certainty
+alramthahospital,AL-Ramtha Hospital,227897.29139971363,0.18567584167114737,lower_certainty
+alzarqahospital,AL-Zarqa Hospital,1228381.389465044,0.19297263666699938,lower_certainty
+almafraqhospital,AL-Mafraq Hospital,389134.4888466019,0.2001731077572881,lower_certainty
+jarashhospital,Jarash Hospital,476765.61556605523,0.2067673742004098,higher_certainty
+princessrahmahospital,Princess Rahma Hospital,893691.829215426,0.2149891794581869,higher_certainty
+mobesprimarycenter,Mobes Primary Center,338744.3716097917,0.21881918593807867,higher_certainty
+jadaaprimarycenter,Jadaa Primary Center,99929.79595602676,0.2657595864136237,higher_certainty
+tafilahgovernmentalhospital,Tafilah Governmental Hospital,151521.0416311773,0.26627103783037126,higher_certainty
+alkarakhospital,Al-Karak Hospital,332481.88982103375,0.2666211769313252,higher_certainty
+alnadeemhospital,AL-Nadeem Hospital,264416.4873249178,0.28213339190948333,higher_certainty
+khazzanprimarycenter,Khazzan Primary Center,201360.28514614629,0.366696286397586,higher_certainty
+queenraniahospital,Queen Rania Hospital,166235.73111941866,0.423701853089687,higher_certainty
+albasheerhospital,Al-Basheer Hospital,,,higher_certainty
+marjalhamamcc,Marj AL Hamam CC,,,higher_certainty

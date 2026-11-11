@@ -1,0 +1,24 @@
+hsa_key,hsa_name,top_choice_pixel_population,mean_allocation_probability,group
+princessrayahospital,Princess Raya Hospital,426387.15939250746,0.13254172891546498,lower_certainty
+alyarmoukhospital,Al-Yarmouk Hospital,141171.46585912904,0.1374009747168823,lower_certainty
+mabroukehprimarycenter,Mabroukeh Primary Center,291882.07054823294,0.14972179172135652,lower_certainty
+alshunehhospital,AL-Shuneh Hospital,127650.24823342351,0.17844983797652325,lower_certainty
+alramthahospital,AL-Ramtha Hospital,265848.6229183535,0.1860427925096371,lower_certainty
+alzarqahospital,AL-Zarqa Hospital,1211254.9408088776,0.19181892634903142,lower_certainty
+princessbasmahospital,Princess Basma Hospital,896404.6189576073,0.20156922670141805,lower_certainty
+jarashhospital,Jarash Hospital,410245.3419406127,0.20743041501997633,lower_certainty
+almafraqhospital,AL-Mafraq Hospital,334605.7489838004,0.22220407277272713,lower_certainty
+jizehcompreahnsivecenter,Jizeh Compreahnsive Center,104262.4086072362,0.22718435681394686,lower_certainty
+bsairacomprehensivecenter,Bsaira Comprehensive Center,151521.0416311773,0.26617467281389523,lower_certainty
+alhamaydehprimarycenter,Al-Hamaydeh Primary Center,181955.00798154797,0.2698501768333312,higher_certainty
+aqabacomprehensivecenter,Aqaba Comprehensive Center,201397.08800917977,0.3092490869050706,higher_certainty
+queenraniahospital,Queen Rania Hospital,166198.92825638514,0.4203974534028072,higher_certainty
+albasheerhospital,Al-Basheer Hospital,,,higher_certainty
+marjalhamamcc,Marj AL Hamam CC,,,higher_certainty
+ainalbashacomprehensivecenter,Ain Al-Basha Comprehensive Center,,,higher_certainty
+drjamelaltotanjihospital,Dr. Jamel Al-Totanji Hospital,,,higher_certainty
+alhussainnewsalthospital,Al Hussain New Salt Hospital,,,higher_certainty
+alimanhospital,Al-Iman Hospital,,,higher_certainty
+princehashemprimarycenter,Prince Hashem Primary Center,,,higher_certainty
+alkarakhospital,Al-Karak Hospital,,,higher_certainty
+faqqoucomprehensivecenter,Faqqou Comprehensive Center,,,higher_certainty

@@ -1,0 +1,48 @@
+{
+  "network": "SYNMODINF",
+  "target": "diarrheal_diseases_count_adjusted",
+  "n_climate_means": 10,
+  "n_extreme_indicators": 22,
+  "model_comparison": [
+    {
+      "specification": "A_AR_Seasonal_Only",
+      "n_features": 4,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual",
+      "train_r2": 0.7581149102299392,
+      "test_r2": 0.7316754972085848,
+      "test_mae": 4.769279120761077,
+      "overfit_gap": 0.02643941302135433,
+      "contribution_over_baseline": 0.0
+    },
+    {
+      "specification": "B_AR_Seasonal_Means",
+      "n_features": 14,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",
+      "train_r2": 0.7592631103064429,
+      "test_r2": 0.7295930792573795,
+      "test_mae": 4.780610391292398,
+      "overfit_gap": 0.029670031049063406,
+      "contribution_over_baseline": -0.00208241795120534
+    },
+    {
+      "specification": "C_AR_Seasonal_Extremes",
+      "n_features": 26,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, heat_moisture_stress...",
+      "train_r2": 0.7609661037337726,
+      "test_r2": 0.7290756137296732,
+      "test_mae": 4.931633432348567,
+      "overfit_gap": 0.03189049000409938,
+      "contribution_over_baseline": -0.002599883478911602
+    },
+    {
+      "specification": "D_AR_Seasonal_Both",
+      "n_features": 36,
+      "features_used": "ar_lag1, ar_lag2, sin_annual, cos_annual, T_mean_week_C...",
+      "train_r2": 0.7615072032852563,
+      "test_r2": 0.7249265404326612,
+      "test_mae": 4.957792842842846,
+      "overfit_gap": 0.03658066285259509,
+      "contribution_over_baseline": -0.006748956775923576
+    }
+  ]
+}
