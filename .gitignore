@@ -8,3 +8,7 @@ GRANDE-U_Task1/
 *.key
 results/
 skills/jordan-climate-health-models/data/archives/_loaded/.DS_Store
+
+.venv/
+.DS_Store
+**/.DS_Store
